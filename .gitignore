@@ -1,0 +1,8 @@
+galaxy_binning
+.gitignore~
+.ipynb_checkpoints/
+*.hist
+*.cpp~
+*.o
+*#
+*h~
