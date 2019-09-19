@@ -201,72 +201,21 @@ double Max_Luminosity(double mbh, double mstar, double beta)
   
 }
 
-//double Luminosity_Probability_Density(double L, double mbh, double mstar, double beta)
-// this is taking the log10(luminosity) as its argument. If you took luminosity (not log), you'd have to use change of variables formula for the differential
-double Luminosity_Probability_Density(double l, void * p)
-{
-
-  if (l <= MIN_LOG_LBOL) return 0.;
-
-  // consider moving these two linees to a better scope. They do need to be included somewhere, you can't just use p without doing this
-  //  struct LF_params {double mbh; double mstar; double beta;};
-  //  struct LF_params * params = (struct LF_params *)p;
-
-  //  double mbh = params->mbh;
-  //  double mstar = params->mstar;
-  //  double beta = params->beta;
-
-  //  printf("mbh, mstar, beta %e %f %f\n",mbh, mstar, beta);
-
-  struct LF_params {double L_max;};
-  struct LF_params * params = (struct LF_params *)p;
-  double L_max = params->L_max;
-
-  if (L_max <= MIN_LOG_LBOL)
-    return 0;
-
-  //  printf("L_max is %e\n",L_max);
-  
-  if (l >= log10(L_max)) return 0.;
-
-  // let x be defined as log10(L) - log10(L_max)
-  double min_x = MIN_LOG_LBOL - log10(L_max);
-  //Note max x is zero
-
-  double norm = LF_LOG_POWERLAW * log(10.)/(pow(10., -1. * LF_LOG_POWERLAW * min_x) - 1.);
-  //  printf("norm is %f\n",norm);
-												
-  return norm * pow(10., (l - log10(L_max)) * -1. * LF_LOG_POWERLAW);
-
-
-}
-
 // might end up changing the scope of some of these variables, like mbh, if all this gets moved to a galaxy object
 double Fraction_Observed_Gband(double mbh, double mstar, double beta, double L_c)
 {
 
   double L_max = Max_Luminosity(mbh, mstar, beta);
 
-  //  if (fabs(L_max - L_c)/L_max < 0.1) printf("close!\n");
+  if (L_max < L_c) return 0;
 
-  struct LF_params {double L_max;}; // consider moving this to a better scope
-  LF_params params = {L_max}; 
+  double logLmax = log10(L_max);
+  if (logLmax < MIN_LOG_LBOL) return 0;
 
-  int grid_size = 128;
-  double relative_error = 1.e-6;
-  gsl_integration_workspace * workspace = gsl_integration_workspace_alloc(grid_size);
-  gsl_function F;
-  F.function = &Luminosity_Probability_Density;
-  F.params = &params;
+  double x_c = log10(L_c) - logLmax;
+  double x_min = MIN_LOG_LBOL - logLmax;
 
-
-  double result, error; 
-
-  gsl_integration_qags(&F, log10(L_c), 47., 0, relative_error, grid_size, workspace, &result, &error);
-  gsl_integration_workspace_free(workspace);
-
-  //printf("LF integral result is %f\n", result);
-  return result;
+  return ((pow(10., -1. * LF_LOG_POWERLAW * x_c) - 1.)/(pow(10., -1. * LF_LOG_POWERLAW * x_min) - 1.));
 
 
 }

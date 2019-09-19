@@ -116,9 +116,7 @@ int main(int argc, char **argv)
     {
 
 
-      //      if (counter > 1007270 && counter < 1007291)
-      //	{
-      
+
       catalogue_data[0] = log10(mass);
       catalogue_data[1] = m_g - m_r;
       catalogue_data[2] = mbh_bulge;
@@ -130,19 +128,16 @@ int main(int argc, char **argv)
       hist_vol_disrupt.Count(catalogue_data,Total_Disruption_Rate(pow(10.,mbh_bulge),z)); // the volumetric disruption rate histogram is just like the host galaxy histogram, but weighted by per-galaxy disruption rate. The z is needed to convert from galaxy time frame to observer rest framee
       double beta = 1.;
       double T = 3.e4;
-      //      hist_detected_disrupt.Count(catalogue_data,Total_Disruption_Rate_Observed_Gband(pow(10.,mbh_bulge),beta,z,T));
+      hist_detected_disrupt.Count(catalogue_data,Total_Disruption_Rate_Observed_Gband(pow(10.,mbh_bulge),beta,z,T));
       
       num_galaxies++;
 
-
-      //      if (counter % 1 == 0)
-      //	{
-      //	  //printf("at galaxy %d\n",num_galaxies);
-      //	  printf("at galaxy %d\n",counter);
-      //	}
+      if (counter % 10000 == 0)
+      	{
+	  printf("at galaxy %d\n",counter);
+	}
 	    
 
-      //      	}
       counter++;
 
 
@@ -313,7 +308,7 @@ int main(int argc, char **argv)
   /////////
 
   // Print out some histograms of detectable disruption
-  /*
+
 
   HistogramNd hist_projected_detected_disrupt;
   
@@ -388,7 +383,7 @@ int main(int argc, char **argv)
   hist_projected_detected_disrupt.Print_Histogram_2D(0,1);
 
 
-  */  
+
 
 }
   
