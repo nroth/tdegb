@@ -207,13 +207,15 @@ double Fraction_Observed_Gband(double mbh, double mstar, double beta, double L_c
 
   double L_max = Max_Luminosity(mbh, mstar, beta);
 
-  if (L_max < L_c) return 0;
+  if (L_max <= L_c) return 0;
 
   double logLmax = log10(L_max);
-  if (logLmax < MIN_LOG_LBOL) return 0;
+  if (logLmax <= MIN_LOG_LBOL) return 0;
 
   double x_c = log10(L_c) - logLmax;
   double x_min = MIN_LOG_LBOL - logLmax;
+
+  if (x_c < x_min) return 1;
 
   return ((pow(10., -1. * LF_LOG_POWERLAW * x_c) - 1.)/(pow(10., -1. * LF_LOG_POWERLAW * x_min) - 1.));
 
