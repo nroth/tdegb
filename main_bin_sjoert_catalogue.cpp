@@ -72,6 +72,16 @@ int main(int argc, char **argv)
   bin_specs.push_back(spec);
   dimension_names.push_back(name);
 
+  /*
+  name = "sersic";
+  spec[0] = 0.;   // start, stop, delta
+  spec[1] = 5.;
+  spec[2] = 0.25;
+
+  bin_specs.push_back(spec);
+  dimension_names.push_back(name);
+  */
+
   base_name = "gals";
   HistogramNd hist_gals(bin_specs, dimension_names, base_name);
 
@@ -122,16 +132,22 @@ int main(int argc, char **argv)
       catalogue_data[2] = mbh_bulge;
       catalogue_data[3] = mbh_sigma;
       catalogue_data[4] = z;
+      //      catalogue_data[5] = sersic_n;
+      
 
       hist_gals.Count(catalogue_data);
 
-      hist_vol_disrupt.Count(catalogue_data,Total_Disruption_Rate(pow(10.,mbh_bulge),z)); // the volumetric disruption rate histogram is just like the host galaxy histogram, but weighted by per-galaxy disruption rate. The z is needed to convert from galaxy time frame to observer rest framee
+      hist_vol_disrupt.Count(catalogue_data,Total_Disruption_Rate(pow(10.,mbh_sigma),z)); // the volumetric disruption rate histogram is just like the host galaxy histogram, but weighted by per-galaxy disruption rate. The z is needed to convert from galaxy time frame to observer rest framee
       double beta = 1.;
       double T = 3.e4;
-      hist_detected_disrupt.Count(catalogue_data,Total_Disruption_Rate_Observed_Gband(pow(10.,mbh_bulge),beta,z,T));
+
+      double m_limit_contrast = find_host_contrast_magnitude(m_g,sersic_n,r50_kpc,z);
+      
+      hist_detected_disrupt.Count(catalogue_data,Total_Disruption_Rate_Observed_Rband(pow(10.,mbh_sigma),beta,z,T,m_limit_contrast));
       
       num_galaxies++;
 
+      /*
       if (counter % 10000 == 0)
       	{
 	  printf("at galaxy %d\n",counter);
@@ -139,7 +155,7 @@ int main(int argc, char **argv)
 	    
 
       counter++;
-
+      */
 
 
     }
@@ -228,7 +244,44 @@ int main(int argc, char **argv)
   hist_projected_gals = hist_gals.Create_Projected_Histogram(kept_axes);
   hist_projected_gals.Print_Histogram_2D(0,1);
 
+  /*
 
+  ka[0] = 0;
+  ka[1] = 5;
+  kept_axes.assign(ka, ka + 2);
+
+  hist_projected_gals = hist_gals.Create_Projected_Histogram(kept_axes);
+  hist_projected_gals.Print_Histogram_2D(0,1);
+
+  ka[0] = 1;
+  ka[1] = 5;
+  kept_axes.assign(ka, ka + 2);
+
+  hist_projected_gals = hist_gals.Create_Projected_Histogram(kept_axes);
+  hist_projected_gals.Print_Histogram_2D(0,1);
+
+  ka[0] = 2;
+  ka[1] = 5;
+  kept_axes.assign(ka, ka + 2);
+
+  hist_projected_gals = hist_gals.Create_Projected_Histogram(kept_axes);
+  hist_projected_gals.Print_Histogram_2D(0,1);
+
+  ka[0] = 3;
+  ka[1] = 5;
+  kept_axes.assign(ka, ka + 2);
+
+  hist_projected_gals = hist_gals.Create_Projected_Histogram(kept_axes);
+  hist_projected_gals.Print_Histogram_2D(0,1);
+
+  ka[0] = 4;
+  ka[1] = 5;
+  kept_axes.assign(ka, ka + 2);
+
+  hist_projected_gals = hist_gals.Create_Projected_Histogram(kept_axes);
+  hist_projected_gals.Print_Histogram_2D(0,1);
+
+  */
 
   // Print out some histograms of volumetric disruption properties
 
@@ -301,9 +354,48 @@ int main(int argc, char **argv)
   ka[1] = 4;
   kept_axes.assign(ka, ka + 2);
 
+  /*
+
   hist_projected_vol_disrupt = hist_vol_disrupt.Create_Projected_Histogram(kept_axes);
   hist_projected_vol_disrupt.Print_Histogram_2D(0,1);
 
+  ka[0] = 0;
+  ka[1] = 5;
+  kept_axes.assign(ka, ka + 2);
+
+  hist_projected_vol_disrupt = hist_vol_disrupt.Create_Projected_Histogram(kept_axes);
+  hist_projected_vol_disrupt.Print_Histogram_2D(0,1);
+
+  ka[0] = 1;
+  ka[1] = 5;
+  kept_axes.assign(ka, ka + 2);
+
+  hist_projected_vol_disrupt = hist_vol_disrupt.Create_Projected_Histogram(kept_axes);
+  hist_projected_vol_disrupt.Print_Histogram_2D(0,1);
+
+  ka[0] = 2;
+  ka[1] = 5;
+  kept_axes.assign(ka, ka + 2);
+
+  hist_projected_vol_disrupt = hist_vol_disrupt.Create_Projected_Histogram(kept_axes);
+  hist_projected_vol_disrupt.Print_Histogram_2D(0,1);
+
+  ka[0] = 3;
+  ka[1] = 5;
+  kept_axes.assign(ka, ka + 2);
+
+  hist_projected_vol_disrupt = hist_vol_disrupt.Create_Projected_Histogram(kept_axes);
+  hist_projected_vol_disrupt.Print_Histogram_2D(0,1);
+
+  ka[0] = 4;
+  ka[1] = 5;
+  kept_axes.assign(ka, ka + 2);
+
+  hist_projected_vol_disrupt = hist_vol_disrupt.Create_Projected_Histogram(kept_axes);
+  hist_projected_vol_disrupt.Print_Histogram_2D(0,1);
+
+
+  */
 
   /////////
 
@@ -381,7 +473,6 @@ int main(int argc, char **argv)
 
   hist_projected_detected_disrupt = hist_detected_disrupt.Create_Projected_Histogram(kept_axes);
   hist_projected_detected_disrupt.Print_Histogram_2D(0,1);
-
 
 
 

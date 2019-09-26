@@ -202,7 +202,7 @@ double Max_Luminosity(double mbh, double mstar, double beta)
 }
 
 // might end up changing the scope of some of these variables, like mbh, if all this gets moved to a galaxy object
-double Fraction_Observed_Gband(double mbh, double mstar, double beta, double L_c)
+double Fraction_Observed(double mbh, double mstar, double beta, double L_c)
 {
 
   double L_max = Max_Luminosity(mbh, mstar, beta);
@@ -234,19 +234,35 @@ double Stellar_Rate_Integrand_GbandCut(double mstar, void * p)
   double L_c = params->L_c;
 
   // I don't think Kroupa_IMF currently cares what param pointer is passed to it
-  return Stellar_Disruption_Rate(mbh, mstar) * Kroupa_IMF(mstar, p) * Fraction_Observed_Gband(mbh,mstar, beta,L_c); // rate of observable disruptions in terms of galaxy proper time
+  return Stellar_Disruption_Rate(mbh, mstar) * Kroupa_IMF(mstar, p) * Fraction_Observed(mbh,mstar, beta,L_c); // rate of observable disruptions in terms of galaxy proper time
+  
+}
+
+// might end up changing the scope of some of these variables, like mbh and z, if all this gets moved to a galaxy object
+double Stellar_Rate_Integrand_RbandCut(double mstar, void * p)
+{
+
+  struct stellar_rate_params {double mbh; double beta; double L_c;};
+  struct stellar_rate_params * params = (struct stellar_rate_params *)p;
+
+  double mbh = params->mbh;
+  double beta = params->beta;
+  double L_c = params->L_c;
+
+  // I don't think Kroupa_IMF currently cares what param pointer is passed to it
+  return Stellar_Disruption_Rate(mbh, mstar) * Kroupa_IMF(mstar, p) * Fraction_Observed(mbh,mstar, beta,L_c); // rate of observable disruptions in terms of galaxy proper time
   
 }
 
 
 
-double Total_Disruption_Rate_Observed_Gband(double mbh, double beta, double z, double T )
+double Total_Disruption_Rate_Observed_Gband(double mbh, double beta, double z, double T, double m_limit_contrast )
 {
  
 
   //  printf("IMF norm is %e\n",IMF_normalization);
 
-  double L_c = LCriticalGband(z,T);
+  double L_c = LCriticalGband(z,T,m_limit_contrast);
   //  printf("L_c is %e\n", L_c);
 
   int grid_size = 128;
@@ -254,6 +270,41 @@ double Total_Disruption_Rate_Observed_Gband(double mbh, double beta, double z, d
   gsl_integration_workspace * workspace = gsl_integration_workspace_alloc(grid_size);
   gsl_function F;
   F.function = &Stellar_Rate_Integrand_GbandCut;
+
+  struct stellar_rate_params {double this_mbh; double this_beta; double this_L_c;};
+
+  stellar_rate_params params = {mbh, beta, L_c};
+  F.params = &params;
+
+  //  printf("params are %e %f %f %f\n",mbh,beta,z,T);
+
+
+  double result, error; 
+  
+  gsl_integration_qags(&F, MSTAR_MIN, MSTAR_MAX, 0, relative_error, grid_size, workspace, &result, &error);
+
+  gsl_integration_workspace_free(workspace);
+
+  return 1./(1. + z) * result; // the 1/(1+z) factor converts from galaxy proper time units to observer time units
+
+
+
+}
+
+double Total_Disruption_Rate_Observed_Rband(double mbh, double beta, double z, double T, double m_limit_contrast )
+{
+ 
+
+  //  printf("IMF norm is %e\n",IMF_normalization);
+
+  double L_c = LCriticalRband(z,T,m_limit_contrast);
+  //  printf("L_c is %e\n", L_c);
+
+  int grid_size = 128;
+  double relative_error = 1.e-5;
+  gsl_integration_workspace * workspace = gsl_integration_workspace_alloc(grid_size);
+  gsl_function F;
+  F.function = &Stellar_Rate_Integrand_RbandCut;
 
   struct stellar_rate_params {double this_mbh; double this_beta; double this_L_c;};
 

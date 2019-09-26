@@ -2,11 +2,15 @@
 #define MAGNITUDES_H
 
 #include <math.h>
+#include <algorithm>
+#include <gsl/gsl_sf_gamma.h>
 #include "physical_constants.h"
 #include "cosmology.h"
 
 
-#define M_APPARENT_THRESHHOLD 22.0 // will need to distinguish how this is handled in various bands
+#define M_APPARENT_THRESHHOLD 20.0 // will need to distinguish how this is handled in various bands
+#define R_PSF_ARCSEC 4.4 // 2 times r-band median PSF FWHM of 2.2 arcsec. will need to distinguish how this is handled in various bands
+#define HOST_CONTRAST_CUT 0.5 // will need to distinguish how this is handled in various bands
 
 #define Z_MIN_CUT 0.003
 #define Z_MAX_CUT 10.
@@ -25,6 +29,7 @@ double PlanckFunctionFrequency(double nu, double T)
 }
 
 //includes K-correction
+/* This function not needed except fo debugging?
 double UnexctinctedBBGbandFlux(double z, double T, double L)
 {
   double nu_corrected_g = NU_GBAND * (1. + z);
@@ -38,6 +43,7 @@ double UnexctinctedBBGbandFlux(double z, double T, double L)
   return unobscured_Lnu * (1. + z)/(4. * PI * d_L * d_L);
   
 }
+*/
 
 // Convert cgs F_nu to AB magnitude
 // Assumes Fnu in cgs
@@ -48,12 +54,21 @@ double mABFromFnu(double F_nu)
   return -2.5 * log10(F_nu) - 48.6;
 }
 
-// Given z and T, what is minimum Lbol that allows the k-corrected flux to exceed the vaalue required to matach the survey apparent magnitude threshhold in the g band?
+// Given z and T, what is minimum Lbol that allows the k-corrected flux to exceed the value required to matach the survey apparent magnitude threshhold in the g band?
 // Here it is easy enough to solve for L. More generally might need to solve an equation with Brent method the way you do for finding Zmax
-double LCriticalGband(double z, double T)
+double LCriticalGband(double z, double T, double m_limit_contrast)
 {
 
-  return pow(10., (M_APPARENT_THRESHHOLD + 48.6)/-2.5) * STEF_BOLTZ * pow(T,4.) * 4. * PI * pow(LuminosityDistance(z),2.)/( (1. + z) * PI * PlanckFunctionFrequency(NU_GBAND * (1. + z), T));
+  double operating_limit = std::min(m_limit_contrast,M_APPARENT_THRESHHOLD);
+  return pow(10., (operating_limit + 48.6)/-2.5) * STEF_BOLTZ * pow(T,4.) * 4. * PI * pow(LuminosityDistance(z),2.)/( (1. + z) * PI * PlanckFunctionFrequency(NU_GBAND * (1. + z), T));
+
+}
+
+double LCriticalRband(double z, double T, double m_limit_contrast)
+{
+
+  double operating_limit = std::min(m_limit_contrast,M_APPARENT_THRESHHOLD);
+  return pow(10., (operating_limit + 48.6)/-2.5) * STEF_BOLTZ * pow(T,4.) * 4. * PI * pow(LuminosityDistance(z),2.)/( (1. + z) * PI * PlanckFunctionFrequency(NU_RBAND * (1. + z), T));
 
 }
   
@@ -169,5 +184,75 @@ double FindZmax(double apparent_mag, double z_original)
 {
   return ZmaxBrentMethod(apparent_mag,z_original);
 }
+
+
+// see reference mentioned at https://ned.ipac.caltech.edu/level5/March05/Graham/Graham2.html
+double get_approx_sersic_bn(double n_sersic)
+{
+  return 1.9992 * n_sersic - 0.3271;
+}
+
+
+// as found in https://ned.ipac.caltech.edu/level5/March05/Graham/Graham2.html
+// will be in units of magnitudes / arcsec^2 assuming m_tot in magnitude and r_eff_arcsec in arsec
+double get_mu_eff(double n_sersic, double m_tot,double r_eff_arcsec)
+{
+  double bn = get_approx_sersic_bn(n_sersic);
+    
+  return m_tot + 5. * log10(r_eff_arcsec) + 2.5 * log10(2. * PI * n_sersic * exp(bn)/pow(bn,2. * n_sersic) * gsl_sf_gamma(2. * n_sersic)  );
+}
+
+
+// as found in https://ned.ipac.caltech.edu/level5/March05/Graham/Graham2.html
+// I_e in mags / arcsec^2, r and r_e in arcsec
+double flux_enclosed_r_sersic(double r, double n_sersic,double r_e, double I_e)
+{
+  
+  double bn = get_approx_sersic_bn(n_sersic);
+      
+  return I_e * r_e * r_e * 2. * PI * n_sersic * exp(bn)/pow(bn,2. * n_sersic) * gsl_sf_gamma_inc_P(2. *n_sersic, bn * (pow(r/r_e,1./n_sersic)))* gsl_sf_gamma(2. * n_sersic);
+
+}
+
+double I_from_mu(double mu)
+{    
+  return pow(10., mu/(-2.5));
+}
+
+double mu_from_I(double I)
+{    
+  return -2.5 * log10(I);
+}
+
+double arcsec_from_radians(double radians)
+{    
+  return radians * 180. * 3600./ PI;
+}
+
+double r_arcsec_from_kpc(double r_kpc, double z)
+{
+    
+  double r_cm = r_kpc * 1000. * PARSEC; // convert to cm
+  double d_A = AngularDiameterDistance(z); // in cm
+
+  double r_radians = r_cm/d_A;
+    
+  return arcsec_from_radians(r_radians);
+}
+
+double find_host_contrast_magnitude(double m_tot,double n_sersic,double re_kpc, double z)
+{
+    
+  double re_arcsec = r_arcsec_from_kpc(re_kpc,z);
+    
+  double mu_e = get_mu_eff(n_sersic,m_tot,re_arcsec);
+  double I_e = I_from_mu(mu_e);
+
+  //magnitude (flux) enclosed in psf
+  double m_psf = mu_from_I(flux_enclosed_r_sersic(R_PSF_ARCSEC,n_sersic,re_arcsec,I_e));
+    
+  return m_psf - 2.5 * log10(pow(10.,HOST_CONTRAST_CUT / 2.5) - 1.);
+}
+
 
 #endif

@@ -87,6 +87,13 @@ double LuminosityDistance(double z)
   
 }
 
+double AngularDiameterDistance(double z)
+{
+
+  return 1./(1. + z) * ComovingDistance(z);
+  
+}
+
 double DistanceModulus(double z)
 {
 
