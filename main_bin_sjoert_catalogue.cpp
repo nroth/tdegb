@@ -137,13 +137,18 @@ int main(int argc, char **argv)
 
       hist_gals.Count(catalogue_data);
 
-      hist_vol_disrupt.Count(catalogue_data,Total_Disruption_Rate(pow(10.,mbh_sigma),z)); // the volumetric disruption rate histogram is just like the host galaxy histogram, but weighted by per-galaxy disruption rate. The z is needed to convert from galaxy time frame to observer rest framee
+      double nuker_gamma = find_nuker_gammaprime_from_sersic(sersic_n,r50_kpc,z);
+
+      hist_vol_disrupt.Count(catalogue_data,Total_Disruption_Rate(pow(10.,mbh_sigma),z,nuker_gamma)); // the volumetric disruption rate histogram is just like the host galaxy histogram, but weighted by per-galaxy disruption rate. The z is needed to convert from galaxy time frame to observer rest framee
       double beta = 1.;
       double T = 3.e4;
 
       double m_limit_contrast = find_host_contrast_magnitude(m_g,sersic_n,r50_kpc,z);
+
+
       
-      hist_detected_disrupt.Count(catalogue_data,Total_Disruption_Rate_Observed_Rband(pow(10.,mbh_sigma),beta,z,T,m_limit_contrast));
+      hist_detected_disrupt.Count(catalogue_data,Total_Disruption_Rate_Observed_Rband(pow(10.,mbh_sigma),beta,z,T,m_limit_contrast,nuker_gamma));
+      //hist_detected_disrupt.Count(catalogue_data,Total_Disruption_Rate_Observed_Gband(pow(10.,mbh_sigma),beta,z,T,23.));
       
       num_galaxies++;
 

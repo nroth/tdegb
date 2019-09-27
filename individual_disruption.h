@@ -11,8 +11,9 @@
 #define MSTAR_MIN 0.08 // Only considering main sequence stars
 
 // In the future these will depend on galaxy properties
-#define RATE_NORMALIZATION 2.9e-5 
+#define RATE_NORMALIZATION_COMBINED 2.9e-5 
 #define RATE_POWERLAW -0.404
+#define RATE_POWERLAW_NUKER 0.705
 
 #define LF_LOG_POWERLAW 1.5
 
@@ -73,23 +74,29 @@ double Hills_Mass(double mstar)
 }
 
 // both mbh and mstar in solar masses
-double Stellar_Disruption_Rate(double mbh, double mstar)
+double Stellar_Disruption_Rate(double mbh, double mstar, double nuker_gamma)
 {
-  //consier using the exp(-M^2) suppression here as suggested by Kesden 2012, or a sharp and total cutoff
+  //consider using the exp(-M^2) suppression here as suggested by Kesden 2012, instead of a sharp and total cutoff
   double mhills = Hills_Mass(mstar);
   if (mbh > mhills) return 0;
 
-  return RATE_NORMALIZATION * pow(mbh/1.e8,RATE_POWERLAW); // rate is still in galaxy proper time
+  //  return RATE_NORMALIZATION_COMBINED * pow(mbh/1.e8,RATE_POWERLAW); // rate is still in galaxy proper time
+
+  return RATE_NORMALIZATION_COMBINED * pow(nuker_gamma/0.4,RATE_POWERLAW_NUKER); // rate is still in galaxy proper time
   
 }
 
 
-double Stellar_Rate_Integrand(double mstar, void * params)
+double Stellar_Rate_Integrand(double mstar, void * p)
 {
 
-  double mbh = *(double *) params;
+  struct stellar_rate_params {double mbh; double nuker_gamma;};
+  struct stellar_rate_params * params = (struct stellar_rate_params *)p;
 
-  return Stellar_Disruption_Rate(mbh, mstar) * Kroupa_IMF(mstar, params); // Stellar disruption rate in terms of galaxy proper time
+  double mbh = params->mbh;
+  double nuker_gamma = params->nuker_gamma;
+
+  return Stellar_Disruption_Rate(mbh, mstar,nuker_gamma) * Kroupa_IMF(mstar, params); // Stellar disruption rate in terms of galaxy proper time
   
 }
 
@@ -121,7 +128,7 @@ void Initialize_IMF()
 
 }
 
-double Total_Disruption_Rate(double mbh, double z)
+ double Total_Disruption_Rate(double mbh, double z, double nuker_gamma)
 {
  
 
@@ -133,7 +140,9 @@ double Total_Disruption_Rate(double mbh, double z)
   gsl_function F;
   F.function = &Stellar_Rate_Integrand;
 
-  F.params = &mbh;
+  struct stellar_rate_params {double this_mbh; double this_nuker_gamma;};
+  stellar_rate_params params = {mbh, nuker_gamma};
+  F.params = &params;
 
   double result, error; 
   
@@ -226,15 +235,16 @@ double Fraction_Observed(double mbh, double mstar, double beta, double L_c)
 double Stellar_Rate_Integrand_GbandCut(double mstar, void * p)
 {
 
-  struct stellar_rate_params {double mbh; double beta; double L_c;};
+  struct stellar_rate_params {double mbh; double beta; double L_c; double nuker_gamma;};
   struct stellar_rate_params * params = (struct stellar_rate_params *)p;
 
   double mbh = params->mbh;
   double beta = params->beta;
   double L_c = params->L_c;
+  double nuker_gamma = params->nuker_gamma;
 
   // I don't think Kroupa_IMF currently cares what param pointer is passed to it
-  return Stellar_Disruption_Rate(mbh, mstar) * Kroupa_IMF(mstar, p) * Fraction_Observed(mbh,mstar, beta,L_c); // rate of observable disruptions in terms of galaxy proper time
+  return Stellar_Disruption_Rate(mbh, mstar,nuker_gamma) * Kroupa_IMF(mstar, p) * Fraction_Observed(mbh,mstar, beta,L_c); // rate of observable disruptions in terms of galaxy proper time
   
 }
 
@@ -242,21 +252,22 @@ double Stellar_Rate_Integrand_GbandCut(double mstar, void * p)
 double Stellar_Rate_Integrand_RbandCut(double mstar, void * p)
 {
 
-  struct stellar_rate_params {double mbh; double beta; double L_c;};
+  struct stellar_rate_params {double mbh; double beta; double L_c; double nuker_gamma;};
   struct stellar_rate_params * params = (struct stellar_rate_params *)p;
 
   double mbh = params->mbh;
   double beta = params->beta;
   double L_c = params->L_c;
+  double nuker_gamma = params->nuker_gamma;
 
   // I don't think Kroupa_IMF currently cares what param pointer is passed to it
-  return Stellar_Disruption_Rate(mbh, mstar) * Kroupa_IMF(mstar, p) * Fraction_Observed(mbh,mstar, beta,L_c); // rate of observable disruptions in terms of galaxy proper time
+  return Stellar_Disruption_Rate(mbh, mstar,nuker_gamma) * Kroupa_IMF(mstar, p) * Fraction_Observed(mbh,mstar, beta,L_c); // rate of observable disruptions in terms of galaxy proper time
   
 }
 
 
 
-double Total_Disruption_Rate_Observed_Gband(double mbh, double beta, double z, double T, double m_limit_contrast )
+ double Total_Disruption_Rate_Observed_Gband(double mbh, double beta, double z, double T, double m_limit_contrast, double nuker_gamma )
 {
  
 
@@ -271,9 +282,9 @@ double Total_Disruption_Rate_Observed_Gband(double mbh, double beta, double z, d
   gsl_function F;
   F.function = &Stellar_Rate_Integrand_GbandCut;
 
-  struct stellar_rate_params {double this_mbh; double this_beta; double this_L_c;};
+  struct stellar_rate_params {double this_mbh; double this_beta; double this_L_c; double this_nuker_gamma;};
 
-  stellar_rate_params params = {mbh, beta, L_c};
+  stellar_rate_params params = {mbh, beta, L_c,nuker_gamma};
   F.params = &params;
 
   //  printf("params are %e %f %f %f\n",mbh,beta,z,T);
@@ -291,7 +302,7 @@ double Total_Disruption_Rate_Observed_Gband(double mbh, double beta, double z, d
 
 }
 
-double Total_Disruption_Rate_Observed_Rband(double mbh, double beta, double z, double T, double m_limit_contrast )
+double Total_Disruption_Rate_Observed_Rband(double mbh, double beta, double z, double T, double m_limit_contrast, double nuker_gamma )
 {
  
 
@@ -306,9 +317,9 @@ double Total_Disruption_Rate_Observed_Rband(double mbh, double beta, double z, d
   gsl_function F;
   F.function = &Stellar_Rate_Integrand_RbandCut;
 
-  struct stellar_rate_params {double this_mbh; double this_beta; double this_L_c;};
+  struct stellar_rate_params {double this_mbh; double this_beta; double this_L_c; double this_nuker_gamma;};
 
-  stellar_rate_params params = {mbh, beta, L_c};
+  stellar_rate_params params = {mbh, beta, L_c, nuker_gamma};
   F.params = &params;
 
   //  printf("params are %e %f %f %f\n",mbh,beta,z,T);

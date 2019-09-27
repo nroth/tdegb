@@ -11,6 +11,10 @@
 #define M_APPARENT_THRESHHOLD 20.0 // will need to distinguish how this is handled in various bands
 #define R_PSF_ARCSEC 4.4 // 2 times r-band median PSF FWHM of 2.2 arcsec. will need to distinguish how this is handled in various bands
 #define HOST_CONTRAST_CUT 0.5 // will need to distinguish how this is handled in various bands
+#define RESOLUTION_FOR_NUKERGAMMA 0.04 // arsec. See Lauer et al 2007. Nick Stone's rate calculations were based on Nuker gamma as measured in this paper, so to convert n_sersic to nuker gamma we want to account for how they measured gamma
+
+#define NU_GBAND 646243712006898.
+#define NU_RBAND 489696925841228.
 
 #define Z_MIN_CUT 0.003
 #define Z_MAX_CUT 10.
@@ -18,8 +22,6 @@
 #define Z_MAX_GENERAL 10. // Just for setting numeric limits, but might need to think about this more 
 
 
-#define NU_GBAND 646243712006898.
-#define NU_RBAND 489696925841228.
 
 double PlanckFunctionFrequency(double nu, double T)
 {
@@ -224,9 +226,16 @@ double mu_from_I(double I)
   return -2.5 * log10(I);
 }
 
+// maybe consider moving this to physical constants
 double arcsec_from_radians(double radians)
 {    
   return radians * 180. * 3600./ PI;
+}
+
+// maybe consider moving this to physical constants
+double radian_from_arcsec(double r_arcsec)
+{    
+  return r_arcsec * PI / (180. * 3600.);
 }
 
 double r_arcsec_from_kpc(double r_kpc, double z)
@@ -238,6 +247,17 @@ double r_arcsec_from_kpc(double r_kpc, double z)
   double r_radians = r_cm/d_A;
     
   return arcsec_from_radians(r_radians);
+}
+
+double r_kpc_from_arcsec(double r_arcsec,double z)
+{
+  double r_rad = radian_from_arcsec(r_arcsec);
+    
+  double d_A = AngularDiameterDistance(z);
+    
+  double r_cm = r_rad * d_A;
+    
+  return r_cm / (1000. * PARSEC);
 }
 
 double find_host_contrast_magnitude(double m_tot,double n_sersic,double re_kpc, double z)
@@ -252,6 +272,21 @@ double find_host_contrast_magnitude(double m_tot,double n_sersic,double re_kpc, 
   double m_psf = mu_from_I(flux_enclosed_r_sersic(R_PSF_ARCSEC,n_sersic,re_arcsec,I_e));
     
   return m_psf - 2.5 * log10(pow(10.,HOST_CONTRAST_CUT / 2.5) - 1.);
+}
+
+double find_nuker_gammaprime_from_sersic(double n_sersic, double re_kpc, double z)
+{
+
+  double bn = get_approx_sersic_bn(n_sersic);
+
+  double rprime_kpc = r_kpc_from_arcsec(RESOLUTION_FOR_NUKERGAMMA,z);
+
+  return bn/n_sersic * pow(rprime_kpc/re_kpc,1./n_sersic);
+
+  // now use Graham 2003 eq 4
+
+  
+  
 }
 
 
