@@ -11,6 +11,8 @@
 #include "cdf.h"
 #include "individual_disruption.h"
 #include "magnitudes.h"
+#include "hdf5.h"
+#include "hdf5_hl.h"
 
 
 using std::vector;
@@ -106,51 +108,58 @@ int main(int argc, char **argv)
 
   // Start reading in the catalogue
 
-  string galaxy_catalogue_filename = "/Users/nathanielroth/Dropbox/research/TDE/host_galaxies/sjoert_catalogue/sjoert_catalogue_ascii.dat";
-
-  float z, ra, dec, mass, b300, b1000, ssfr, bt, r50_kpc, sersic_n, sigma, sigma_SDSS,sigma_SDSS_err, mbh_sigma, mbh_bulge, m_r, Mabs_r, m_g, M_g;
-
-  int num_galaxies = 0;
-  
   clock_t begin = clock();
 
-  FILE * pFile;
-  pFile = fopen(galaxy_catalogue_filename.c_str(),"r");
+  string catalogue_filename = "/Users/nathanielroth/Dropbox/research/TDE/host_galaxies/sjoert_catalogue/van_velzen_2018_catalogue.h5";
+
+  hid_t file_id = H5Fopen(catalogue_filename.c_str(),H5F_ACC_RDONLY,H5P_DEFAULT);
+
+  int num_galaxies = 6101944; // should think more about how to make this flexible
+
+  double* z = new double[num_galaxies]; // for some reason, the hdf5 read will only work if you do the manual memory allocation this way (and you must delete later)
+  double* m_g = new double[num_galaxies];
+  double* m_r = new double[num_galaxies];
+  double* mbh_bulge = new double[num_galaxies];
+  double* mbh_sigma = new double[num_galaxies];
+  double* mass = new double[num_galaxies];
+  double* sersic_n = new double[num_galaxies];
+  double* r50_kpc = new double[num_galaxies];
+
+  H5LTread_dataset_double(file_id,"z",z);
+  H5LTread_dataset_double(file_id,"m_g",m_g);
+  H5LTread_dataset_double(file_id,"m_r",m_r);
+  H5LTread_dataset_double(file_id,"mbh_bulge",mbh_bulge);
+  H5LTread_dataset_double(file_id,"mbh_sigma",mbh_sigma);
+  H5LTread_dataset_double(file_id,"mass",mass);
+  H5LTread_dataset_double(file_id,"sersic_n",sersic_n);
+  H5LTread_dataset_double(file_id,"r50_kpc",r50_kpc);
 
   vector<double> catalogue_data(hist_gals_dimension);
 
   Initialize_IMF(); // for computing volumetric disruption rates
 
-  int counter = 0;
-  while(fscanf(pFile,"%f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f", &z, &ra, &dec, &mass, &b300, &b1000, &ssfr, &bt, &r50_kpc, &sersic_n, &sigma, &sigma_SDSS,&sigma_SDSS_err, &mbh_sigma, &mbh_bulge, &m_r, &Mabs_r, &m_g, &M_g) != EOF)
+  for (int i = 0; i < num_galaxies; i++)
     {
 
-
-
-      catalogue_data[0] = log10(mass);
-      catalogue_data[1] = m_g - m_r;
-      catalogue_data[2] = mbh_bulge;
-      catalogue_data[3] = mbh_sigma;
-      catalogue_data[4] = z;
-      //      catalogue_data[5] = sersic_n;
-      
+      catalogue_data[0] = log10(mass[i]);
+      catalogue_data[1] = m_g[i] - m_r[i];
+      catalogue_data[2] = mbh_bulge[i];
+      catalogue_data[3] = mbh_sigma[i];
+      catalogue_data[4] = z[i];
 
       hist_gals.Count(catalogue_data);
 
-      double nuker_gamma = find_nuker_gammaprime_from_sersic(sersic_n,r50_kpc,z);
+      double nuker_gamma = find_nuker_gammaprime_from_sersic(sersic_n[i],r50_kpc[i],z[i]);
 
-      hist_vol_disrupt.Count(catalogue_data,Total_Disruption_Rate(pow(10.,mbh_sigma),z,nuker_gamma)); // the volumetric disruption rate histogram is just like the host galaxy histogram, but weighted by per-galaxy disruption rate. The z is needed to convert from galaxy time frame to observer rest framee
+      hist_vol_disrupt.Count(catalogue_data,Total_Disruption_Rate(pow(10.,mbh_sigma[i]),z[i],nuker_gamma)); // the volumetric disruption rate histogram is just like the host galaxy histogram, but weighted by per-galaxy disruption rate. The z is needed to convert from galaxy time frame to observer rest framee
       double beta = 1.;
       double T = 3.e4;
 
-      double m_limit_contrast = find_host_contrast_magnitude(m_g,sersic_n,r50_kpc,z);
-
-
+      double m_limit_contrast = find_host_contrast_magnitude(m_g[i],sersic_n[i],r50_kpc[i],z[i]);
       
-      hist_detected_disrupt.Count(catalogue_data,Total_Disruption_Rate_Observed_Rband(pow(10.,mbh_sigma),beta,z,T,m_limit_contrast,nuker_gamma));
+      hist_detected_disrupt.Count(catalogue_data,Total_Disruption_Rate_Observed_Rband(pow(10.,mbh_sigma[i]),beta,z[i],T,23.,nuker_gamma));
       //hist_detected_disrupt.Count(catalogue_data,Total_Disruption_Rate_Observed_Gband(pow(10.,mbh_sigma),beta,z,T,23.));
       
-      num_galaxies++;
 
       /*
       if (counter % 10000 == 0)
@@ -162,10 +171,17 @@ int main(int argc, char **argv)
       counter++;
       */
 
-
     }
 
-  fclose(pFile);
+  H5Fclose(file_id);
+  delete[] z;
+  delete[] m_g;
+  delete[] m_r;
+  delete[] mbh_bulge;
+  delete[] mbh_sigma;
+  delete[] mass;
+  delete[] sersic_n;
+  delete[] r50_kpc;
 
   clock_t end = clock();
     
@@ -241,7 +257,7 @@ int main(int argc, char **argv)
 
   hist_projected_gals = hist_gals.Create_Projected_Histogram(kept_axes);
   hist_projected_gals.Print_Histogram_2D(0,1);
-
+  
   ka[0] = 3;
   ka[1] = 4;
   kept_axes.assign(ka, ka + 2);
