@@ -339,6 +339,20 @@ void HistogramNd::Count(vector<int> coordinates, double weight)
   count[bin_index] += weight;
 }
 
+void HistogramNd::Set_All_Counts(vector<double> flattened_counts)
+{
+
+  count = flattened_counts;
+
+}
+
+vector<double> HistogramNd::Get_All_Counts()
+{
+
+  return count;
+
+}
+
 
 //***************************************************************
 //--------------------------------------------------------------

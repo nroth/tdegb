@@ -14,8 +14,7 @@ class HistogramNd {
  
 private:
 
-  // histogram name
-  string base_name;
+  string base_name; // histogram name
   vector<string> dimension_names;
   string datadir;
 
@@ -28,7 +27,7 @@ private:
   // bin array
   vector<LOCATE_ARRAY> bin_array; // one bin array for each dimension
   
-  vector<double> count; // Flattened. using a double because sometimes you'll have weighted counts
+  vector<double> count; // The actual count data. Flattened. Using doubles because sometimes you'll have weighted counts
 
   // Used for MPI
   //  void MPI_Allreduce_Array(double *arr);
@@ -79,6 +78,9 @@ public:
   //  void Normalize();
   //  void Rescale(double);
 
+  void Set_All_Counts(vector<double>); // when passed a flattened counts array
+
+  vector<double> Get_All_Counts();
 
   //Projections
   HistogramNd Create_Projected_Histogram(vector<int>);
