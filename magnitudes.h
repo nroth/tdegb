@@ -1,5 +1,5 @@
-#ifndef MAGNITUDES_H
-#define MAGNITUDES_H
+#ifndef _MAGNITUDES_H
+#define _MAGNITUDES_H
 
 #include <math.h>
 #include <algorithm>
@@ -23,7 +23,7 @@
 
 
 
-double PlanckFunctionFrequency(double nu, double T)
+static double PlanckFunctionFrequency(double nu, double T)
 {
 
   return 2. * H_PLANCK * pow(nu,3.)/( pow(C_LIGHT,2.) * (exp(H_PLANCK * nu /(K_BOLTZ * T)) - 1.) );
@@ -49,7 +49,7 @@ double UnexctinctedBBGbandFlux(double z, double T, double L)
 
 // Convert cgs F_nu to AB magnitude
 // Assumes Fnu in cgs
-double mABFromFnu(double F_nu)
+static double mABFromFnu(double F_nu)
 {
   if (F_nu <= 0) printf("ERROR: Fnu is negataive");
 
@@ -58,7 +58,7 @@ double mABFromFnu(double F_nu)
 
 // Given z and T, what is minimum Lbol that allows the k-corrected flux to exceed the value required to matach the survey apparent magnitude threshhold in the g band?
 // Here it is easy enough to solve for L. More generally might need to solve an equation with Brent method the way you do for finding Zmax
-double LCriticalGband(double z, double T, double m_limit_contrast)
+static double LCriticalGband(double z, double T, double m_limit_contrast)
 {
 
   double operating_limit = std::min(m_limit_contrast,M_APPARENT_THRESHHOLD);
@@ -66,7 +66,7 @@ double LCriticalGband(double z, double T, double m_limit_contrast)
 
 }
 
-double LCriticalRband(double z, double T, double m_limit_contrast)
+static double LCriticalRband(double z, double T, double m_limit_contrast)
 {
 
   double operating_limit = std::min(m_limit_contrast,M_APPARENT_THRESHHOLD);
@@ -76,13 +76,13 @@ double LCriticalRband(double z, double T, double m_limit_contrast)
   
 
 // will need to specify which band(s), and distinguish how this is handled in various bands
-double KCorrection()
+static double KCorrection()
 {
   return 0.;
 }
 
 // will need to distinguish how this is handled in various bands
-double AbsMagFromApparentMag(double apparent_mag, double z)
+static double AbsMagFromApparentMag(double apparent_mag, double z)
 {
 
   return apparent_mag - DistanceModulus(z) - KCorrection();
@@ -90,7 +90,7 @@ double AbsMagFromApparentMag(double apparent_mag, double z)
 }
 
 
-double ZmaxEqCondition(double this_z, double apparent_mag, double z_original)
+static double ZmaxEqCondition(double this_z, double apparent_mag, double z_original)
 {
 
   double abs_mag = AbsMagFromApparentMag(apparent_mag,z_original);
@@ -100,7 +100,7 @@ double ZmaxEqCondition(double this_z, double apparent_mag, double z_original)
 }
 
 #define SIGN(a,b) ((b) >= 0.0 ? fabs(a) : -fabs(a))
-double ZmaxBrentMethod(double apparent_mag, double z_original)
+static double ZmaxBrentMethod(double apparent_mag, double z_original)
 {
 
   double brent_solve_tolerance = 1.0e-2;
@@ -182,14 +182,14 @@ double ZmaxBrentMethod(double apparent_mag, double z_original)
 
 }
 
-double FindZmax(double apparent_mag, double z_original)
+static double FindZmax(double apparent_mag, double z_original)
 {
   return ZmaxBrentMethod(apparent_mag,z_original);
 }
 
 
 // see reference mentioned at https://ned.ipac.caltech.edu/level5/March05/Graham/Graham2.html
-double get_approx_sersic_bn(double n_sersic)
+static double get_approx_sersic_bn(double n_sersic)
 {
   return 1.9992 * n_sersic - 0.3271;
 }
@@ -197,7 +197,7 @@ double get_approx_sersic_bn(double n_sersic)
 
 // as found in https://ned.ipac.caltech.edu/level5/March05/Graham/Graham2.html
 // will be in units of magnitudes / arcsec^2 assuming m_tot in magnitude and r_eff_arcsec in arsec
-double get_mu_eff(double n_sersic, double m_tot,double r_eff_arcsec)
+static double get_mu_eff(double n_sersic, double m_tot,double r_eff_arcsec)
 {
   double bn = get_approx_sersic_bn(n_sersic);
     
@@ -207,7 +207,7 @@ double get_mu_eff(double n_sersic, double m_tot,double r_eff_arcsec)
 
 // as found in https://ned.ipac.caltech.edu/level5/March05/Graham/Graham2.html
 // I_e in mags / arcsec^2, r and r_e in arcsec
-double flux_enclosed_r_sersic(double r, double n_sersic,double r_e, double I_e)
+static double flux_enclosed_r_sersic(double r, double n_sersic,double r_e, double I_e)
 {
   
   double bn = get_approx_sersic_bn(n_sersic);
@@ -216,29 +216,29 @@ double flux_enclosed_r_sersic(double r, double n_sersic,double r_e, double I_e)
 
 }
 
-double I_from_mu(double mu)
+static double I_from_mu(double mu)
 {    
   return pow(10., mu/(-2.5));
 }
 
-double mu_from_I(double I)
+static double mu_from_I(double I)
 {    
   return -2.5 * log10(I);
 }
 
 // maybe consider moving this to physical constants
-double arcsec_from_radians(double radians)
+static double arcsec_from_radians(double radians)
 {    
   return radians * 180. * 3600./ PI;
 }
 
 // maybe consider moving this to physical constants
-double radian_from_arcsec(double r_arcsec)
+static double radian_from_arcsec(double r_arcsec)
 {    
   return r_arcsec * PI / (180. * 3600.);
 }
 
-double r_arcsec_from_kpc(double r_kpc, double z)
+static double r_arcsec_from_kpc(double r_kpc, double z)
 {
     
   double r_cm = r_kpc * 1000. * PARSEC; // convert to cm
@@ -249,7 +249,7 @@ double r_arcsec_from_kpc(double r_kpc, double z)
   return arcsec_from_radians(r_radians);
 }
 
-double r_kpc_from_arcsec(double r_arcsec,double z)
+static double r_kpc_from_arcsec(double r_arcsec,double z)
 {
   double r_rad = radian_from_arcsec(r_arcsec);
     
@@ -260,7 +260,7 @@ double r_kpc_from_arcsec(double r_arcsec,double z)
   return r_cm / (1000. * PARSEC);
 }
 
-double find_host_contrast_magnitude(double m_tot,double n_sersic,double re_kpc, double z)
+static double find_host_contrast_magnitude(double m_tot,double n_sersic,double re_kpc, double z)
 {
     
   double re_arcsec = r_arcsec_from_kpc(re_kpc,z);
@@ -274,7 +274,8 @@ double find_host_contrast_magnitude(double m_tot,double n_sersic,double re_kpc, 
   return m_psf - 2.5 * log10(pow(10.,HOST_CONTRAST_CUT / 2.5) - 1.);
 }
 
-double find_nuker_gammaprime_from_sersic(double n_sersic, double re_kpc, double z)
+
+static double Find_Nuker_Gammaprime_From_Sersic(double n_sersic, double re_kpc, double z)
 {
 
   double bn = get_approx_sersic_bn(n_sersic);
@@ -288,6 +289,5 @@ double find_nuker_gammaprime_from_sersic(double n_sersic, double re_kpc, double 
   
   
 }
-
 
 #endif

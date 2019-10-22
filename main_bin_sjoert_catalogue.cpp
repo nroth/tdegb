@@ -10,11 +10,10 @@
 #include "physical_constants.h"
 #include "histogramNd.h"
 #include "cdf.h"
-#include "individual_disruption.h"
-#include "magnitudes.h"
+#include "galaxy.h"
 #include "hdf5.h"
 #include "hdf5_hl.h"
-
+//#include "magnitudes.h"
 
 using std::vector;
 using std::string;
@@ -218,7 +217,13 @@ int main(int argc, char **argv)
 
   vector<double> catalogue_data(hist_gals_dimension);
 
-  Initialize_IMF(); // for computing volumetric disruption rates
+  Galaxy dummy_galaxy;
+  double imf_norm = dummy_galaxy.Determine_IMF_Normalization();
+
+  if (my_rank == 0)
+    {
+      printf("imf norm is %f\n", imf_norm);
+    }
 
   for (int i = 0; i < my_num_gals; i++)
     {
@@ -231,16 +236,22 @@ int main(int argc, char **argv)
 
       hist_gals.Count(catalogue_data);
 
-      double nuker_gamma = find_nuker_gammaprime_from_sersic(sersic_n[i],r50_kpc[i],z[i]);
+      double galaxy_info[6] = { mass[i], mbh_sigma[i], mbh_bulge[i], z[i], sersic_n[i], r50_kpc[i]};
 
-      hist_vol_disrupt.Count(catalogue_data,Total_Disruption_Rate(pow(10.,mbh_sigma[i]),z[i],nuker_gamma)); // the volumetric disruption rate histogram is just like the host galaxy histogram, but weighted by per-galaxy disruption rate. The z is needed to convert from galaxy time frame to observer rest framee
-      double beta = 1.;
       double T = 3.e4;
+      double beta = 1.;
+      Galaxy this_galaxy(galaxy_info, imf_norm  ,T,beta ); //temporarilty hard-coding the 
+
+      double total_disruption_rate_volumetric = this_galaxy.Total_Disruption_Rate();
+
+      hist_vol_disrupt.Count(catalogue_data,total_disruption_rate_volumetric); // the volumetric disruption rate histogram is just like the host galaxy histogram, but weighted by per-galaxy disruption rate. The z is needed to convert from galaxy time frame to observer rest framee
 
       double m_limit_contrast = find_host_contrast_magnitude(m_g[i],sersic_n[i],r50_kpc[i],z[i]);
 
       //      hist_detected_disrupt.Count(catalogue_data,Total_Disruption_Rate_Observed_Rband(pow(10.,mbh_sigma[i]),beta,z[i],T,23.,nuker_gamma));
-      hist_detected_disrupt.Count(catalogue_data,Total_Disruption_Rate_Observed_Rband(pow(10.,mbh_sigma[i]),beta,z[i],T,m_limit_contrast,nuker_gamma));
+
+      double total_disruption_rate_obs_rband = this_galaxy.Total_Disruption_Rate_Observed_Rband(m_limit_contrast);
+      hist_detected_disrupt.Count(catalogue_data, total_disruption_rate_obs_rband);
 
     }
 
