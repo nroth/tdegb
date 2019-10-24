@@ -233,16 +233,14 @@ int main(int argc, char **argv)
 
 
       Galaxy this_galaxy(galaxy_info);
+      Disruption this_disruption(this_galaxy);
 
-      double total_disruption_rate_volumetric = Total_Disruption_Rate(this_galaxy);
+	double total_disruption_rate_volumetric = Total_Disruption_Rate(this_galaxy, this_disruption);
 
       hist_vol_disrupt.Count(catalogue_data,total_disruption_rate_volumetric); // the volumetric disruption rate histogram is just like the host galaxy histogram, but weighted by per-galaxy disruption rate. The z is needed to convert from galaxy time frame to observer rest framee
 
 
-      double T = 3.e4;
-      double beta = 1.;
-
-      double total_rate_obs_rband = Total_Disruption_Rate_Observed_Rband(this_galaxy,T,beta);
+      double total_rate_obs_rband = Total_Disruption_Rate_Observed_Rband(this_galaxy,this_disruption);
 
       hist_detected_disrupt.Count(catalogue_data,total_rate_obs_rband);
 

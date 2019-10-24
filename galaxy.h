@@ -30,6 +30,7 @@ class Galaxy {
   double mbh; // what you will take to be the actual mbh, not what would be inferred from a survey by correlations.
 
   // include star formation history information? Time since starburst, durtaion of starburst?
+  // could be used to set the upper truncation of IMF to make the approximate present-day mass function
 
   double imf_normalization;
 
