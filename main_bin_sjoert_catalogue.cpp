@@ -13,7 +13,7 @@
 #include "galaxy.h"
 #include "hdf5.h"
 #include "hdf5_hl.h"
-//#include "magnitudes.h"
+#include "integration_helper_functions.h"
 
 using std::vector;
 using std::string;
@@ -140,6 +140,7 @@ int main(int argc, char **argv)
 
   
   for (int i = 0; i < n_procs; ++i)
+
     {
       if (remainder_count < remainder)
 	{
@@ -217,41 +218,33 @@ int main(int argc, char **argv)
 
   vector<double> catalogue_data(hist_gals_dimension);
 
-  Galaxy dummy_galaxy;
-  double imf_norm = dummy_galaxy.Determine_IMF_Normalization();
-
-  if (my_rank == 0)
-    {
-      printf("imf norm is %f\n", imf_norm);
-    }
-
   for (int i = 0; i < my_num_gals; i++)
     {
 
-      catalogue_data[0] = log10(mass[i]);
+      catalogue_data[0] = log10(mass[i]); // stored as value, we want log
       catalogue_data[1] = m_g[i] - m_r[i];
-      catalogue_data[2] = mbh_bulge[i];
-      catalogue_data[3] = mbh_sigma[i];
+      catalogue_data[2] = mbh_bulge[i];// stored as log
+      catalogue_data[3] = mbh_sigma[i]; // stored as log
       catalogue_data[4] = z[i];
 
       hist_gals.Count(catalogue_data);
 
-      double galaxy_info[6] = { mass[i], mbh_sigma[i], mbh_bulge[i], z[i], sersic_n[i], r50_kpc[i]};
+      double galaxy_info[8] = { mass[i], mbh_sigma[i], mbh_bulge[i], z[i], sersic_n[i], r50_kpc[i], m_g[i], m_r[i]};
 
-      double T = 3.e4;
-      double beta = 1.;
-      Galaxy this_galaxy(galaxy_info, imf_norm  ,T,beta ); //temporarilty hard-coding the 
 
-      double total_disruption_rate_volumetric = this_galaxy.Total_Disruption_Rate();
+      Galaxy this_galaxy(galaxy_info);
+
+      double total_disruption_rate_volumetric = Total_Disruption_Rate(this_galaxy);
 
       hist_vol_disrupt.Count(catalogue_data,total_disruption_rate_volumetric); // the volumetric disruption rate histogram is just like the host galaxy histogram, but weighted by per-galaxy disruption rate. The z is needed to convert from galaxy time frame to observer rest framee
 
-      double m_limit_contrast = find_host_contrast_magnitude(m_g[i],sersic_n[i],r50_kpc[i],z[i]);
 
-      //      hist_detected_disrupt.Count(catalogue_data,Total_Disruption_Rate_Observed_Rband(pow(10.,mbh_sigma[i]),beta,z[i],T,23.,nuker_gamma));
+      double T = 3.e4;
+      double beta = 1.;
 
-      double total_disruption_rate_obs_rband = this_galaxy.Total_Disruption_Rate_Observed_Rband(m_limit_contrast);
-      hist_detected_disrupt.Count(catalogue_data, total_disruption_rate_obs_rband);
+      double total_rate_obs_rband = Total_Disruption_Rate_Observed_Rband(this_galaxy,T,beta);
+
+      hist_detected_disrupt.Count(catalogue_data,total_rate_obs_rband);
 
     }
 
@@ -306,14 +299,16 @@ int main(int argc, char **argv)
   float elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
   printf("#\n# It took %f seconds to bin %d entries\n",elapsed_secs, num_galaxies);
 
+  vector<int> kept_axes(2);
+  int ka[2];
+
   if (my_rank == 0)
     {
   
   // Print out some histograms of galaxy properties
   HistogramNd hist_projected_gals;
   
-  vector<int> kept_axes(2);
-  int ka[2];
+
     
   ka[0] = 0;
   ka[1] = 1;
@@ -385,6 +380,7 @@ int main(int argc, char **argv)
   hist_projected_gals = hist_gals.Create_Projected_Histogram(kept_axes);
   hist_projected_gals.Print_Histogram_2D(0,1);
 
+    }
   /*
 
   ka[0] = 0;
@@ -426,6 +422,9 @@ int main(int argc, char **argv)
 
   // Print out some histograms of volumetric disruption properties
 
+
+  if (my_rank == 1)
+    {
   HistogramNd hist_projected_vol_disrupt;
   
   ka[0] = 0;
@@ -494,6 +493,7 @@ int main(int argc, char **argv)
   ka[0] = 3;
   ka[1] = 4;
   kept_axes.assign(ka, ka + 2);
+    }
 
   /*
 
@@ -542,7 +542,8 @@ int main(int argc, char **argv)
 
   // Print out some histograms of detectable disruption
 
-
+  if (my_rank == 2)
+    {
   HistogramNd hist_projected_detected_disrupt;
   
   ka[0] = 0;
