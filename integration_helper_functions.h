@@ -1,5 +1,6 @@
 #include <math.h>
 #include <gsl/gsl_integration.h>
+#include <gsl/gsl_rng.h>
 #include "physical_constants.h"
 #include "galaxy.h"
 #include "disruption.h"
@@ -112,7 +113,10 @@ double Total_Disruption_Rate_Observed_Rband(Galaxy gal, Disruption disrupt)
   // Keeping m_g here for testing purposes, really should be m_r
   double m_limit_contrast = find_host_contrast_magnitude(gal);
 
-  double L_c = LCriticalRband(gal,disrupt,m_limit_contrast);
+  double T = disrupt.Get_T();
+  double z = gal.Get_z();
+
+  double L_c = LCriticalRband(gal,T,z,m_limit_contrast);
   //  printf("L_c is %e\n", L_c);
 
   int grid_size = 128;
@@ -131,10 +135,86 @@ double Total_Disruption_Rate_Observed_Rband(Galaxy gal, Disruption disrupt)
 
   gsl_integration_workspace_free(workspace);
 
-  double z = gal.Get_z();
+
 
   return 1./(1. + z) * result; // the 1/(1+z) factor converts from galaxy proper time units to observer time units
 
+
+
+}
+
+
+// could this be made faster by using a better "proposal distribution?". 
+double Rejection_Sample_Mstar(gsl_rng *rangen, Galaxy gal)
+{
+    double mstar_min = MSTAR_MIN; //really will want to allow this to be different in different galaxies
+    double mstar_max = MSTAR_MAX;
+  
+    double imf_norm = gal.Get_imf_norm();
+
+    // careful about this if you end up using different IMF that is not monotonically decreasing with stellar mass
+    double envelope = gal.Kroupa_IMF_for_value(mstar_min, imf_norm);
+
+  while (true)
+  {
+    // pick a random mstar between minimum and maximum allowed values, in units of solar mass
+    // this is the "proposal distribution"
+    double mstar_e = mstar_min + (mstar_max - mstar_min)*gsl_rng_uniform(rangen);
+
+    // calculate the probability from the present day mass function
+    double P = 1./envelope * gal.Kroupa_IMF_for_value(mstar_e, imf_norm);
+    if (gsl_rng_uniform(rangen) < P) return mstar_e;
+  }
+
+
+}
+
+
+double Total_Disruption_Rate_Volumetric_Random_Mstar(Galaxy gal, Disruption disrupt, gsl_rng *rangen)
+{
+
+
+
+  double m_limit_contrast = find_host_contrast_magnitude(gal);
+
+  double z = gal.Get_z();
+  double mbh = gal.Get_Mbh();
+
+  // later will randomly sample this, too
+  double T = 3.e4;
+
+  // later will need to move this into the event generation loop. 
+  //  double L_c = LCriticalRband(gal,T, z, m_limit_contrast);
+  //  printf("L_c is %e\n", L_c);
+
+  int num_trials = 100;
+  double observed_event_accumulator = 0;
+
+  for (int i = 0; i < num_trials; ++i)
+    {
+
+      // sample mstar
+      double mstar = Rejection_Sample_Mstar(rangen, gal);
+
+      double mhills = disrupt.Hills_Mass(mstar);
+
+      if (mbh > mhills) continue;
+      else
+	{
+	  // will then have to do the flare observability criteria for each flare when doing detected disrupt. For volumteric disrupt, accept all of these
+
+	  observed_event_accumulator += 1.;
+
+	}
+
+    }
+
+  // this can be done at the end to save time
+  // normalize by number of trials
+  observed_event_accumulator /= (double) num_trials;
+  observed_event_accumulator *= RATE_NORMALIZATION_COMBINED * pow(gal.Get_nuker_gammaprime()/0.4,RATE_POWERLAW_NUKER); // rate is still in galaxy proper time
+  
+  return 1./(1. + z) * observed_event_accumulator;
 
 
 }

@@ -61,11 +61,8 @@ static double mABFromFnu(double F_nu)
 // Given z and T, what is minimum Lbol that allows the k-corrected flux to exceed the value required to matach the survey apparent magnitude threshhold in the g band?
 // Here it is easy enough to solve for L. More generally might need to solve an equation with Brent method the way you do for finding Zmax
 
-static double LCriticalRband(Galaxy gal, Disruption disrupt, double m_limit_contrast)
+static double LCriticalRband(Galaxy gal,double T, double z, double m_limit_contrast)
 {
-
-  double T = disrupt.Get_T();
-  double z = gal.Get_z();
   
   double operating_limit = std::min(m_limit_contrast,M_APPARENT_THRESHHOLD);
   return pow(10., (operating_limit + 48.6)/-2.5) * STEF_BOLTZ * pow(T,4.) * 4. * PI * pow(LuminosityDistance(z),2.)/( (1. + z) * PI * PlanckFunctionFrequency(NU_RBAND * (1. + z), T));

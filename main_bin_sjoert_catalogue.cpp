@@ -218,6 +218,14 @@ int main(int argc, char **argv)
 
   vector<double> catalogue_data(hist_gals_dimension);
 
+  //Set up random number stuff
+  gsl_rng *rangen;
+  const gsl_rng_type * TypeR;
+  gsl_rng_env_setup();
+  gsl_rng_default_seed = (unsigned int)time(NULL);
+  TypeR = gsl_rng_default;
+  rangen = gsl_rng_alloc (TypeR);
+
   for (int i = 0; i < my_num_gals; i++)
     {
 
@@ -235,14 +243,15 @@ int main(int argc, char **argv)
       Galaxy this_galaxy(galaxy_info);
       Disruption this_disruption(this_galaxy);
 
-	double total_disruption_rate_volumetric = Total_Disruption_Rate(this_galaxy, this_disruption);
+      double total_disruption_rate_volumetric = Total_Disruption_Rate_Volumetric_Random_Mstar(this_galaxy, this_disruption, rangen);
 
       hist_vol_disrupt.Count(catalogue_data,total_disruption_rate_volumetric); // the volumetric disruption rate histogram is just like the host galaxy histogram, but weighted by per-galaxy disruption rate. The z is needed to convert from galaxy time frame to observer rest framee
 
-
+      /*
       double total_rate_obs_rband = Total_Disruption_Rate_Observed_Rband(this_galaxy,this_disruption);
 
       hist_detected_disrupt.Count(catalogue_data,total_rate_obs_rband);
+      */
 
     }
 
@@ -420,7 +429,7 @@ int main(int argc, char **argv)
 
   // Print out some histograms of volumetric disruption properties
 
-
+  
   if (my_rank == 1)
     {
   HistogramNd hist_projected_vol_disrupt;
@@ -540,6 +549,7 @@ int main(int argc, char **argv)
 
   // Print out some histograms of detectable disruption
 
+  /*
   if (my_rank == 2)
     {
   HistogramNd hist_projected_detected_disrupt;
@@ -615,7 +625,7 @@ int main(int argc, char **argv)
   hist_projected_detected_disrupt.Print_Histogram_2D(0,1);
 
     }
-
+  */
     MPI_Finalize();
 
 }
