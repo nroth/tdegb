@@ -6,20 +6,6 @@
 #include "disruption.h"
 #include "magnitudes.h"
 
-// both mbh and mstar in solar masses
-double Stellar_Disruption_Rate(double mstar, Galaxy gal, Disruption disrupt)
-{
-
-  double mbh = gal.Get_Mbh();
-  //consider using the exp(-M^2) suppression here as suggested by Kesden 2012, instead of a sharp and total cutoff
-  double mhills = disrupt.Hills_Mass(mstar);
-  if (mbh > mhills) return 0;
-
-  //  return RATE_NORMALIZATION_COMBINED * pow(mbh/1.e8,RATE_POWERLAW); // rate is still in galaxy proper time
-  return RATE_NORMALIZATION_COMBINED * pow(gal.Get_nuker_gammaprime()/0.4,RATE_POWERLAW_NUKER); // rate is still in galaxy proper time
-  
-}
-
 
 // might end up changing the scope of some of these variables, like mbh, if all this gets moved to a galaxy object
 double Fraction_Observed(double mstar, double L_c, Galaxy gal, Disruption disrupt)
@@ -41,7 +27,6 @@ double Fraction_Observed(double mstar, double L_c, Galaxy gal, Disruption disrup
 
 
 }
-
 
 
 // could this be made faster by using a better "proposal distribution?". 
@@ -67,6 +52,24 @@ double Rejection_Sample_Mstar(gsl_rng *rangen, Galaxy gal)
   }
 
 
+}
+
+
+//Not rejection sampling ... inverse transform sampling
+double Sample_Peak_L(gsl_rng *rangen, double mstar, double L_c, Galaxy gal, Disruption disrupt)
+{
+
+  // work in terms of x = log10(L) - log10(Lmax)
+
+  double L_max = disrupt.Max_Luminosity(mstar);  // will also be used to convert the sampled x to a phsyical L
+
+  double ymin = pow( pow(10., MIN_LOG_LBOL)/L_max ,LF_LOG_POWERLAW);
+
+  double u = gsl_rng_uniform(rangen);
+
+  double this_y = ymin/(1. - u * (1. - ymin));
+
+  return L_max * pow(this_y,1./LF_LOG_POWERLAW);
 }
 
 
@@ -105,10 +108,12 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Galaxy gal,  double& vol_rate
 
 	  double T = disrupt.Get_T();
 	  double L_c = LCriticalRband(gal,T,z,m_limit_contrast); // careful with the band here
+	  double this_peak_L = Sample_Peak_L(rangen,mstar, L_c, gal, disrupt);
 
-	  double frac = Fraction_Observed(mstar,L_c,gal,disrupt);
-
-	  detected_rate_accumulator += frac;
+	  if (this_peak_L > L_c)
+	    {
+	      detected_rate_accumulator += 1.;
+	    }
 
 	}
 
