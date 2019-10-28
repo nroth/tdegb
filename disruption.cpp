@@ -1,9 +1,9 @@
 #include <math.h>
+#include <stdio.h>
 #include <gsl/gsl_integration.h>
 #include "physical_constants.h"
 #include "galaxy.h"
-#include "magnitudes.h"
-
+#include "disruption.h"
 
 
 Disruption::Disruption(Galaxy gal)

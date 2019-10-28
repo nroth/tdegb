@@ -5,31 +5,11 @@
 #include "galaxy.h"
 #include "disruption.h"
 #include "magnitudes.h"
+#include "histogramNd.h"
 
 
-// might end up changing the scope of some of these variables, like mbh, if all this gets moved to a galaxy object
-double Fraction_Observed(double mstar, double L_c, Galaxy gal, Disruption disrupt)
-{
-
-  double L_max = disrupt.Max_Luminosity(mstar);
-
-  if (L_max <= L_c) return 0;
-
-  double logLmax = log10(L_max);
-  if (logLmax <= MIN_LOG_LBOL) return 0;
-  
-  double x_c = log10(L_c) - logLmax;
-  double x_min = MIN_LOG_LBOL - logLmax;
-
-  if (x_c < x_min) return 1;
-
-  return ((pow(10., -1. * LF_LOG_POWERLAW * x_c) - 1.)/(pow(10., -1. * LF_LOG_POWERLAW * x_min) - 1.));
-
-
-}
-
-
-// could this be made faster by using a better "proposal distribution?". 
+// Rejection sampling to avoid messiness of integrating piecewise function
+// could this be made faster by using a better "proposal distribution?".
 double Rejection_Sample_Mstar(gsl_rng *rangen, Galaxy gal)
 {
     double mstar_min = MSTAR_MIN; //really will want to allow this to be different in different galaxies
@@ -55,7 +35,7 @@ double Rejection_Sample_Mstar(gsl_rng *rangen, Galaxy gal)
 }
 
 
-//Not rejection sampling ... inverse transform sampling
+//Not rejection sampling, inverse transform sampling
 double Sample_Peak_L(gsl_rng *rangen, double mstar, double L_c, Galaxy gal, Disruption disrupt)
 {
 
@@ -73,13 +53,14 @@ double Sample_Peak_L(gsl_rng *rangen, double mstar, double L_c, Galaxy gal, Disr
 }
 
 
-void Sample_Disruption_Parameters(gsl_rng *rangen, Galaxy gal,  double& vol_rate_accumulator, double& detected_rate_accumulator)
+void Sample_Disruption_Parameters(gsl_rng *rangen, Galaxy gal,  double& vol_rate_accumulator, double& detected_rate_accumulator, HistogramNd& hist_detected_flares)
 {
 
   double m_limit_contrast = find_host_contrast_magnitude(gal); // in the future, maybe specify which band this is for
 
-  double z = gal.Get_z();
+
   double mbh = gal.Get_Mbh();
+  double z = gal.Get_z();
 
   // later will need to move this into the event generation loop. 
   //  double L_c = LCriticalRband(gal,T, z, m_limit_contrast);
@@ -88,6 +69,8 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Galaxy gal,  double& vol_rate
   int num_trials = 100;
   vol_rate_accumulator = 0;
   detected_rate_accumulator = 0;
+
+  vector<double> flare_properties(hist_detected_flares.Get_Dimension());
 
   for (int i = 0; i < num_trials; ++i)
     {
@@ -105,15 +88,33 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Galaxy gal,  double& vol_rate
 	  // will then have to do the flare observability criteria for each flare when doing detected disrupt. For volumteric disrupt, accept all of these
 
 	  vol_rate_accumulator += 1.;
+	  
 
 	  double T = disrupt.Get_T();
 	  double L_c = LCriticalRband(gal,T,z,m_limit_contrast); // careful with the band here
 	  double this_peak_L = Sample_Peak_L(rangen,mstar, L_c, gal, disrupt);
 
+
+
 	  if (this_peak_L > L_c)
 	    {
 	      detected_rate_accumulator += 1.;
+
+	      double d_L = LuminosityDistance(z);
+	      double m_g = Flare_m_g(this_peak_L, T, z, d_L);
+	      double m_r = Flare_m_r(this_peak_L, T, z, d_L);
+
+	      //	      double flare_properties[5] = {m_g,m_r,z,Lbol_peak,mbh};
+	      flare_properties[0] = m_g;
+	      flare_properties[1] = m_r;
+	      flare_properties[2] = z;
+	      flare_properties[3] = this_peak_L;
+	      flare_properties[4] = mbh;
+
+	      hist_detected_flares.Count(flare_properties);
 	    }
+
+
 
 	}
 

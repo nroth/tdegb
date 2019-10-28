@@ -74,26 +74,14 @@ int main(int argc, char **argv)
   bin_specs.push_back(spec);
   dimension_names.push_back(name);
 
-  /*
-  name = "sersic";
-  spec[0] = 0.;   // start, stop, delta
-  spec[1] = 5.;
-  spec[2] = 0.25;
-
-  bin_specs.push_back(spec);
-  dimension_names.push_back(name);
-  */
-
   base_name = "gals";
   HistogramNd hist_gals(bin_specs, dimension_names, base_name);
 
   int hist_gals_dimension = hist_gals.Get_Dimension();
   int n_bins_total = hist_gals.Get_Num_Bins_Total();
 
-  //  printf("Galaxy histogram dimension is %d\n", hist_gals_dimension);
-  //  printf("Total number of bins in galaxy histogram is %d\n", n_bins_total);
-
-  // Define the axes for a histogram of the volumetric disruption properties. For now, give it the same axes as for the host galaxies, but later will need to give it other axes like flare luminosity, flare temperature, maybe redshift
+ 
+  ///// DISRUPTION HISTOGRAMS
 
   HistogramNd hist_vol_disrupt;
   hist_vol_disrupt = hist_gals;
@@ -105,9 +93,49 @@ int main(int argc, char **argv)
   base_name = "detected_disrupt";
   hist_detected_disrupt.Set_Base_Name(base_name);
 
-  // And maybe later you'll make another histogram for the *observed* flares
+  ///////// FLARE HISTOGRAMS
+  bin_specs.clear();
+  dimension_names.clear();
+  
+  name = "m_g";
+  spec[0] = 12.;   // start, stop, delta
+  spec[1] = 22;
+  spec[2] = 0.25;
+  bin_specs.push_back(spec);
+  dimension_names.push_back(name);
 
-  // Start reading in the catalogue
+  name = "m_r";
+  spec[0] = 12.;   // start, stop, delta
+  spec[1] = 22;
+  spec[2] = 0.25;
+  bin_specs.push_back(spec);
+  dimension_names.push_back(name);
+
+  name = "z";
+  spec[0] = 0.;   // start, stop, delta
+  spec[1] = 1.02;
+  spec[2] = 0.05;
+  bin_specs.push_back(spec);
+  dimension_names.push_back(name);
+
+  name = "Lbol_peak";
+  spec[0] = 0.;   // start, stop, delta
+  spec[1] = 1.02;
+  spec[2] = 0.05;
+  bin_specs.push_back(spec);
+  dimension_names.push_back(name);
+
+  name = "mbh"; // might be redundant, but might as well
+  spec[0] = 3.;   // start, stop, delta
+  spec[1] = 9.;
+  spec[2] = 0.3;
+  bin_specs.push_back(spec);
+  dimension_names.push_back(name);
+
+  base_name = "flares_detected";
+  HistogramNd hist_detected_flares(bin_specs, dimension_names, base_name);
+
+  ////////// Start reading in the catalogue
 
   clock_t begin = clock();
 
@@ -226,6 +254,8 @@ int main(int argc, char **argv)
   TypeR = gsl_rng_default;
   rangen = gsl_rng_alloc (TypeR);
 
+
+  /////// MAIN LOOP
   for (int i = 0; i < my_num_gals; i++)
     {
 
@@ -245,7 +275,7 @@ int main(int argc, char **argv)
       double vol_rate_weight;
       double detected_rate_weight;
 
-      Sample_Disruption_Parameters(rangen,this_galaxy,vol_rate_weight, detected_rate_weight);
+      Sample_Disruption_Parameters(rangen,this_galaxy,vol_rate_weight, detected_rate_weight,hist_detected_flares);
 
       hist_vol_disrupt.Count(catalogue_data, vol_rate_weight);
       hist_detected_disrupt.Count(catalogue_data, detected_rate_weight);
@@ -310,317 +340,72 @@ int main(int argc, char **argv)
   if (my_rank == 0)
     {
   
-  // Print out some histograms of galaxy properties
-  HistogramNd hist_projected_gals;
+      // Print out some histograms of galaxy properties
+      HistogramNd hist_projected_gals;
   
+      for (int i = 1; i < hist_gals_dimension; i++)
+	for (int j = i-1; j < i; j++)
+	  {
 
-    
-  ka[0] = 0;
-  ka[1] = 1;
-  kept_axes.assign(ka, ka + 2);
+	    ka[0] = j;
+	    ka[1] = i;
+	    kept_axes.assign(ka, ka + 2);
+	    hist_projected_gals = hist_gals.Create_Projected_Histogram(kept_axes);
+	    hist_projected_gals.Print_Histogram_2D(0,1);
+	    
+	  }
 
-  hist_projected_gals = hist_gals.Create_Projected_Histogram(kept_axes);
-  hist_projected_gals.Print_Histogram_2D(0,1);
 
-  ka[0] = 0;
-  ka[1] = 2;
-  kept_axes.assign(ka, ka + 2);
-
-  hist_projected_gals = hist_gals.Create_Projected_Histogram(kept_axes);
-  hist_projected_gals.Print_Histogram_2D(0,1);
-
-  ka[0] = 1;
-  ka[1] = 2;
-  kept_axes.assign(ka, ka + 2);
-
-  hist_projected_gals = hist_gals.Create_Projected_Histogram(kept_axes);
-  hist_projected_gals.Print_Histogram_2D(0,1);
-
-  ka[0] = 0;
-  ka[1] = 3;
-  kept_axes.assign(ka, ka + 2);
-
-  hist_projected_gals = hist_gals.Create_Projected_Histogram(kept_axes);
-  hist_projected_gals.Print_Histogram_2D(0,1);
-
-  ka[0] = 1;
-  ka[1] = 3;
-  kept_axes.assign(ka, ka + 2);
-
-  hist_projected_gals = hist_gals.Create_Projected_Histogram(kept_axes);
-  hist_projected_gals.Print_Histogram_2D(0,1);
-
-  ka[0] = 2;
-  ka[1] = 3;
-  kept_axes.assign(ka, ka + 2);
-
-  hist_projected_gals = hist_gals.Create_Projected_Histogram(kept_axes);
-  hist_projected_gals.Print_Histogram_2D(0,1);
-
-  ka[0] = 0;
-  ka[1] = 4;
-  kept_axes.assign(ka, ka + 2);
-
-  hist_projected_gals = hist_gals.Create_Projected_Histogram(kept_axes);
-  hist_projected_gals.Print_Histogram_2D(0,1);
-
-  ka[0] = 1;
-  ka[1] = 4;
-  kept_axes.assign(ka, ka + 2);
-
-  hist_projected_gals = hist_gals.Create_Projected_Histogram(kept_axes);
-  hist_projected_gals.Print_Histogram_2D(0,1);
-
-  ka[0] = 2;
-  ka[1] = 4;
-  kept_axes.assign(ka, ka + 2);
-
-  hist_projected_gals = hist_gals.Create_Projected_Histogram(kept_axes);
-  hist_projected_gals.Print_Histogram_2D(0,1);
+  HistogramNd hist_projected_flares;
   
-  ka[0] = 3;
-  ka[1] = 4;
-  kept_axes.assign(ka, ka + 2);
+  for (int i = 1; i < hist_detected_flares.Get_Dimension(); i++)
+    for (int j = i-1; j < i; j++)
+      {
 
-  hist_projected_gals = hist_gals.Create_Projected_Histogram(kept_axes);
-  hist_projected_gals.Print_Histogram_2D(0,1);
+	ka[0] = j;
+	ka[1] = i;
+	kept_axes.assign(ka, ka + 2);
+	hist_projected_flares = hist_detected_flares.Create_Projected_Histogram(kept_axes);
+	hist_projected_flares.Print_Histogram_2D(0,1);
 
+      }
+  
     }
-  /*
 
-  ka[0] = 0;
-  ka[1] = 5;
-  kept_axes.assign(ka, ka + 2);
-
-  hist_projected_gals = hist_gals.Create_Projected_Histogram(kept_axes);
-  hist_projected_gals.Print_Histogram_2D(0,1);
-
-  ka[0] = 1;
-  ka[1] = 5;
-  kept_axes.assign(ka, ka + 2);
-
-  hist_projected_gals = hist_gals.Create_Projected_Histogram(kept_axes);
-  hist_projected_gals.Print_Histogram_2D(0,1);
-
-  ka[0] = 2;
-  ka[1] = 5;
-  kept_axes.assign(ka, ka + 2);
-
-  hist_projected_gals = hist_gals.Create_Projected_Histogram(kept_axes);
-  hist_projected_gals.Print_Histogram_2D(0,1);
-
-  ka[0] = 3;
-  ka[1] = 5;
-  kept_axes.assign(ka, ka + 2);
-
-  hist_projected_gals = hist_gals.Create_Projected_Histogram(kept_axes);
-  hist_projected_gals.Print_Histogram_2D(0,1);
-
-  ka[0] = 4;
-  ka[1] = 5;
-  kept_axes.assign(ka, ka + 2);
-
-  hist_projected_gals = hist_gals.Create_Projected_Histogram(kept_axes);
-  hist_projected_gals.Print_Histogram_2D(0,1);
-
-  */
-
-  // Print out some histograms of volumetric disruption properties
-
+  
   
   if (my_rank == 1)
     {
-  HistogramNd hist_projected_vol_disrupt;
+      HistogramNd hist_projected_vol_disrupt;
   
-  ka[0] = 0;
-  ka[1] = 1;
-  kept_axes.assign(ka, ka + 2);
+      for (int i = 1; i < hist_gals_dimension; i++)
+	for (int j = i-1; j < i; j++)
+	  {
 
-  hist_projected_vol_disrupt = hist_vol_disrupt.Create_Projected_Histogram(kept_axes);
-  hist_projected_vol_disrupt.Print_Histogram_2D(0,1);
+	    ka[0] = j;
+	    ka[1] = i;
+	    kept_axes.assign(ka, ka + 2);
+	    hist_projected_vol_disrupt = hist_vol_disrupt.Create_Projected_Histogram(kept_axes);
+	    hist_projected_vol_disrupt.Print_Histogram_2D(0,1);
+	  }
 
-  ka[0] = 0;
-  ka[1] = 2;
-  kept_axes.assign(ka, ka + 2);
-
-  hist_projected_vol_disrupt = hist_vol_disrupt.Create_Projected_Histogram(kept_axes);
-  hist_projected_vol_disrupt.Print_Histogram_2D(0,1);
-
-  ka[0] = 1;
-  ka[1] = 2;
-  kept_axes.assign(ka, ka + 2);
-
-  hist_projected_vol_disrupt = hist_vol_disrupt.Create_Projected_Histogram(kept_axes);
-  hist_projected_vol_disrupt.Print_Histogram_2D(0,1);
-
-  ka[0] = 0;
-  ka[1] = 3;
-  kept_axes.assign(ka, ka + 2);
-
-  hist_projected_vol_disrupt = hist_vol_disrupt.Create_Projected_Histogram(kept_axes);
-  hist_projected_vol_disrupt.Print_Histogram_2D(0,1);
-
-  ka[0] = 1;
-  ka[1] = 3;
-  kept_axes.assign(ka, ka + 2);
-
-  hist_projected_vol_disrupt = hist_vol_disrupt.Create_Projected_Histogram(kept_axes);
-  hist_projected_vol_disrupt.Print_Histogram_2D(0,1);
-
-  ka[0] = 2;
-  ka[1] = 3;
-  kept_axes.assign(ka, ka + 2);
-
-  hist_projected_vol_disrupt = hist_vol_disrupt.Create_Projected_Histogram(kept_axes);
-  hist_projected_vol_disrupt.Print_Histogram_2D(0,1);
-
-  ka[0] = 0;
-  ka[1] = 4;
-  kept_axes.assign(ka, ka + 2);
-
-  hist_projected_vol_disrupt = hist_vol_disrupt.Create_Projected_Histogram(kept_axes);
-  hist_projected_vol_disrupt.Print_Histogram_2D(0,1);
-
-  ka[0] = 1;
-  ka[1] = 4;
-  kept_axes.assign(ka, ka + 2);
-
-  hist_projected_vol_disrupt = hist_vol_disrupt.Create_Projected_Histogram(kept_axes);
-  hist_projected_vol_disrupt.Print_Histogram_2D(0,1);
-
-  ka[0] = 2;
-  ka[1] = 4;
-  kept_axes.assign(ka, ka + 2);
-
-  hist_projected_vol_disrupt = hist_vol_disrupt.Create_Projected_Histogram(kept_axes);
-  hist_projected_vol_disrupt.Print_Histogram_2D(0,1);
-
-  ka[0] = 3;
-  ka[1] = 4;
-  kept_axes.assign(ka, ka + 2);
     }
-
-  /*
-
-  hist_projected_vol_disrupt = hist_vol_disrupt.Create_Projected_Histogram(kept_axes);
-  hist_projected_vol_disrupt.Print_Histogram_2D(0,1);
-
-  ka[0] = 0;
-  ka[1] = 5;
-  kept_axes.assign(ka, ka + 2);
-
-  hist_projected_vol_disrupt = hist_vol_disrupt.Create_Projected_Histogram(kept_axes);
-  hist_projected_vol_disrupt.Print_Histogram_2D(0,1);
-
-  ka[0] = 1;
-  ka[1] = 5;
-  kept_axes.assign(ka, ka + 2);
-
-  hist_projected_vol_disrupt = hist_vol_disrupt.Create_Projected_Histogram(kept_axes);
-  hist_projected_vol_disrupt.Print_Histogram_2D(0,1);
-
-  ka[0] = 2;
-  ka[1] = 5;
-  kept_axes.assign(ka, ka + 2);
-
-  hist_projected_vol_disrupt = hist_vol_disrupt.Create_Projected_Histogram(kept_axes);
-  hist_projected_vol_disrupt.Print_Histogram_2D(0,1);
-
-  ka[0] = 3;
-  ka[1] = 5;
-  kept_axes.assign(ka, ka + 2);
-
-  hist_projected_vol_disrupt = hist_vol_disrupt.Create_Projected_Histogram(kept_axes);
-  hist_projected_vol_disrupt.Print_Histogram_2D(0,1);
-
-  ka[0] = 4;
-  ka[1] = 5;
-  kept_axes.assign(ka, ka + 2);
-
-  hist_projected_vol_disrupt = hist_vol_disrupt.Create_Projected_Histogram(kept_axes);
-  hist_projected_vol_disrupt.Print_Histogram_2D(0,1);
-
-
-  */
-
-  /////////
-
-  // Print out some histograms of detectable disruption
-
+  
 
   if (my_rank == 2)
     {
-  HistogramNd hist_projected_detected_disrupt;
-  
-  ka[0] = 0;
-  ka[1] = 1;
-  kept_axes.assign(ka, ka + 2);
+      HistogramNd hist_projected_detected_disrupt;
 
-  hist_projected_detected_disrupt = hist_detected_disrupt.Create_Projected_Histogram(kept_axes);
-  hist_projected_detected_disrupt.Print_Histogram_2D(0,1);
+      for (int i = 1; i < hist_gals_dimension; i++)
+	for (int j = i-1; j < i; j++)
+	  {
 
-  ka[0] = 0;
-  ka[1] = 2;
-  kept_axes.assign(ka, ka + 2);
-
-  hist_projected_detected_disrupt = hist_detected_disrupt.Create_Projected_Histogram(kept_axes);
-  hist_projected_detected_disrupt.Print_Histogram_2D(0,1);
-
-  ka[0] = 1;
-  ka[1] = 2;
-  kept_axes.assign(ka, ka + 2);
-
-  hist_projected_detected_disrupt = hist_detected_disrupt.Create_Projected_Histogram(kept_axes);
-  hist_projected_detected_disrupt.Print_Histogram_2D(0,1);
-
-  ka[0] = 0;
-  ka[1] = 3;
-  kept_axes.assign(ka, ka + 2);
-
-  hist_projected_detected_disrupt = hist_detected_disrupt.Create_Projected_Histogram(kept_axes);
-  hist_projected_detected_disrupt.Print_Histogram_2D(0,1);
-
-  ka[0] = 1;
-  ka[1] = 3;
-  kept_axes.assign(ka, ka + 2);
-
-  hist_projected_detected_disrupt = hist_detected_disrupt.Create_Projected_Histogram(kept_axes);
-  hist_projected_detected_disrupt.Print_Histogram_2D(0,1);
-
-  ka[0] = 2;
-  ka[1] = 3;
-  kept_axes.assign(ka, ka + 2);
-
-  hist_projected_detected_disrupt = hist_detected_disrupt.Create_Projected_Histogram(kept_axes);
-  hist_projected_detected_disrupt.Print_Histogram_2D(0,1);
-
-  ka[0] = 0;
-  ka[1] = 4;
-  kept_axes.assign(ka, ka + 2);
-
-  hist_projected_detected_disrupt = hist_detected_disrupt.Create_Projected_Histogram(kept_axes);
-  hist_projected_detected_disrupt.Print_Histogram_2D(0,1);
-
-  ka[0] = 1;
-  ka[1] = 4;
-  kept_axes.assign(ka, ka + 2);
-
-  hist_projected_detected_disrupt = hist_detected_disrupt.Create_Projected_Histogram(kept_axes);
-  hist_projected_detected_disrupt.Print_Histogram_2D(0,1);
-
-  ka[0] = 2;
-  ka[1] = 4;
-  kept_axes.assign(ka, ka + 2);
-
-  hist_projected_detected_disrupt = hist_detected_disrupt.Create_Projected_Histogram(kept_axes);
-  hist_projected_detected_disrupt.Print_Histogram_2D(0,1);
-
-  ka[0] = 3;
-  ka[1] = 4;
-  kept_axes.assign(ka, ka + 2);
-
-  hist_projected_detected_disrupt = hist_detected_disrupt.Create_Projected_Histogram(kept_axes);
-  hist_projected_detected_disrupt.Print_Histogram_2D(0,1);
+	    ka[0] = j;
+	    ka[1] = i;
+	    kept_axes.assign(ka, ka + 2);
+	    hist_projected_detected_disrupt = hist_detected_disrupt.Create_Projected_Histogram(kept_axes);
+	    hist_projected_detected_disrupt.Print_Histogram_2D(0,1);
+	  }
 
     }
 

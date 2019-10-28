@@ -58,6 +58,30 @@ static double mABFromFnu(double F_nu)
   return -2.5 * log10(F_nu) - 48.6;
 }
 
+static double Flare_m_r(double Lbol, double T, double z, double d_L)
+{
+
+  double nu_corrected_r = NU_RBAND * (1. + z);
+
+  double unobscured_Lnu =  PI * PlanckFunctionFrequency(nu_corrected_r, T) * Lbol/(STEF_BOLTZ * pow(T,4.));
+
+  //Now apply the "band stretch factor" 1 + z and convert to flux via luminosity distance
+
+  return mABFromFnu(unobscured_Lnu * (1. + z)/(4. * PI * d_L * d_L));
+
+}
+
+static double Flare_m_g(double Lbol, double T, double z, double d_L)
+{
+  double nu_corrected_g = NU_GBAND * (1. + z);
+
+  double unobscured_Lnu =  PI * PlanckFunctionFrequency(nu_corrected_g, T) * Lbol/(STEF_BOLTZ * pow(T,4.));
+
+  //Now apply the "band stretch factor" 1 + z and convert to flux via luminosity distance
+
+  return mABFromFnu(unobscured_Lnu * (1. + z)/(4. * PI * d_L * d_L));
+}
+
 // Given z and T, what is minimum Lbol that allows the k-corrected flux to exceed the value required to matach the survey apparent magnitude threshhold in the g band?
 // Here it is easy enough to solve for L. More generally might need to solve an equation with Brent method the way you do for finding Zmax
 
@@ -255,7 +279,7 @@ static double r_kpc_from_arcsec(double r_arcsec,double z)
   return r_cm / (1000. * PARSEC);
 }
 
-//static double find_host_contrast_magnitude(double m_tot,double sersic_n,double re_kpc, double z)
+//double find_host_contrast_magnitude(double m_tot,double sersic_n,double re_kpc, double z)
 
 static double find_host_contrast_magnitude(Galaxy gal)
 {
