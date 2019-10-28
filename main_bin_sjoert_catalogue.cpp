@@ -189,7 +189,9 @@ int main(int argc, char **argv)
     {
       printf("num_galaxies %d, n_procs %d, base_gals_per_proc %d, remainder %d\n",num_galaxies,n_procs, base_gals_per_proc, remainder);
 
-      string catalogue_filename = "/Users/nathanielroth/Dropbox/research/TDE/host_galaxies/sjoert_catalogue/van_velzen_2018_catalogue.h5";
+      //      string catalogue_filename = "/Users/nathanielroth/Dropbox/research/TDE/host_galaxies/sjoert_catalogue/van_velzen_2018_catalogue.h5";
+      string catalogue_filename = "/lustre/nroth1/TDE/host_galaxy_binning/van_velzen_2018_catalogue.h5";
+      
 
       z_vector_big = (double*) malloc(num_galaxies * sizeof(double));
       m_g_vector_big = (double*) malloc(num_galaxies * sizeof(double));
@@ -344,7 +346,7 @@ int main(int argc, char **argv)
       HistogramNd hist_projected_gals;
   
       for (int i = 1; i < hist_gals_dimension; i++)
-	for (int j = i-1; j < i; j++)
+	for (int j = 0; j < i; j++)
 	  {
 
 	    ka[0] = j;
@@ -354,12 +356,15 @@ int main(int argc, char **argv)
 	    hist_projected_gals.Print_Histogram_2D(0,1);
 	    
 	  }
+    }
 
+  if (my_rank == 3)
+    {
 
   HistogramNd hist_projected_flares;
   
   for (int i = 1; i < hist_detected_flares.Get_Dimension(); i++)
-    for (int j = i-1; j < i; j++)
+    for (int j = 0; j < i; j++)
       {
 
 	ka[0] = j;
@@ -379,7 +384,7 @@ int main(int argc, char **argv)
       HistogramNd hist_projected_vol_disrupt;
   
       for (int i = 1; i < hist_gals_dimension; i++)
-	for (int j = i-1; j < i; j++)
+	for (int j = 0; j < i; j++)
 	  {
 
 	    ka[0] = j;
@@ -397,7 +402,7 @@ int main(int argc, char **argv)
       HistogramNd hist_projected_detected_disrupt;
 
       for (int i = 1; i < hist_gals_dimension; i++)
-	for (int j = i-1; j < i; j++)
+	for (int j = 0; j < i; j++)
 	  {
 
 	    ka[0] = j;
