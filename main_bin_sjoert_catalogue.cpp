@@ -98,16 +98,16 @@ int main(int argc, char **argv)
   dimension_names.clear();
   
   name = "m_g";
-  spec[0] = 12.;   // start, stop, delta
-  spec[1] = 22;
+  spec[0] = 14.;   // start, stop, delta
+  spec[1] = 22.;
   spec[2] = 0.25;
   bin_specs.push_back(spec);
   dimension_names.push_back(name);
 
-  name = "m_r";
-  spec[0] = 12.;   // start, stop, delta
-  spec[1] = 22;
-  spec[2] = 0.25;
+  name = "g_minus_r";
+  spec[0] = -2.;   // start, stop, delta
+  spec[1] = 1.;
+  spec[2] = 0.1;
   bin_specs.push_back(spec);
   dimension_names.push_back(name);
 
@@ -119,9 +119,9 @@ int main(int argc, char **argv)
   dimension_names.push_back(name);
 
   name = "Lbol_peak";
-  spec[0] = 0.;   // start, stop, delta
-  spec[1] = 1.02;
-  spec[2] = 0.05;
+  spec[0] = 43.;
+  spec[1] = 47.;
+  spec[2] = 0.1;
   bin_specs.push_back(spec);
   dimension_names.push_back(name);
 

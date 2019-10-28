@@ -66,7 +66,7 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Galaxy gal,  double& vol_rate
   //  double L_c = LCriticalRband(gal,T, z, m_limit_contrast);
   //  printf("L_c is %e\n", L_c);
 
-  int num_trials = 100;
+  int num_trials = 500;
   vol_rate_accumulator = 0;
   detected_rate_accumulator = 0;
 
@@ -106,10 +106,10 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Galaxy gal,  double& vol_rate
 
 	      //	      double flare_properties[5] = {m_g,m_r,z,Lbol_peak,mbh};
 	      flare_properties[0] = m_g;
-	      flare_properties[1] = m_r;
+	      flare_properties[1] = m_g - m_r;
 	      flare_properties[2] = z;
-	      flare_properties[3] = this_peak_L;
-	      flare_properties[4] = mbh;
+	      flare_properties[3] = log10(this_peak_L);
+	      flare_properties[4] = log10(mbh);
 
 	      hist_detected_flares.Count(flare_properties);
 	    }
