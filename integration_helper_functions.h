@@ -94,7 +94,7 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Galaxy gal, double& vol_rate_
 	  double L_c = LCriticalRband(gal,T,z,m_limit_contrast); // careful with the band here
 
 	  if (log10(L_max) < MIN_LOG_LBOL) continue;
-	  if (log10(L_max) < L_c) continue;
+	  if (L_max < L_c) continue;
 
 
 	  double this_peak_L = Sample_Peak_L(rangen,L_max);
