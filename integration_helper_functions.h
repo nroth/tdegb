@@ -36,12 +36,8 @@ double Rejection_Sample_Mstar(gsl_rng *rangen, Galaxy gal)
 
 
 //Not rejection sampling, inverse transform sampling
-double Sample_Peak_L(gsl_rng *rangen, double mstar, double L_c, Galaxy gal, Disruption disrupt)
+double Sample_Peak_L(gsl_rng *rangen, double L_max)
 {
-
-  // work in terms of x = log10(L) - log10(Lmax)
-
-  double L_max = disrupt.Max_Luminosity(mstar);  // will also be used to convert the sampled x to a phsyical L
 
   double ymin = pow( pow(10., MIN_LOG_LBOL)/L_max ,LF_LOG_POWERLAW);
 
@@ -53,7 +49,7 @@ double Sample_Peak_L(gsl_rng *rangen, double mstar, double L_c, Galaxy gal, Disr
 }
 
 
-void Sample_Disruption_Parameters(gsl_rng *rangen, Galaxy gal,  double& vol_rate_accumulator, double& detected_rate_accumulator, HistogramNd& hist_detected_flares)
+void Sample_Disruption_Parameters(gsl_rng *rangen, Galaxy gal, double& vol_rate_accumulator, double& detected_rate_accumulator, HistogramNd& hist_detected_flares)
 {
 
   double m_limit_contrast = find_host_contrast_magnitude(gal); // in the future, maybe specify which band this is for
@@ -82,6 +78,7 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Galaxy gal,  double& vol_rate
       // sample mstar
       double mstar = Rejection_Sample_Mstar(rangen, gal);
 
+
       double mhills = disrupt.Hills_Mass(mstar);
 
       if (mbh > mhills) continue;
@@ -90,11 +87,17 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Galaxy gal,  double& vol_rate
 	  // will then have to do the flare observability criteria for each flare when doing detected disrupt. For volumteric disrupt, accept all of these
 
 	  vol_rate_accumulator += 1.;
-	  
+
+      	  double L_max = disrupt.Max_Luminosity(mstar);  // will also be used to convert the sampled x to a phsyical L
 
 	  double T = disrupt.Get_T();
 	  double L_c = LCriticalRband(gal,T,z,m_limit_contrast); // careful with the band here
-	  double this_peak_L = Sample_Peak_L(rangen,mstar, L_c, gal, disrupt);
+
+	  if (log10(L_max) < MIN_LOG_LBOL) continue;
+	  if (log10(L_max) < L_c) continue;
+
+
+	  double this_peak_L = Sample_Peak_L(rangen,L_max);
 
 
 	  if (this_peak_L > L_c)
