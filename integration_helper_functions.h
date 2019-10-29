@@ -67,8 +67,10 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Galaxy gal,  double& vol_rate
   //  printf("L_c is %e\n", L_c);
 
   int num_trials = 500;
-  vol_rate_accumulator = 0;
-  detected_rate_accumulator = 0;
+  vol_rate_accumulator = 0.;
+  detected_rate_accumulator = 0.;
+
+  double rate_normalization = 1./( (double) num_trials) * RATE_NORMALIZATION_COMBINED * pow(gal.Get_nuker_gammaprime()/0.4,RATE_POWERLAW_NUKER) * 1./(1. + z);
 
   vector<double> flare_properties(hist_detected_flares.Get_Dimension());
 
@@ -95,7 +97,6 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Galaxy gal,  double& vol_rate
 	  double this_peak_L = Sample_Peak_L(rangen,mstar, L_c, gal, disrupt);
 
 
-
 	  if (this_peak_L > L_c)
 	    {
 	      detected_rate_accumulator += 1.;
@@ -111,7 +112,7 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Galaxy gal,  double& vol_rate
 	      flare_properties[3] = log10(this_peak_L);
 	      flare_properties[4] = log10(mbh);
 
-	      hist_detected_flares.Count(flare_properties);
+	      hist_detected_flares.Count(flare_properties,rate_normalization);
 	    }
 
 
@@ -122,16 +123,12 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Galaxy gal,  double& vol_rate
 
   // this can be done at the end to save time
   // normalize by number of trials
-  vol_rate_accumulator /= (double) num_trials;
-  vol_rate_accumulator *= RATE_NORMALIZATION_COMBINED * pow(gal.Get_nuker_gammaprime()/0.4,RATE_POWERLAW_NUKER); // rate is still in galaxy proper time
-  vol_rate_accumulator *=  1./(1. + z);
+  vol_rate_accumulator *=  rate_normalization;
 
 
     // this can be done at the end to save time
   // normalize by number of trials
-  detected_rate_accumulator /= (double) num_trials;
-  detected_rate_accumulator *= RATE_NORMALIZATION_COMBINED * pow(gal.Get_nuker_gammaprime()/0.4,RATE_POWERLAW_NUKER); // rate is still in galaxy proper time
-  detected_rate_accumulator *=  1./(1. + z);
+  detected_rate_accumulator *= rate_normalization;
 
 
 }

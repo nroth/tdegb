@@ -98,8 +98,8 @@ int main(int argc, char **argv)
   dimension_names.clear();
   
   name = "m_g";
-  spec[0] = 14.;   // start, stop, delta
-  spec[1] = 22.;
+  spec[0] = 12.;   // start, stop, delta
+  spec[1] = 20.;
   spec[2] = 0.25;
   bin_specs.push_back(spec);
   dimension_names.push_back(name);
@@ -271,7 +271,6 @@ int main(int argc, char **argv)
 
       double galaxy_info[8] = { mass[i], mbh_sigma[i], mbh_bulge[i], z[i], sersic_n[i], r50_kpc[i], m_g[i], m_r[i]};
 
-
       Galaxy this_galaxy(galaxy_info);
 
       double vol_rate_weight;
@@ -308,6 +307,7 @@ int main(int argc, char **argv)
   for (int i =0; i < n_bins_total; ++i) dst_mpi[i] = 0.;
 
   MPI_Allreduce(src_mpi,dst_mpi,n_bins_total,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+  MPI_Barrier(MPI_COMM_WORLD); // might not be necessary, but doesn't hurt much
   dst_mpi_vec.assign(dst_mpi, dst_mpi + n_bins_total);
   hist_gals.Set_All_Counts(dst_mpi_vec);
 
@@ -317,6 +317,7 @@ int main(int argc, char **argv)
   src_mpi = &src_mpi_vec[0]; // not needed?
 
   MPI_Allreduce(src_mpi,dst_mpi,n_bins_total,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+  MPI_Barrier(MPI_COMM_WORLD); // might not be necessary, but doesn't hurt much
   dst_mpi_vec.assign(dst_mpi, dst_mpi + n_bins_total);
   hist_vol_disrupt.Set_All_Counts(dst_mpi_vec);
 
@@ -326,11 +327,30 @@ int main(int argc, char **argv)
   src_mpi = &src_mpi_vec[0]; // not needed?
 
   MPI_Allreduce(src_mpi,dst_mpi,n_bins_total,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+  MPI_Barrier(MPI_COMM_WORLD); // might not be necessary, but doesn't hurt much
   dst_mpi_vec.assign(dst_mpi, dst_mpi + n_bins_total);
   hist_detected_disrupt.Set_All_Counts(dst_mpi_vec);
 
   delete[] dst_mpi;
 
+  // now do it for flares
+  src_mpi_vec = hist_detected_flares.Get_All_Counts();
+  dst_mpi_vec.clear(); // not needed?
+
+  n_bins_total = hist_detected_flares.Get_Num_Bins_Total();
+  dst_mpi_vec.resize(n_bins_total);
+
+  double* src_mpi_flares = &src_mpi_vec[0];
+  double* dst_mpi_flares = new double[n_bins_total]; // remember to delete later
+  for (int i =0; i < n_bins_total; ++i) dst_mpi_flares[i] = 0.;
+
+  MPI_Allreduce(src_mpi_flares,dst_mpi_flares,n_bins_total,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+  MPI_Barrier(MPI_COMM_WORLD); // might not be necessary, but doesn't hurt much
+  dst_mpi_vec.assign(dst_mpi_flares, dst_mpi_flares + n_bins_total);
+  hist_detected_flares.Set_All_Counts(dst_mpi_vec);
+
+  delete[] dst_mpi_flares;
+  
   clock_t end = clock();
 
   float elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
