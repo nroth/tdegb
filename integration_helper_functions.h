@@ -54,9 +54,15 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Galaxy gal, double& vol_rate_
 
   double m_limit_contrast = find_host_contrast_magnitude(gal); // in the future, maybe specify which band this is for
 
+  double operating_m_limit = std::min(m_limit_contrast,M_APPARENT_THRESHHOLD);
+
 
   double mbh = gal.Get_Mbh();
   double z = gal.Get_z();
+
+  double cosmo_factor = (1. + z)/(4. * PI * pow(LuminosityDistance(z),2.));
+  double nu_g_emit = (1. + z) * NU_GBAND;
+  double nu_r_emit = (1. + z) * NU_RBAND;  
 
   // later will need to move this into the event generation loop. 
   //  double L_c = LCriticalRband(gal,T, z, m_limit_contrast);
@@ -89,28 +95,25 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Galaxy gal, double& vol_rate_
 	  vol_rate_accumulator += 1.;
 
       	  double L_max = disrupt.Max_Luminosity(mstar);  // will also be used to convert the sampled x to a phsyical L
-
-	  double T = disrupt.Get_T();
-	  double L_c = LCriticalRband(gal,T,z,m_limit_contrast); // careful with the band here
-
 	  if (log10(L_max) < MIN_LOG_LBOL) continue;
-	  if (L_max < L_c) continue;
 
+	  double T = disrupt.Get_T(); // randomly generate
+	  double R_V = 3.; // randomly generate? or assing as function of galaxy properties?
+	  double A_V = 0.; // will want to randomly generate
 
 	  double this_peak_L = Sample_Peak_L(rangen,L_max);
+	    
+	  double r_mag_observed = mABFromFnu(ExtinctedFluxObserved(nu_r_emit,cosmo_factor,this_peak_L,T,A_V,R_V));
 
-
-	  if (this_peak_L > L_c)
+	  if (r_mag_observed < operating_m_limit)
 	    {
 	      detected_rate_accumulator += 1.;
 
-	      double d_L = LuminosityDistance(z);
-	      double m_g = Flare_m_g(this_peak_L, T, z, d_L);
-	      double m_r = Flare_m_r(this_peak_L, T, z, d_L);
+	      double g_mag_observed = mABFromFnu(ExtinctedFluxObserved(nu_g_emit,cosmo_factor,this_peak_L,T,A_V,R_V));
 
 	      //	      double flare_properties[5] = {m_g,m_r,z,Lbol_peak,mbh};
-	      flare_properties[0] = m_g;
-	      flare_properties[1] = m_g - m_r;
+	      flare_properties[0] = g_mag_observed;
+	      flare_properties[1] = g_mag_observed - r_mag_observed;
 	      flare_properties[2] = z;
 	      flare_properties[3] = log10(this_peak_L);
 	      flare_properties[4] = log10(mbh);
