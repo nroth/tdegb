@@ -97,7 +97,7 @@ int main(int argc, char **argv)
   bin_specs.clear();
   dimension_names.clear();
   
-  name = "m_g";
+  name = "m_r";
   spec[0] = 12.;   // start, stop, delta
   spec[1] = 20.;
   spec[2] = 0.25;

@@ -112,7 +112,7 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Galaxy gal, double& vol_rate_
 	      double g_mag_observed = mABFromFnu(ExtinctedFluxObserved(nu_g_emit,cosmo_factor,this_peak_L,T,A_V,R_V));
 
 	      //	      double flare_properties[5] = {m_g,m_r,z,Lbol_peak,mbh};
-	      flare_properties[0] = g_mag_observed;
+	      flare_properties[0] = r_mag_observed;
 	      flare_properties[1] = g_mag_observed - r_mag_observed;
 	      flare_properties[2] = z;
 	      flare_properties[3] = log10(this_peak_L);
