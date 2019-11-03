@@ -31,7 +31,6 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Galaxy gal, double& vol_rate_
   vector<double> flare_properties(hist_detected_flares.Get_Dimension());
 
   Disruption disrupt(gal);
-  disrupt.Determine_L_Edd();
 
   for (int i = 0; i < num_trials; ++i)
     {
@@ -58,9 +57,8 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Galaxy gal, double& vol_rate_
 	  double A_V = 0.; // will want to randomly generate
 
 	  disrupt.Determine_Max_L();
-	  disrupt.Sample_Peak_L();
 
-	  double this_peak_L = Sample_Peak_L(rangen,L_max);
+	  double this_peak_L = disrupt.Sample_Peak_L(rangen);
 	    
 	  double r_mag_observed = mABFromFnu(ExtinctedFluxObserved(nu_r_emit,cosmo_factor,this_peak_L,T_opt,A_V,R_V));
 
