@@ -8,47 +8,6 @@
 #include "histogramNd.h"
 
 
-// Rejection sampling to avoid messiness of integrating piecewise function
-// could this be made faster by using a better "proposal distribution?".
-double Rejection_Sample_Mstar(gsl_rng *rangen, Galaxy gal)
-{
-    double mstar_min = MSTAR_MIN; //really will want to allow this to be different in different galaxies
-    double mstar_max = MSTAR_MAX;
-  
-    double imf_norm = gal.Get_imf_norm();
-
-    // careful about this if you end up using different IMF that is not monotonically decreasing with stellar mass
-    double envelope = gal.Kroupa_IMF_for_value(mstar_min, imf_norm);
-
-  while (true)
-  {
-    // pick a random mstar between minimum and maximum allowed values, in units of solar mass
-    // this is the "proposal distribution"
-    double mstar_e = mstar_min + (mstar_max - mstar_min)*gsl_rng_uniform(rangen);
-
-    // calculate the probability from the present day mass function
-    double P = 1./envelope * gal.Kroupa_IMF_for_value(mstar_e, imf_norm);
-    if (gsl_rng_uniform(rangen) < P) return mstar_e;
-  }
-
-
-}
-
-
-//Not rejection sampling, inverse transform sampling
-double Sample_Peak_L(gsl_rng *rangen, double L_max)
-{
-
-  double ymin = pow( pow(10., MIN_LOG_LBOL)/L_max ,LF_LOG_POWERLAW);
-
-  double u = gsl_rng_uniform(rangen);
-
-  double this_y = ymin/(1. - u * (1. - ymin));
-
-  return L_max * pow(this_y,1./LF_LOG_POWERLAW);
-}
-
-
 void Sample_Disruption_Parameters(gsl_rng *rangen, Galaxy gal, double& vol_rate_accumulator, double& detected_rate_accumulator, HistogramNd& hist_detected_flares)
 {
 
@@ -56,17 +15,12 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Galaxy gal, double& vol_rate_
 
   double operating_m_limit = std::min(m_limit_contrast,M_APPARENT_THRESHHOLD);
 
-
   double mbh = gal.Get_Mbh();
   double z = gal.Get_z();
 
   double cosmo_factor = (1. + z)/(4. * PI * pow(LuminosityDistance(z),2.));
   double nu_g_emit = (1. + z) * NU_GBAND;
   double nu_r_emit = (1. + z) * NU_RBAND;  
-
-  // later will need to move this into the event generation loop. 
-  //  double L_c = LCriticalRband(gal,T, z, m_limit_contrast);
-  //  printf("L_c is %e\n", L_c);
 
   int num_trials = 500;
   vol_rate_accumulator = 0.;
@@ -76,16 +30,15 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Galaxy gal, double& vol_rate_
 
   vector<double> flare_properties(hist_detected_flares.Get_Dimension());
 
+  Disruption disrupt(gal);
+  disrupt.Determine_L_Edd();
+
   for (int i = 0; i < num_trials; ++i)
     {
 
-      Disruption disrupt(gal);
-      
       // sample mstar
-      double mstar = Rejection_Sample_Mstar(rangen, gal);
-
-
-      double mhills = disrupt.Hills_Mass(mstar);
+      disrupt.Rejection_Sample_Mstar(rangen);
+      double mhills = disrupt.Hills_Mass();
 
       if (mbh > mhills) continue;
       else
@@ -94,24 +47,29 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Galaxy gal, double& vol_rate_
 
 	  vol_rate_accumulator += 1.;
 
+	  
+	  /* Re-introduce some sort of check like this?
       	  double L_max = disrupt.Max_Luminosity(mstar);  // will also be used to convert the sampled x to a phsyical L
 	  if (log10(L_max) < MIN_LOG_LBOL) continue;
+	  */
 
-	  double T = disrupt.Get_T(); // randomly generate
+	  double T_opt = disrupt.Get_Topt(); // randomly generate
 	  double R_V = 3.; // randomly generate? or assing as function of galaxy properties?
 	  double A_V = 0.; // will want to randomly generate
 
+	  disrupt.Determine_Max_L();
+	  disrupt.Sample_Peak_L();
+
 	  double this_peak_L = Sample_Peak_L(rangen,L_max);
 	    
-	  double r_mag_observed = mABFromFnu(ExtinctedFluxObserved(nu_r_emit,cosmo_factor,this_peak_L,T,A_V,R_V));
+	  double r_mag_observed = mABFromFnu(ExtinctedFluxObserved(nu_r_emit,cosmo_factor,this_peak_L,T_opt,A_V,R_V));
 
 	  if (r_mag_observed < operating_m_limit)
 	    {
 	      detected_rate_accumulator += 1.;
 
-	      double g_mag_observed = mABFromFnu(ExtinctedFluxObserved(nu_g_emit,cosmo_factor,this_peak_L,T,A_V,R_V));
+	      double g_mag_observed = mABFromFnu(ExtinctedFluxObserved(nu_g_emit,cosmo_factor,this_peak_L,T_opt,A_V,R_V));
 
-	      //	      double flare_properties[5] = {m_g,m_r,z,Lbol_peak,mbh};
 	      flare_properties[0] = r_mag_observed;
 	      flare_properties[1] = g_mag_observed - r_mag_observed;
 	      flare_properties[2] = z;

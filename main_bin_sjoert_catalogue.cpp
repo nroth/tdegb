@@ -284,8 +284,9 @@ int main(int argc, char **argv)
 
     }
 
-
-  // we're done with the input now, only need the histograms
+  gsl_rng_free(rangen); // we don't need more random numbers
+  
+  // we've finished with the input now, only need the histograms
   delete[] z;
   delete[] m_g;
   delete[] m_r;
@@ -434,7 +435,8 @@ int main(int argc, char **argv)
 
     }
 
-    MPI_Finalize();
+
+  MPI_Finalize();
 
 }
   

@@ -36,8 +36,9 @@ class Galaxy {
 
   // mbh spin
 
- public:
-
+public:
+  
+  Galaxy();  // default construtor, only here because it needs to be, filled with bogus values
   Galaxy(double*); //  including a pre-computed IMF normalization, and a temperature for the disrutpions. will want to clean this up
 
   double Get_Mbh() const; // const member functions can be called by constant objects

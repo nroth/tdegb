@@ -9,6 +9,25 @@
 // Constructors
 //***************************************************************
 
+// default constructor, included because the compiler needs it to be hre
+Galaxy::Galaxy()
+{
+  total_stellar_mass = 0.;
+  mbh_sigma = 0.;
+  mbh_bulge = 0.;
+  z = 0.;
+  sersic_n = 0.;
+  r50_kpc = 0.;
+  m_g = -99.;
+  m_r = -99.;
+  nuker_gammaprime = 0.;
+
+  mbh = mbh_sigma; // making this choice for now
+
+
+
+}
+
 
 Galaxy::Galaxy(double* galaxy_info)
 {
