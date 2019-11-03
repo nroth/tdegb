@@ -37,7 +37,7 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Galaxy gal, double& vol_rate_
 
       // sample mstar
       disrupt.Rejection_Sample_Mstar(rangen);
-      double mhills = disrupt.Hills_Mass();
+      double mhills = disrupt.Get_Hills_Mass();
 
       if (mbh > mhills) continue;
       else
@@ -45,18 +45,18 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Galaxy gal, double& vol_rate_
 	  // will then have to do the flare observability criteria for each flare when doing detected disrupt. For volumteric disrupt, accept all of these
 
 	  vol_rate_accumulator += 1.;
-
 	  
-	  /* Re-introduce some sort of check like this?
-      	  double L_max = disrupt.Max_Luminosity(mstar);  // will also be used to convert the sampled x to a phsyical L
-	  if (log10(L_max) < MIN_LOG_LBOL) continue;
-	  */
+	  // need to haave sampled mstar, beta (and mbh) already 
+	  disrupt.Determine_Max_L();
+      	  double max_L = disrupt.Get_Max_L();  // will also be used to convert the sampled x to a phsyical L
+	  if (log10(max_L) < MIN_LOG_LBOL) continue;
 
 	  double T_opt = disrupt.Get_Topt(); // randomly generate
 	  double R_V = 3.; // randomly generate? or assing as function of galaxy properties?
 	  double A_V = 0.; // will want to randomly generate
 
-	  disrupt.Determine_Max_L();
+
+
 
 	  double this_peak_L = disrupt.Sample_Peak_L(rangen);
 	    

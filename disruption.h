@@ -32,7 +32,7 @@ class Disruption {
   double Max_Luminosity(double);
   double Peak_Mdot();
   double Main_Sequence_Radius();
-  double Hills_Mass();
+
   double Eddington_Luminosity();
 
  public:
@@ -42,6 +42,8 @@ class Disruption {
   double Get_Mstar();
   double Get_Topt();
   double Get_beta();
+  double Get_Hills_Mass();
+  double Get_Max_L();
   
   void Rejection_Sample_Mstar(gsl_rng *);
   void Determine_Max_L();

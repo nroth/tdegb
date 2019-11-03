@@ -69,6 +69,11 @@ double Disruption::Get_Mstar()
   return mstar;
 }
 
+double Disruption::Get_Max_L()
+{
+  return max_L;
+}
+
 
 // This could be improved
 double Disruption::Main_Sequence_Radius()
@@ -86,7 +91,7 @@ double Disruption::Main_Sequence_Radius()
 // The Newtonian formula in Stone & Metzger requires relativistic correction, as in Beloborodov 1992 (involves IBSCO)
 // Final result is consistent with what is quoted in Leloudas et al 2016
 // mstar in solar mass, returns a mass in solar masses
-double Disruption::Hills_Mass()
+double Disruption::Get_Hills_Mass()
 {
   double rstar = Main_Sequence_Radius();
     
