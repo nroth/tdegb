@@ -10,7 +10,7 @@ Disruption::Disruption(Galaxy gal)
 {
 
   host_gal = gal;
-  mbh = gal.Get_Mbh();
+  mbh = host_gal.Get_Mbh();
   L_Edd = Eddington_Luminosity();
 
   T_opt = 3.e4;

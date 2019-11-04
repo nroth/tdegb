@@ -11,6 +11,7 @@
 #include "histogramNd.h"
 #include "cdf.h"
 #include "galaxy.h"
+#include "survey.h"
 #include "hdf5.h"
 #include "hdf5_hl.h"
 #include "integration_helper_functions.h"
@@ -256,6 +257,8 @@ int main(int argc, char **argv)
   TypeR = gsl_rng_default;
   rangen = gsl_rng_alloc (TypeR);
 
+  Survey surv;
+
 
   /////// MAIN LOOP
   for (int i = 0; i < my_num_gals; i++)
@@ -276,7 +279,7 @@ int main(int argc, char **argv)
       double vol_rate_weight;
       double detected_rate_weight;
 
-      Sample_Disruption_Parameters(rangen,this_galaxy,vol_rate_weight, detected_rate_weight,hist_detected_flares);
+      Sample_Disruption_Parameters(rangen,surv,this_galaxy,vol_rate_weight, detected_rate_weight,hist_detected_flares);
 
       hist_vol_disrupt.Count(catalogue_data, vol_rate_weight);
       hist_detected_disrupt.Count(catalogue_data, detected_rate_weight);

@@ -27,7 +27,13 @@ class Galaxy {
   double r50_kpc;
   double nuker_gammaprime;
 
+  double resolution_for_nuker_gamma; // arsec. Taken to be same for all galaxies. See Lauer et al 2007. Nick Stone's rate calculations were based on Nuker gamma as measured in this paper, so to convert n_sersic to nuker gamma we want to account for how they measured gamma
+
   double mbh; // what you will take to be the actual mbh, not what would be inferred from a survey by correlations.
+
+  //derived quantities
+  double re_arcsec;
+  double sersic_bn;
 
   // include star formation history information? Time since starburst, durtaion of starburst?
   // could be used to set the upper truncation of IMF to make the approximate present-day mass function
@@ -35,6 +41,17 @@ class Galaxy {
   double imf_normalization;
 
   // mbh spin
+
+  //helper functions
+  double Get_Approx_Sersic_bn();
+  double Find_Nuker_Gammaprime_From_Sersic();
+  
+  double R_Arcsec_From_Kpc(double);
+  double R_Kpc_From_Arcsec(double);
+  double Arcsec_From_Radian(double); // might want to move these somewhere else
+  double Radian_From_Arcsec(double); // might want to move these somwhere else
+
+
 
 public:
   
@@ -50,10 +67,13 @@ public:
   double Get_r50_kpc() const;
   double Get_imf_norm() const;
 
+  double Get_Mu_Eff(double);
+
   static double Kroupa_IMF_for_integrating(double, void *); // static needed for gsl integration to work
   double Kroupa_IMF_for_value(double, double) const; // static needed for gsl integration to work
   void Set_IMF_Normalization();
 
+  double Flux_Enclosed_R_Sersic(double, double); // not totally sure this belongs here
 
   
 };

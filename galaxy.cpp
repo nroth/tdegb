@@ -1,8 +1,9 @@
 #include <math.h>
 #include <gsl/gsl_integration.h>
+#include <gsl/gsl_sf_gamma.h>
 #include "physical_constants.h"
 #include "galaxy.h"
-#include "magnitudes.h"
+#include "cosmology.h"
 
 
 //***************************************************************
@@ -21,9 +22,7 @@ Galaxy::Galaxy()
   m_g = -99.;
   m_r = -99.;
   nuker_gammaprime = 0.;
-
-  mbh = mbh_sigma; // making this choice for now
-
+  resolution_for_nuker_gamma = 0.;
 
 
 }
@@ -39,9 +38,15 @@ Galaxy::Galaxy(double* galaxy_info)
   r50_kpc = galaxy_info[5];
   m_g = galaxy_info[6];
   m_r = galaxy_info[7];
-  nuker_gammaprime = Find_Nuker_Gammaprime_From_Sersic(sersic_n, r50_kpc, z);
+
+  resolution_for_nuker_gamma = 0.04; // arsec. See Lauer et al 2007. Nick Stone's rate calculations were based on Nuker gamma as measured in this paper, so to convert n_sersic to nuker gamma we want to account for how they measured gamma
+  nuker_gammaprime = Find_Nuker_Gammaprime_From_Sersic();
 
   mbh = mbh_sigma; // making this choice for now
+  
+  re_arcsec = R_Arcsec_From_Kpc(r50_kpc);
+
+  sersic_bn = Get_Approx_Sersic_bn();
 
   Set_IMF_Normalization();
 
@@ -154,6 +159,78 @@ void Galaxy::Set_IMF_Normalization()
 }
 
 
+// maybe consider moving this to physical constants
+double Galaxy::Arcsec_From_Radian(double radians)
+{    
+  return radians * 180. * 3600./ PI;
+}
 
 
+// maybe consider moving this to physical constants
+double Galaxy::Radian_From_Arcsec(double r_arcsec)
+{    
+  return r_arcsec * PI / (180. * 3600.);
+}
+
+
+
+double Galaxy::R_Arcsec_From_Kpc(double r_kpc)
+{
+    
+  double r_cm = r_kpc * 1000. * PARSEC; // convert to cm
+  double d_A = AngularDiameterDistance(z); // in cm
+
+  double r_radians = r_cm/d_A;
+    
+  return Arcsec_From_Radian(r_radians);
+}
+
+
+double Galaxy::R_Kpc_From_Arcsec(double r_arcsec)
+{
+  double r_rad = Radian_From_Arcsec(r_arcsec);
+    
+  double d_A = AngularDiameterDistance(z);
+    
+  double r_cm = r_rad * d_A;
+    
+  return r_cm / (1000. * PARSEC);
+}
+
+
+double Galaxy::Find_Nuker_Gammaprime_From_Sersic()
+{
+
+  double rprime_kpc = R_Kpc_From_Arcsec(resolution_for_nuker_gamma);
+
+  return sersic_bn/sersic_n * pow(rprime_kpc/r50_kpc,1./sersic_n);
+
+}
+
+
+
+// see reference mentioned at https://ned.ipac.caltech.edu/level5/March05/Graham/Graham2.html
+double Galaxy::Get_Approx_Sersic_bn()
+{
+  return 1.9992 * sersic_n - 0.3271;
+}
+
+
+// as found in https://ned.ipac.caltech.edu/level5/March05/Graham/Graham2.html
+// will be in units of magnitudes / arcsec^2 assuming m_tot in magnitude and r_eff_arcsec in arsec
+double Galaxy::Get_Mu_Eff(double m_tot)
+{
+
+  return m_tot + 5. * log10(re_arcsec) + 2.5 * log10(2. * PI * sersic_n * exp(sersic_bn)/pow(sersic_bn,2. * sersic_n) * gsl_sf_gamma(2. * sersic_n)  );
+}
+
+
+// as found in https://ned.ipac.caltech.edu/level5/March05/Graham/Graham2.html
+// I_e in mags / arcsec^2, r in arscsec
+double Galaxy::Flux_Enclosed_R_Sersic(double r, double I_e)
+{
+  
+  return I_e * re_arcsec * re_arcsec * 2. * PI * sersic_n * exp(sersic_bn)/pow(sersic_bn,2. * sersic_n) * gsl_sf_gamma_inc_P(2. *sersic_n, sersic_bn * (pow(r/re_arcsec,1./sersic_n)))* gsl_sf_gamma(2. * sersic_n);
+
+}
 

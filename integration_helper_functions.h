@@ -4,23 +4,25 @@
 #include "physical_constants.h"
 #include "galaxy.h"
 #include "disruption.h"
-#include "magnitudes.h"
 #include "histogramNd.h"
+#include "survey.h"
+#include "cosmology.h"
 
 
-void Sample_Disruption_Parameters(gsl_rng *rangen, Galaxy gal, double& vol_rate_accumulator, double& detected_rate_accumulator, HistogramNd& hist_detected_flares)
+void Sample_Disruption_Parameters(gsl_rng *rangen, Survey surv, Galaxy gal, double& vol_rate_accumulator, double& detected_rate_accumulator, HistogramNd& hist_detected_flares)
 {
 
-  double m_limit_contrast = find_host_contrast_magnitude(gal); // in the future, maybe specify which band this is for
+  double m_limit_contrast = surv.Find_Host_Contrast_Magnitude(gal); // in the future, maybe specify which band this is for
 
-  double operating_m_limit = std::min(m_limit_contrast,M_APPARENT_THRESHHOLD);
+  // for all flares in this galaxy
+  double operating_m_limit = std::min(m_limit_contrast,surv.Get_m_r_Threshhold());
 
   double mbh = gal.Get_Mbh();
   double z = gal.Get_z();
 
   double cosmo_factor = (1. + z)/(4. * PI * pow(LuminosityDistance(z),2.));
-  double nu_g_emit = (1. + z) * NU_GBAND;
-  double nu_r_emit = (1. + z) * NU_RBAND;  
+  double nu_g_emit = (1. + z) * surv.Get_Nu_Gband();
+  double nu_r_emit = (1. + z) * surv.Get_Nu_Rband();  
 
   int num_trials = 500;
   vol_rate_accumulator = 0.;
@@ -30,7 +32,7 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Galaxy gal, double& vol_rate_
 
   vector<double> flare_properties(hist_detected_flares.Get_Dimension());
 
-  Disruption disrupt(gal);
+  Disruption disrupt(gal); // default values filled in now
 
   for (int i = 0; i < num_trials; ++i)
     {
@@ -51,20 +53,20 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Galaxy gal, double& vol_rate_
       	  double max_L = disrupt.Get_Max_L();  // will also be used to convert the sampled x to a phsyical L
 	  if (log10(max_L) < MIN_LOG_LBOL) continue;
 
-	  double T_opt = disrupt.Get_Topt(); // randomly generate
-	  double R_V = 3.; // randomly generate? or assing as function of galaxy properties?
-	  double A_V = 0.; // will want to randomly generate
+	  //	  double T_opt = disrupt.Get_Topt(); // randomly generate
+	  //	  double R_V = 3.; // randomly generate? or assing as function of galaxy properties?
+	  //	  double A_V = 0.; // will want to randomly generate
 
 
 	  disrupt.Sample_Peak_L(rangen);
 	    
-	  double r_mag_observed = mABFromFnu(disrupt.Extincted_Flux_Observed(nu_r_emit,cosmo_factor));
+	  double r_mag_observed = surv.mAB_From_Fnu(disrupt.Extincted_Flux_Observed(nu_r_emit,cosmo_factor));
 
 	  if (r_mag_observed < operating_m_limit)
 	    {
 	      detected_rate_accumulator += 1.;
 
-	      double g_mag_observed = mABFromFnu(disrupt.Extincted_Flux_Observed(nu_g_emit,cosmo_factor));
+	      double g_mag_observed = surv.mAB_From_Fnu(disrupt.Extincted_Flux_Observed(nu_g_emit,cosmo_factor));
 
 	      flare_properties[0] = r_mag_observed;
 	      flare_properties[1] = g_mag_observed - r_mag_observed;
