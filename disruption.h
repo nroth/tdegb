@@ -32,8 +32,12 @@ class Disruption {
   double Max_Luminosity(double);
   double Peak_Mdot();
   double Main_Sequence_Radius();
-
   double Eddington_Luminosity();
+
+  double Planck_Function_Frequency(double, double);
+  double Unobscured_Lnu(double, double, double);
+  double Cardelli_Extinction(double);
+  double Dust_Flux_Factor_Reduction(double);
 
  public:
 
@@ -48,6 +52,8 @@ class Disruption {
   void Rejection_Sample_Mstar(gsl_rng *);
   void Determine_Max_L();
   double Sample_Peak_L(gsl_rng *);
+
+  double Extincted_Flux_Observed(double, double);
 
 };
 

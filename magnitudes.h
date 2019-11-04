@@ -8,8 +8,6 @@
 #include "cosmology.h"
 #include "galaxy.h"
 #include "disruption.h"
-#include "dust.h"
-
 
 #define M_APPARENT_THRESHHOLD 20.0 // will need to distinguish how this is handled in various bands
 #define R_PSF_ARCSEC 4.4 // 2 times r-band median PSF FWHM of 2.2 arcsec. will need to distinguish how this is handled in various bands
@@ -19,36 +17,6 @@
 #define NU_GBAND 646243712006898.
 #define NU_RBAND 489696925841228.
 
-#define Z_MIN_CUT 0.003
-#define Z_MAX_CUT 10.
-#define Z_MIN_GENERAL 0.0001 // Just for setting numeric limits, but might need to think about this more 
-#define Z_MAX_GENERAL 10. // Just for setting numeric limits, but might need to think about this more 
-
-
-
-static double PlanckFunctionFrequency(double nu, double T)
-{
-
-  return 2. * H_PLANCK * pow(nu,3.)/( pow(C_LIGHT,2.) * (exp(H_PLANCK * nu /(K_BOLTZ * T)) - 1.) );
-
-}
-
-//includes K-correction
-/* This function not needed except fo debugging?
-double UnexctinctedBBGbandFlux(double z, double T, double L)
-{
-  double nu_corrected_g = NU_GBAND * (1. + z);
-
-  double d_L = LuminosityDistance(z);
-
-  double unobscured_Lnu =  PI * PlanckFunctionFrequency(nu_corrected_g, T) * L/(STEF_BOLTZ * pow(T,4.));
-
-  //Now apply the "band stretch factor" 1 + z and convert to flux via luminosity distance
-
-  return unobscured_Lnu * (1. + z)/(4. * PI * d_L * d_L);
-  
-}
-*/
 
 // Convert cgs F_nu to AB magnitude
 // Assumes Fnu in cgs
@@ -58,63 +26,6 @@ static double mABFromFnu(double F_nu)
 
   return -2.5 * log10(F_nu) - 48.6;
 }
-
-// want to make this obsolete
-static double Flare_m_r(double Lbol, double T, double z, double d_L)
-{
-
-  double nu_corrected_r = NU_RBAND * (1. + z);
-
-  double unobscured_Lnu =  PI * PlanckFunctionFrequency(nu_corrected_r, T) * Lbol/(STEF_BOLTZ * pow(T,4.));
-
-  //Now apply the "band stretch factor" 1 + z and convert to flux via luminosity distance
-
-  return mABFromFnu(unobscured_Lnu * (1. + z)/(4. * PI * d_L * d_L));
-
-}
-
-
-// want to make this obsolete
-static double Flare_m_g(double Lbol, double T, double z, double d_L)
-{
-  double nu_corrected_g = NU_GBAND * (1. + z);
-
-  double unobscured_Lnu =  PI * PlanckFunctionFrequency(nu_corrected_g, T) * Lbol/(STEF_BOLTZ * pow(T,4.));
-
-  //Now apply the "band stretch factor" 1 + z and convert to flux via luminosity distance
-
-  return mABFromFnu(unobscured_Lnu * (1. + z)/(4. * PI * d_L * d_L));
-}
-
-static double Unobscured_Lnu(double nu_emit, double T, double Lbol)
-{
-
-  return PI * PlanckFunctionFrequency(nu_emit, T) * Lbol/(STEF_BOLTZ * pow(T,4.));
-  
-}
-
-static double DustFluxFactorReduction(double nu_emit, double A_V, double R_V)
-{
-
-  double lambda_cm = C_LIGHT/nu_emit; // assumes nu_emit in Hz (rest frame)
-  double lambda_micron = lambda_cm * 1.e4;
-  double x = 1./lambda_micron;
-  
-  double cardelli_factor = Cardelli_Extinction(x,R_V);
-
-  return pow(10., -1. * A_V * cardelli_factor/(2.5));
-
-}
-
-// can save time by precomputing the (1. + z)/(4. * PI * d_L * d_L)  for each galaxy and passing it heree
-// can't precompute the dust flux factor reduction because A_V might be randomly generated
-static double ExtinctedFluxObserved(double nu_emit, double cosmo_factor, double Lbol, double T, double A_V, double R_V)
-{
-
-  return Unobscured_Lnu(nu_emit, T,Lbol) * cosmo_factor * DustFluxFactorReduction(nu_emit,A_V,R_V);
-
-}
-
 
 // see reference mentioned at https://ned.ipac.caltech.edu/level5/March05/Graham/Graham2.html
 static double get_approx_sersic_bn(double sersic_n)
