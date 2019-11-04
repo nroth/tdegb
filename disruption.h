@@ -43,15 +43,17 @@ class Disruption {
 
   Disruption(Galaxy);
 
+  void Rejection_Sample_Mstar(gsl_rng *);
+  void Determine_Max_L();
+  void Sample_Peak_L(gsl_rng *);
+
   double Get_Mstar();
+  double Get_Peak_L();
   double Get_Topt();
   double Get_beta();
   double Get_Hills_Mass();
   double Get_Max_L();
   
-  void Rejection_Sample_Mstar(gsl_rng *);
-  void Determine_Max_L();
-  double Sample_Peak_L(gsl_rng *);
 
   double Extincted_Flux_Observed(double, double);
 

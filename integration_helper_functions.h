@@ -56,22 +56,20 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Galaxy gal, double& vol_rate_
 	  double A_V = 0.; // will want to randomly generate
 
 
-
-
-	  double this_peak_L = disrupt.Sample_Peak_L(rangen);
+	  disrupt.Sample_Peak_L(rangen);
 	    
-	  double r_mag_observed = mABFromFnu(disrupt.ExtinctedFluxObserved(nu_r_emit,cosmo_factor));
+	  double r_mag_observed = mABFromFnu(disrupt.Extincted_Flux_Observed(nu_r_emit,cosmo_factor));
 
 	  if (r_mag_observed < operating_m_limit)
 	    {
 	      detected_rate_accumulator += 1.;
 
-	      double g_mag_observed = mABFromFnu(disrupt.ExtinctedFluxObserved(nu_g_emit,cosmo_factor,this_peak_L,T_opt,A_V,R_V));
+	      double g_mag_observed = mABFromFnu(disrupt.Extincted_Flux_Observed(nu_g_emit,cosmo_factor));
 
 	      flare_properties[0] = r_mag_observed;
 	      flare_properties[1] = g_mag_observed - r_mag_observed;
 	      flare_properties[2] = z;
-	      flare_properties[3] = log10(this_peak_L);
+	      flare_properties[3] = log10(disrupt.Get_Peak_L());
 	      flare_properties[4] = log10(mbh);
 
 	      hist_detected_flares.Count(flare_properties,rate_normalization);

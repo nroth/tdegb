@@ -22,7 +22,7 @@
 // Assumes Fnu in cgs
 static double mABFromFnu(double F_nu)
 {
-  if (F_nu <= 0) printf("ERROR: Fnu is negataive");
+  if (F_nu <= 0) printf("ERROR: Fnu is negative\n");
 
   return -2.5 * log10(F_nu) - 48.6;
 }

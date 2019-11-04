@@ -15,8 +15,9 @@ Disruption::Disruption(Galaxy gal)
 
   T_opt = 3.e4;
   beta = 1.;
-  mstar = 1.;
+  mstar = 0.;
   max_L = 0.;
+  peak_L = 0.;
   A_V = 0.;
   R_V = 3.;
   
@@ -72,6 +73,11 @@ double Disruption::Get_Mstar()
 double Disruption::Get_Max_L()
 {
   return max_L;
+}
+
+double Disruption::Get_Peak_L()
+{
+  return peak_L;
 }
 
 
@@ -155,7 +161,7 @@ void Disruption::Determine_Max_L()
 
 
 //Not rejection sampling, inverse transform sampling
-double Disruption::Sample_Peak_L(gsl_rng *rangen)
+void Disruption::Sample_Peak_L(gsl_rng *rangen)
 {
 
   double ymin = pow( pow(10., MIN_LOG_LBOL)/max_L ,LF_LOG_POWERLAW);
@@ -164,7 +170,9 @@ double Disruption::Sample_Peak_L(gsl_rng *rangen)
 
   double this_y = ymin/(1. - u * (1. - ymin));
 
-  return max_L * pow(this_y,1./LF_LOG_POWERLAW);
+  peak_L = max_L * pow(this_y,1./LF_LOG_POWERLAW);
+
+  return;
 }
 
 // trying to keep this general, not only for optical emission
