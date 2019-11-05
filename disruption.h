@@ -51,6 +51,7 @@ class Disruption {
   double Get_beta();
   double Get_Hills_Mass();
   double Get_Max_L();
+  double Get_Min_Log_Lbol();
   
 
   double Extincted_Flux_Observed(double, double);

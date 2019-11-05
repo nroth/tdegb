@@ -84,6 +84,11 @@ double Disruption::Get_Peak_L()
   return peak_L;
 }
 
+double Disruption::Get_Min_Log_Lbol()
+{
+  return min_log_lbol;
+}
+
 
 // This could be improved
 double Disruption::Main_Sequence_Radius()

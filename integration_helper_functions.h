@@ -26,7 +26,7 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Survey surv, Galaxy gal, doub
   vol_rate_accumulator = 0.;
   detected_rate_accumulator = 0.;
 
-  double rate_normalization = 1./( (double) num_trials) * gal.Get_Disruption_Rate_Normalization_Combined() * pow(gal.Get_nuker_gammaprime()/0.4,gal.Get_Rate_Powerlaw_nuker()) * 1./(1. + z);
+  double rate_normalization = 1./( (double) num_trials) * gal.Get_Disruption_Rate_Normalization_Combined() * pow(gal.Get_nuker_gammaprime()/0.4,gal.Get_Disruption_Rate_Powerlaw_Nuker()) * 1./(1. + z);
 
   vector<double> flare_properties(hist_detected_flares.Get_Dimension());
 
@@ -49,8 +49,7 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Survey surv, Galaxy gal, doub
 	  // need to haave sampled mstar, beta (and mbh) already 
 	  disrupt.Determine_Max_L();
       	  double max_L = disrupt.Get_Max_L();  // will also be used to convert the sampled x to a phsyical L
-	  if (log10(max_L) < MIN_LOG_LBOL) continue;
-
+	  if (log10(max_L) < disrupt.Get_Min_Log_Lbol()) continue;
 	  //	  double T_opt = disrupt.Get_Topt(); // randomly generate
 	  //	  double R_V = 3.; // randomly generate? or assing as function of galaxy properties?
 	  //	  double A_V = 0.; // will want to randomly generate
