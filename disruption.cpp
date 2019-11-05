@@ -8,6 +8,11 @@
 Disruption::Disruption(Galaxy gal)
 {
 
+  lf_log_powerlaw = 1.5;
+  min_log_lbol = 43.0;
+  max_radeff_streams = 0.1;
+  max_edd_ratio = 2.;
+
   host_gal = gal;
   mbh = host_gal.Get_Mbh();
   L_Edd = Eddington_Luminosity();
@@ -27,13 +32,13 @@ Disruption::Disruption(Galaxy gal)
 void Disruption::Rejection_Sample_Mstar(gsl_rng *rangen)
 {
 
-    double mstar_min = MSTAR_MIN; //really will want to allow this to be different in different galaxies
-    double mstar_max = MSTAR_MAX;
+  double mstar_min = host_gal.Get_Mstar_Min(); //really will want to allow this to be different in different galaxies
+  double mstar_max = host_gal.Get_Mstar_Max();
   
-    double imf_norm = host_gal.Get_imf_norm();
+  double imf_norm = host_gal.Get_imf_norm();
 
-    // careful about this if you end up using different IMF that is not monotonically decreasing with stellar mass
-    double envelope = host_gal.Kroupa_IMF_for_value(mstar_min, imf_norm);
+  // careful about this if you end up using different IMF that is not monotonically decreasing with stellar mass
+  double envelope = host_gal.Kroupa_IMF_for_value(mstar_min, imf_norm);
 
   while (true)
   {
@@ -145,10 +150,10 @@ void Disruption::Determine_Max_L()
 
   double mdot_fallback_peak = Peak_Mdot();
     
-  double L_fallback_peak = MAX_RADEFF_STREAMS * mdot_fallback_peak * C_LIGHT * C_LIGHT;
+  double L_fallback_peak = max_radeff_streams * mdot_fallback_peak * C_LIGHT * C_LIGHT;
     
-  if (L_fallback_peak >  MAX_EDD_RATIO  * L_Edd)
-    max_L =  MAX_EDD_RATIO  * L_Edd;
+  if (L_fallback_peak >  max_edd_ratio  * L_Edd)
+    max_L =  max_edd_ratio  * L_Edd;
     
   else
     max_L =  L_fallback_peak;
@@ -163,13 +168,13 @@ void Disruption::Determine_Max_L()
 void Disruption::Sample_Peak_L(gsl_rng *rangen)
 {
 
-  double ymin = pow( pow(10., MIN_LOG_LBOL)/max_L ,LF_LOG_POWERLAW);
+  double ymin = pow( pow(10., min_log_lbol)/max_L, lf_log_powerlaw);
 
   double u = gsl_rng_uniform(rangen);
 
   double this_y = ymin/(1. - u * (1. - ymin));
 
-  peak_L = max_L * pow(this_y,1./LF_LOG_POWERLAW);
+  peak_L = max_L * pow(this_y,1./lf_log_powerlaw);
 
   return;
 }

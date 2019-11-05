@@ -4,13 +4,6 @@
 #include "galaxy.h"
 #include <gsl/gsl_rng.h>
 
-#define LF_LOG_POWERLAW 1.5
-
-#define MIN_LOG_LBOL 43.0
-#define MAX_RADEFF_STREAMS 0.1 // maximum radiative efficiency of stream collisions.
-
-#define MAX_EDD_RATIO 2.
-
 class Disruption {
 
  private:
@@ -26,6 +19,11 @@ class Disruption {
   double L_Edd;
   double peak_L; // beak Lbol for a given disruption
   double max_L; // maximum possible Lbol for any disruption in this host galaxy
+
+  double lf_log_powerlaw;
+  double min_log_lbol;
+  double max_radeff_streams;
+  double max_edd_ratio;
 
   // randomly generated LOS obscuration? or put that in survey?
 

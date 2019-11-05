@@ -1,23 +1,11 @@
 #ifndef GALAXY_H
 #define GALAXY_H
 
-// In the future these will depend on galaxy properties
-#define MSTAR_MAX 1.0 // maximum stellar mass, in solar units. Really, should consider making this a function of galaxy properties
-#define MSTAR_MIN 0.08 // Only considering main sequence stars
-
-// In the future these will depend on galaxy properties
-#define RATE_NORMALIZATION_COMBINED 2.9e-5 
-#define RATE_POWERLAW -0.404
-#define RATE_POWERLAW_NUKER 0.705
-
-// mstar in solar mass throughout
-
-
 class Galaxy {
 
  private:
 
-  double total_stellar_mass;
+  double total_stellar_mass; // in solar mass
   double m_g;
   double m_r;
   double mbh_sigma;
@@ -26,17 +14,25 @@ class Galaxy {
   double sersic_n;
   double r50_kpc;
   double nuker_gammaprime;
+  // include star formation history information? Time since starburst, durtaion of starburst?
+  // could be used to set the upper truncation of IMF to make the approximate present-day mass function
+
 
   double resolution_for_nuker_gamma; // arsec. Taken to be same for all galaxies. See Lauer et al 2007. Nick Stone's rate calculations were based on Nuker gamma as measured in this paper, so to convert n_sersic to nuker gamma we want to account for how they measured gamma
 
   double mbh; // what you will take to be the actual mbh, not what would be inferred from a survey by correlations.
 
+  double mstar_max;
+  double mstar_min;
+
+  double disruption_rate_normalization_combined;
+  double disruption_rate_powerlaw_mass;
+  double disruption_rate_powerlaw_nuker;
+
+  
   //derived quantities
   double re_arcsec;
   double sersic_bn;
-
-  // include star formation history information? Time since starburst, durtaion of starburst?
-  // could be used to set the upper truncation of IMF to make the approximate present-day mass function
 
   double imf_normalization;
 
@@ -65,8 +61,14 @@ public:
   double Get_sersic_n() const;
   double Get_nuker_gammaprime() const;
   double Get_r50_kpc() const;
+  double Get_Mstar_Min() const;
+  double Get_Mstar_Max() const;
   double Get_imf_norm() const;
   double Get_Luminosity_Distance() const;
+  double Get_Disruption_Rate_Normalization_Combined() const;
+  double Get_Disruption_Rate_Powerlaw_Mass() const;
+  double Get_Disruption_Rate_Powerlaw_Nuker() const;
+
   double Get_Mu_Eff(double) const;
 
   static double Kroupa_IMF_for_integrating(double, void *); // static needed for gsl integration to work

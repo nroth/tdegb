@@ -13,6 +13,14 @@
 
 Galaxy::Galaxy(double* galaxy_info)
 {
+
+  mstar_max = 1.0;  // In the future these will depend on galaxy properties
+  mstar_min = 0.08; // Only considering main sequence stars
+  disruption_rate_normalization_combined = 2.9e-5;
+  disruption_rate_powerlaw_mass = -0.404;
+  disruption_rate_powerlaw_nuker = 0.705;
+
+  
   total_stellar_mass = galaxy_info[0];  // stored as log
   mbh_sigma = pow(10.,galaxy_info[1]); // converting log to value
   mbh_bulge = pow(10.,galaxy_info[2]); // converting log to value
@@ -30,8 +38,6 @@ Galaxy::Galaxy(double* galaxy_info)
   mbh = mbh_sigma; // making this choice for now
   
   re_arcsec = R_Arcsec_From_Kpc(r50_kpc);
-
-
 
   Set_IMF_Normalization();
 
@@ -81,31 +87,57 @@ double Galaxy::Get_r50_kpc() const
   return r50_kpc;
 }
 
+double Galaxy::Get_Mstar_Min() const
+{
+  return mstar_min;
+}
+
+double Galaxy::Get_Mstar_Max() const
+{
+  return mstar_max;
+}
+
 double Galaxy::Get_imf_norm() const
 {
   return imf_normalization;
+}
+
+double Galaxy::Get_Disruption_Rate_Normalization_Combined() const
+{
+  return disruption_rate_normalization_combined;
+}
+
+double Galaxy::Get_Disruption_Rate_Powerlaw_Mass() const
+{
+  return disruption_rate_powerlaw_mass;
+}
+
+double Galaxy::Get_Disruption_Rate_Powerlaw_Nuker() const
+{
+  return disruption_rate_powerlaw_nuker;
 }
 
 
 
 // See equation 7 of https://arxiv.org/pdf/1212.0939.pdf
 // the params has the overall normalization, so as not to recompute it each time
-double Galaxy::Kroupa_IMF_for_integrating(double mstar, void * params)
+double Galaxy::Kroupa_IMF_for_integrating(double mstar, void * p)
 {
-  double norm = *(double *) params;
+  struct imf_params {double norm; double min_mass; double max_mass;};
+  struct imf_params params = *(struct imf_params *)p;
   
-  double m1 = MSTAR_MIN;
+  double m1 = params.min_mass;
   double m2 = 0.5;
-  double m3 = MSTAR_MAX;
+  double m3 = params.max_mass;
 
   double k1 = pow(m1,-0.3 + 1.3);
   double k2 = k1 * pow(m2,-1.3 + 2.3);
   //  double k3 = k2 * pow(m3, -2.3 + 2.3);
 
   if (mstar >= m1 && mstar < m2)
-    return 1./norm * k1 * pow(mstar,-1.3);
+    return 1./params.norm * k1 * pow(mstar,-1.3);
   else if (mstar >= m2 && mstar <= m3)
-      return 1./norm * k2 * pow(mstar,-2.3);
+      return 1./params.norm * k2 * pow(mstar,-2.3);
   else
     return 0.;
   
@@ -113,9 +145,9 @@ double Galaxy::Kroupa_IMF_for_integrating(double mstar, void * params)
 
 double Galaxy::Kroupa_IMF_for_value(double mstar, double norm) const
 {
-  double m1 = MSTAR_MIN;
+  double m1 = mstar_min;
   double m2 = 0.5;
-  double m3 = MSTAR_MAX;
+  double m3 = mstar_max;
 
   double k1 = pow(m1,-0.3 + 1.3);
   double k2 = k1 * pow(m2,-1.3 + 2.3);
@@ -140,11 +172,13 @@ void Galaxy::Set_IMF_Normalization()
   gsl_integration_workspace * workspace = gsl_integration_workspace_alloc(grid_size);
   F.function = Galaxy::Kroupa_IMF_for_integrating;
 
-  double temp_norm = 1.;
-  F.params = &temp_norm;
+  struct imf_params {double temp_norm; double min_mass; double max_mass;};
+
+  imf_params params = {1.,mstar_min, mstar_max};
+  F.params = &params;
 
   double result, error;
-  gsl_integration_qags(&F,MSTAR_MIN, MSTAR_MAX, 0, relative_error, grid_size, workspace, &result, &error);
+  gsl_integration_qags(&F,mstar_min, mstar_max, 0, relative_error, grid_size, workspace, &result, &error);
   gsl_integration_workspace_free(workspace);
   
   imf_normalization = result;

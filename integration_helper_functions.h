@@ -26,7 +26,7 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Survey surv, Galaxy gal, doub
   vol_rate_accumulator = 0.;
   detected_rate_accumulator = 0.;
 
-  double rate_normalization = 1./( (double) num_trials) * RATE_NORMALIZATION_COMBINED * pow(gal.Get_nuker_gammaprime()/0.4,RATE_POWERLAW_NUKER) * 1./(1. + z);
+  double rate_normalization = 1./( (double) num_trials) * gal.Get_Disruption_Rate_Normalization_Combined() * pow(gal.Get_nuker_gammaprime()/0.4,gal.Get_Rate_Powerlaw_nuker()) * 1./(1. + z);
 
   vector<double> flare_properties(hist_detected_flares.Get_Dimension());
 
