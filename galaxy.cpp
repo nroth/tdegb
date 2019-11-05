@@ -40,13 +40,15 @@ Galaxy::Galaxy(double* galaxy_info)
   m_r = galaxy_info[7];
 
   resolution_for_nuker_gamma = 0.04; // arsec. See Lauer et al 2007. Nick Stone's rate calculations were based on Nuker gamma as measured in this paper, so to convert n_sersic to nuker gamma we want to account for how they measured gamma
+  sersic_bn = Get_Approx_Sersic_bn();
+  
   nuker_gammaprime = Find_Nuker_Gammaprime_From_Sersic();
 
   mbh = mbh_sigma; // making this choice for now
   
   re_arcsec = R_Arcsec_From_Kpc(r50_kpc);
 
-  sersic_bn = Get_Approx_Sersic_bn();
+
 
   Set_IMF_Normalization();
 
