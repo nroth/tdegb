@@ -1,5 +1,4 @@
 #include <math.h>
-#include <gsl/gsl_integration.h>
 #include <gsl/gsl_rng.h>
 #include "physical_constants.h"
 #include "galaxy.h"

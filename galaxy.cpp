@@ -10,27 +10,10 @@
 // Constructors
 //***************************************************************
 
-// default constructor, included because the compiler needs it to be hre
-Galaxy::Galaxy()
-{
-  total_stellar_mass = 0.;
-  mbh_sigma = 0.;
-  mbh_bulge = 0.;
-  z = 0.;
-  sersic_n = 0.;
-  r50_kpc = 0.;
-  m_g = -99.;
-  m_r = -99.;
-  nuker_gammaprime = 0.;
-  resolution_for_nuker_gamma = 0.;
-
-
-}
-
 
 Galaxy::Galaxy(double* galaxy_info)
 {
-  total_stellar_mass = galaxy_info[0];  // log
+  total_stellar_mass = galaxy_info[0];  // stored as log
   mbh_sigma = pow(10.,galaxy_info[1]); // converting log to value
   mbh_bulge = pow(10.,galaxy_info[2]); // converting log to value
   z = galaxy_info[3];
@@ -53,6 +36,14 @@ Galaxy::Galaxy(double* galaxy_info)
   Set_IMF_Normalization();
 
 }
+
+
+// default constructor, included because the compiler needs it to be hre
+Galaxy::Galaxy()
+{
+  total_stellar_mass = 0.;
+}
+
 
 double Galaxy::Get_Mbh() const
 {
@@ -103,7 +94,7 @@ double Galaxy::Kroupa_IMF_for_integrating(double mstar, void * params)
 {
   double norm = *(double *) params;
   
-  double m1 = 0.08;
+  double m1 = MSTAR_MIN;
   double m2 = 0.5;
   double m3 = MSTAR_MAX;
 
@@ -122,7 +113,7 @@ double Galaxy::Kroupa_IMF_for_integrating(double mstar, void * params)
 
 double Galaxy::Kroupa_IMF_for_value(double mstar, double norm) const
 {
-  double m1 = 0.08;
+  double m1 = MSTAR_MIN;
   double m2 = 0.5;
   double m3 = MSTAR_MAX;
 

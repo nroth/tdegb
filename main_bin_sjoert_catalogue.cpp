@@ -6,10 +6,7 @@
 #include <ctime>
 #include <mpi.h>
 #include <gsl/gsl_rng.h>
-#include <gsl/gsl_randist.h>
-#include "physical_constants.h"
 #include "histogramNd.h"
-#include "cdf.h"
 #include "galaxy.h"
 #include "survey.h"
 #include "hdf5.h"

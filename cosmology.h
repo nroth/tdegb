@@ -14,7 +14,7 @@
 
 
 //function needs to have this signature for params
-static double ComovingDistanceIntegrand(double z, void * params)
+double ComovingDistanceIntegrand(double z, void * params)
 {
 
   //double param = *(double *) params;
@@ -23,7 +23,7 @@ static double ComovingDistanceIntegrand(double z, void * params)
 
 }
 
-static double ComovingDistance(double z)
+double ComovingDistance(double z)
 {
 
   //    double ComovingDistanceIntegrand(double, void *); // function needs to have this signature for gsl
@@ -47,7 +47,7 @@ static double ComovingDistance(double z)
 
 }
 
-static double ComovingVolumeIntegrand(double z, void * params)
+double ComovingVolumeIntegrand(double z, void * params)
 {
 
   double d_c = ComovingDistance(z);
@@ -57,7 +57,7 @@ static double ComovingVolumeIntegrand(double z, void * params)
 }
 
 // return in Mpc^3
-static double ComovingVolume(double z_min, double z_max, double omega)
+double ComovingVolume(double z_min, double z_max, double omega)
 {
 
   int grid_size = 256;
@@ -80,21 +80,21 @@ static double ComovingVolume(double z_min, double z_max, double omega)
 
 }
 
-static double LuminosityDistance(double z)
+double LuminosityDistance(double z)
 {
 
   return (1. + z) * ComovingDistance(z);
   
 }
 
-static double AngularDiameterDistance(double z)
+double AngularDiameterDistance(double z)
 {
 
   return 1./(1. + z) * ComovingDistance(z);
   
 }
 
-static double DistanceModulus(double z)
+double DistanceModulus(double z)
 {
 
   double ld = LuminosityDistance(z);

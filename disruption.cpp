@@ -1,6 +1,5 @@
 #include <math.h>
 #include <stdio.h>
-#include <gsl/gsl_integration.h>
 #include "physical_constants.h"
 #include "galaxy.h"
 #include "disruption.h"

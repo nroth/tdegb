@@ -1,5 +1,5 @@
 #include <math.h>
-#include <algorithm>
+#include <stdio.h>
 #include "physical_constants.h"
 #include "galaxy.h"
 #include "survey.h"
