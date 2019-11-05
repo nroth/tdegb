@@ -66,8 +66,8 @@ public:
   double Get_nuker_gammaprime() const;
   double Get_r50_kpc() const;
   double Get_imf_norm() const;
-
-  double Get_Mu_Eff(double);
+  double Get_Luminosity_Distance() const;
+  double Get_Mu_Eff(double) const;
 
   static double Kroupa_IMF_for_integrating(double, void *); // static needed for gsl integration to work
   double Kroupa_IMF_for_value(double, double) const; // static needed for gsl integration to work

@@ -200,8 +200,6 @@ double Galaxy::Find_Nuker_Gammaprime_From_Sersic()
 
 }
 
-
-
 // see reference mentioned at https://ned.ipac.caltech.edu/level5/March05/Graham/Graham2.html
 double Galaxy::Get_Approx_Sersic_bn()
 {
@@ -211,10 +209,15 @@ double Galaxy::Get_Approx_Sersic_bn()
 
 // as found in https://ned.ipac.caltech.edu/level5/March05/Graham/Graham2.html
 // will be in units of magnitudes / arcsec^2 assuming m_tot in magnitude and r_eff_arcsec in arsec
-double Galaxy::Get_Mu_Eff(double m_tot)
+double Galaxy::Get_Mu_Eff(double m_tot) const
 {
 
   return m_tot + 5. * log10(re_arcsec) + 2.5 * log10(2. * PI * sersic_n * exp(sersic_bn)/pow(sersic_bn,2. * sersic_n) * gsl_sf_gamma(2. * sersic_n)  );
+}
+
+double Galaxy::Get_Luminosity_Distance() const
+{
+  return LuminosityDistance(z);
 }
 
 

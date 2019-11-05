@@ -5,7 +5,6 @@
 #include "disruption.h"
 #include "histogramNd.h"
 #include "survey.h"
-#include "cosmology.h"
 
 
 void Sample_Disruption_Parameters(gsl_rng *rangen, Survey surv, Galaxy gal, double& vol_rate_accumulator, double& detected_rate_accumulator, HistogramNd& hist_detected_flares)
@@ -19,7 +18,7 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Survey surv, Galaxy gal, doub
   double mbh = gal.Get_Mbh();
   double z = gal.Get_z();
 
-  double cosmo_factor = (1. + z)/(4. * PI * pow(LuminosityDistance(z),2.));
+  double cosmo_factor = (1. + z)/(4. * PI * pow(gal.Get_Luminosity_Distance(),2.));
   double nu_g_emit = (1. + z) * surv.Get_Nu_Gband();
   double nu_r_emit = (1. + z) * surv.Get_Nu_Rband();  
 
