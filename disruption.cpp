@@ -1,5 +1,7 @@
 #include <math.h>
 #include <stdio.h>
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
 #include "physical_constants.h"
 #include "galaxy.h"
 #include "disruption.h"
@@ -17,13 +19,26 @@ Disruption::Disruption(Galaxy gal)
   mbh = host_gal.Get_Mbh();
   L_Edd = Eddington_Luminosity();
 
-  T_opt = 3.e4;
-  beta = 1.;
-  mstar = 0.;
-  max_L = 0.;
-  peak_L = 0.;
+
+
+  // move these to galaxy?
+  T_opt_mean = 3.e4;
+  T_opt_sigma = 1.e-6;
+  beta_mean = 1.;
+  beta_sigma = 1.e-6;
+  A_V_mean = 1.e-6; // should depend on galaxy properties
+  A_V_sigma = 0.; // should depend on galaxy properties
+  R_V_mean = 3.; // should depend on galaxy properties
+  R_V_sigma = 1.e-6; // should depend on galaxy properties
+
+  T_opt = 0.;
+  beta = 0.;
   A_V = 0.;
-  R_V = 3.;
+  R_V = 0.;
+  mstar = 0.;
+  peak_L = 0.;
+
+  max_L = 0.;
   
 }
 
@@ -182,6 +197,31 @@ void Disruption::Sample_Peak_L(gsl_rng *rangen)
   peak_L = max_L * pow(this_y,1./lf_log_powerlaw);
 
   return;
+}
+
+void Disruption::Sample_Beta(gsl_rng *rangen)
+{
+  beta = beta_mean + gsl_ran_gaussian(rangen, beta_sigma);
+
+}
+
+void Disruption::Sample_Topt(gsl_rng *rangen)
+{
+  T_opt = T_opt_mean + gsl_ran_gaussian(rangen, T_opt_sigma);
+}
+
+void Disruption::Sample_A_V(gsl_rng *rangen)
+{
+
+  A_V = A_V_mean + gsl_ran_gaussian(rangen, A_V_sigma);
+
+}
+
+void Disruption::Sample_R_V(gsl_rng *rangen)
+{
+  
+  R_V = R_V_mean + gsl_ran_gaussian(rangen, R_V_sigma);
+  
 }
 
 // trying to keep this general, not only for optical emission

@@ -45,6 +45,8 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Survey surv, Galaxy gal, doub
 	  // will then have to do the flare observability criteria for each flare when doing detected disrupt. For volumteric disrupt, accept all of these
 
 	  vol_rate_accumulator += 1.;
+
+	  disrupt.Sample_Beta(rangen);
 	  
 	  // need to haave sampled mstar, beta (and mbh) already 
 	  disrupt.Determine_Max_L();
@@ -56,6 +58,9 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Survey surv, Galaxy gal, doub
 
 
 	  disrupt.Sample_Peak_L(rangen);
+	  disrupt.Sample_Topt(rangen);
+	  disrupt.Sample_R_V(rangen);
+	  disrupt.Sample_A_V(rangen);
 	    
 	  double r_mag_observed = surv.mAB_From_Fnu(disrupt.Extincted_Flux_Observed(nu_r_emit,cosmo_factor));
 
