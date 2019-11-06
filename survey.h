@@ -24,7 +24,7 @@ class Survey {
 
   Survey();
   double mAB_From_Fnu(double);
-  double Find_Host_Contrast_Magnitude(Galaxy);
+  double Find_Host_Contrast_Magnitude(Galaxy, char);
 
   double Get_Nu_Gband();
   double Get_Nu_Rband();

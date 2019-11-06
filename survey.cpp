@@ -50,11 +50,14 @@ double Survey::mAB_From_Fnu(double F_nu)
 }
 
 // find a way to make this passed galaxy constant?
-double Survey::Find_Host_Contrast_Magnitude(Galaxy gal)
+double Survey::Find_Host_Contrast_Magnitude(Galaxy gal, char band)
 {
 
-  // REALLY NEED A GOOD WAY TO CHOOSE THE BAND HERE
-  double m_tot = gal.Get_m_g();
+  double m_tot = gal.Get_m_r(); // default is r band
+  if (band == 'g')
+    {
+      m_tot = gal.Get_m_g();
+    }
   double mu_e = gal.Get_Mu_Eff(m_tot);
   double I_e = I_From_Mu(mu_e);
 

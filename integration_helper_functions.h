@@ -10,10 +10,12 @@
 void Sample_Disruption_Parameters(gsl_rng *rangen, Survey surv, Galaxy gal, double& vol_rate_accumulator, double& detected_rate_accumulator, HistogramNd& hist_detected_flares)
 {
 
-  double m_limit_contrast = surv.Find_Host_Contrast_Magnitude(gal); // in the future, maybe specify which band this is for
+  double m_r_limit_contrast = surv.Find_Host_Contrast_Magnitude(gal,'r');
+  double m_g_limit_contrast = surv.Find_Host_Contrast_Magnitude(gal,'g'); 
 
   // for all flares in this galaxy
-  double operating_m_limit = std::min(m_limit_contrast,surv.Get_m_r_Threshhold());
+  double operating_m_r_limit = std::min(m_r_limit_contrast,surv.Get_m_r_Threshhold());
+  double operating_m_g_limit = std::min(m_g_limit_contrast,surv.Get_m_g_Threshhold());
 
   double mbh = gal.Get_Mbh();
   double z = gal.Get_z();
@@ -63,12 +65,11 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Survey surv, Galaxy gal, doub
 	  disrupt.Sample_A_V(rangen);
 	    
 	  double r_mag_observed = surv.mAB_From_Fnu(disrupt.Extincted_Flux_Observed(nu_r_emit,cosmo_factor));
+	  double g_mag_observed = surv.mAB_From_Fnu(disrupt.Extincted_Flux_Observed(nu_g_emit,cosmo_factor));
 
-	  if (r_mag_observed < operating_m_limit)
+	  if (r_mag_observed < operating_m_r_limit && g_mag_observed < operating_m_g_limit)
 	    {
 	      detected_rate_accumulator += 1.;
-
-	      double g_mag_observed = surv.mAB_From_Fnu(disrupt.Extincted_Flux_Observed(nu_g_emit,cosmo_factor));
 
 	      flare_properties[0] = r_mag_observed;
 	      flare_properties[1] = g_mag_observed - r_mag_observed;
