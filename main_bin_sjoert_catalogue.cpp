@@ -21,6 +21,8 @@ using std::string;
 int main(int argc, char **argv)
 {
 
+  clock_t begin = clock();
+
   //  double Omega = SURVEY_SQ_DEG / (41252.96);
 
   vector<vector<double> > bin_specs;
@@ -68,6 +70,14 @@ int main(int argc, char **argv)
   spec[0] = 0.;   // start, stop, delta
   spec[1] = 1.02;
   spec[2] = 0.05;
+
+  bin_specs.push_back(spec);
+  dimension_names.push_back(name);
+
+  name = "sersic";
+  spec[0] = 0.;   // start, stop, delta
+  spec[1] = 6.;
+  spec[2] = 0.25;
 
   bin_specs.push_back(spec);
   dimension_names.push_back(name);
@@ -135,7 +145,6 @@ int main(int argc, char **argv)
 
   ////////// Start reading in the catalogue
 
-  clock_t begin = clock();
 
   int num_galaxies = 6101944; // should think more about how to make this flexible
   
@@ -256,6 +265,11 @@ int main(int argc, char **argv)
 
   Survey surv;
 
+  clock_t end = clock();
+  float elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
+  printf("#\n# It took %f seconds to prepare evereythign on rank %d\n",elapsed_secs,my_rank );
+
+  begin = clock();
 
   /////// MAIN LOOP
   for (int i = 0; i < my_num_gals; i++)
@@ -266,6 +280,7 @@ int main(int argc, char **argv)
       catalogue_data[2] = mbh_bulge[i];// stored as log
       catalogue_data[3] = mbh_sigma[i]; // stored as log
       catalogue_data[4] = z[i];
+      catalogue_data[5] = sersic_n[i];
 
       hist_gals.Count(catalogue_data);
 
@@ -296,9 +311,14 @@ int main(int argc, char **argv)
   delete[] sersic_n;
   delete[] r50_kpc;
 
-  MPI_Barrier(MPI_COMM_WORLD); // might not be necessary, but doesn't hurt much
+  end = clock();
+  elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
+  printf("#\n# It took %f seconds to finish the flares on rank %d\n",elapsed_secs,my_rank );
 
+  MPI_Barrier(MPI_COMM_WORLD); // might not be necessary, but doesn't hurt much
+  
   // now reduce
+  begin = clock();
 
   // make arrays for communication
   vector<double> src_mpi_vec(hist_gals.Get_All_Counts());
@@ -352,88 +372,106 @@ int main(int argc, char **argv)
 
   delete[] dst_mpi_flares;
   
-  clock_t end = clock();
-
-  float elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
-  printf("#\n# It took %f seconds to bin %d entries\n",elapsed_secs, num_galaxies);
+  end = clock();
+  if (my_rank == 0)
+    {
+      elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
+      printf("#\n# It took %f seconds to reduce everything\n",elapsed_secs);
+    }
 
   vector<int> kept_axes(2);
   int ka[2];
 
-  if (my_rank == 0)
-    {
-  
-      // Print out some histograms of galaxy properties
-      HistogramNd hist_projected_gals;
-  
-      for (int i = 1; i < hist_gals_dimension; i++)
-	for (int j = 0; j < i; j++)
-	  {
 
+  int assigned_ranks = 3;
+  int rank_counter = 0;
+  for (int i = 1; i < hist_gals.Get_Dimension(); i++)
+    for (int j = 0; j < i; j++)
+      {
+
+	if (rank_counter % assigned_ranks == my_rank)
+	  {
+	    printf("Rank %d outputting galaxy info set %d %d\n", my_rank,i,j);
+	    HistogramNd hist_projected_gals;
 	    ka[0] = j;
 	    ka[1] = i;
 	    kept_axes.assign(ka, ka + 2);
 	    hist_projected_gals = hist_gals.Create_Projected_Histogram(kept_axes);
 	    hist_projected_gals.Print_Histogram_2D(0,1);
-	    
 	  }
-    }
-
-  if (my_rank == 3)
-    {
-
-  HistogramNd hist_projected_flares;
-  
-  for (int i = 1; i < hist_detected_flares.Get_Dimension(); i++)
-    for (int j = 0; j < i; j++)
-      {
-
-	ka[0] = j;
-	ka[1] = i;
-	kept_axes.assign(ka, ka + 2);
-	hist_projected_flares = hist_detected_flares.Create_Projected_Histogram(kept_axes);
-	hist_projected_flares.Print_Histogram_2D(0,1);
-
+	rank_counter++;
+	    
       }
-  
-    }
 
   
-  
-  if (my_rank == 1)
-    {
-      HistogramNd hist_projected_vol_disrupt;
-  
-      for (int i = 1; i < hist_gals_dimension; i++)
+  assigned_ranks = 3;
+  int rank_displacement = 3;
+  rank_counter = 0;
+  for (int i = 1; i < hist_vol_disrupt.Get_Dimension(); i++)
 	for (int j = 0; j < i; j++)
 	  {
 
+	    if (rank_counter % assigned_ranks + rank_displacement == my_rank)
+	      {
+		printf("Rank %d outputting vol disrupt set %d %d\n", my_rank,i,j);
+		  HistogramNd hist_projected_vol_disrupt;
 	    ka[0] = j;
 	    ka[1] = i;
 	    kept_axes.assign(ka, ka + 2);
 	    hist_projected_vol_disrupt = hist_vol_disrupt.Create_Projected_Histogram(kept_axes);
 	    hist_projected_vol_disrupt.Print_Histogram_2D(0,1);
+	      }
+
+	    rank_counter++;
 	  }
 
-    }
-  
+  assigned_ranks = 3;
+  rank_displacement = 6;
+  rank_counter = 0;
 
-  if (my_rank == 2)
-    {
-      HistogramNd hist_projected_detected_disrupt;
-
-      for (int i = 1; i < hist_gals_dimension; i++)
-	for (int j = 0; j < i; j++)
+  for (int i = 1; i < hist_detected_disrupt.Get_Dimension(); i++)
+    for (int j = 0; j < i; j++)
+      {
+	
+	if (rank_counter % assigned_ranks + rank_displacement == my_rank)
 	  {
-
-	    ka[0] = j;
-	    ka[1] = i;
-	    kept_axes.assign(ka, ka + 2);
-	    hist_projected_detected_disrupt = hist_detected_disrupt.Create_Projected_Histogram(kept_axes);
-	    hist_projected_detected_disrupt.Print_Histogram_2D(0,1);
+	    printf("Rank %d outputting detected disrupt set %d %d\n", my_rank,i,j);
+	    HistogramNd hist_projected_detected_disrupt;
+	ka[0] = j;
+	ka[1] = i;
+	kept_axes.assign(ka, ka + 2);
+	hist_projected_detected_disrupt = hist_detected_disrupt.Create_Projected_Histogram(kept_axes);
+	hist_projected_detected_disrupt.Print_Histogram_2D(0,1);
 	  }
 
-    }
+	rank_counter++;
+      }
+
+
+  assigned_ranks = 1;
+  rank_displacement = 9;
+  rank_counter = 0;
+  for (int i = 1; i < hist_detected_flares.Get_Dimension(); i++)
+    for (int j = 0; j < i; j++)
+      {
+	
+	if (rank_counter % assigned_ranks + rank_displacement == my_rank)
+	  {
+	    printf("Rank %d outputting flare set %d %d\n", my_rank,i,j);
+	      HistogramNd hist_projected_flares;
+	ka[0] = j;
+	ka[1] = i;
+	kept_axes.assign(ka, ka + 2);
+	hist_projected_flares = hist_detected_flares.Create_Projected_Histogram(kept_axes);
+	hist_projected_flares.Print_Histogram_2D(0,1);
+	  }
+
+	rank_counter++;
+      }
+
+
+
+
 
 
   MPI_Finalize();

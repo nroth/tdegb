@@ -24,7 +24,7 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Survey surv, Galaxy gal, doub
   double nu_g_emit = (1. + z) * surv.Get_Nu_Gband();
   double nu_r_emit = (1. + z) * surv.Get_Nu_Rband();  
 
-  int num_trials = 500;
+  int num_trials = 1000;
   vol_rate_accumulator = 0.;
   detected_rate_accumulator = 0.;
 

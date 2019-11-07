@@ -23,7 +23,7 @@ Disruption::Disruption(Galaxy gal)
 
   // move these to galaxy?
   T_opt_mean = 3.e4;
-  T_opt_sigma = 1.e-6;
+  T_opt_sigma = 1.5e4;
   beta_mean = 1.;
   beta_sigma = 1.e-6;
   A_V_mean = 1.e-6; // should depend on galaxy properties
@@ -207,7 +207,8 @@ void Disruption::Sample_Beta(gsl_rng *rangen)
 
 void Disruption::Sample_Topt(gsl_rng *rangen)
 {
-  T_opt = T_opt_mean + gsl_ran_gaussian(rangen, T_opt_sigma);
+  double u = gsl_rng_uniform(rangen);  
+  T_opt = T_opt_mean + T_opt_sigma* (2. * u - 1.);
 }
 
 void Disruption::Sample_A_V(gsl_rng *rangen)
