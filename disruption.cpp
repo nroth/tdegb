@@ -42,6 +42,31 @@ Disruption::Disruption(Galaxy gal)
   
 }
 
+void Disruption::Set_Topt(double T)
+{
+  T_opt = T;
+}
+
+void Disruption::Set_Beta(double b)
+{
+  beta = b;
+}
+
+void Disruption::Set_Peak_L(double L)
+{
+  peak_L = L;
+}
+
+void Disruption::Set_A_V(double av)
+{
+  A_V = av;
+}
+
+void Disruption::Set_R_V(double rv)
+{
+  R_V = rv;
+}
+
 // Rejection sampling to avoid messiness of integrating piecewise function
 // could this be made faster by using a better "proposal distribution?".
 void Disruption::Rejection_Sample_Mstar(gsl_rng *rangen)

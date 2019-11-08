@@ -267,7 +267,7 @@ int main(int argc, char **argv)
 
   clock_t end = clock();
   float elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
-  printf("#\n# It took %f seconds to prepare evereythign on rank %d\n",elapsed_secs,my_rank );
+  printf("#\n# It took %f seconds to prepare everything on rank %d\n",elapsed_secs,my_rank );
 
   begin = clock();
 

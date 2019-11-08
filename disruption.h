@@ -44,8 +44,7 @@ class Disruption {
   double Eddington_Luminosity();
 
   double Planck_Function_Frequency(double, double);
-  double Unobscured_Lnu(double, double, double);
-  double Cardelli_Extinction(double);
+
   double Dust_Flux_Factor_Reduction(double);
 
  public:
@@ -67,8 +66,15 @@ class Disruption {
   double Get_Hills_Mass();
   double Get_Max_L();
   double Get_Min_Log_Lbol();
-  
 
+  void Set_Topt(double);
+  void Set_Beta(double);
+  void Set_Peak_L(double);
+  void Set_A_V(double);
+  void Set_R_V(double);
+  
+  double Unobscured_Lnu(double, double, double);
+  double Cardelli_Extinction(double);
   double Extincted_Flux_Observed(double, double);
 
 };
