@@ -248,6 +248,13 @@ int main(int argc, char **argv)
     if (my_rank == 0)
     {
       free(z_vector_big);
+      free(m_g_vector_big); 
+      free(m_r_vector_big); 
+      free(mbh_bulge_vector_big);
+      free(mbh_sigma_vector_big);
+      free(mass_vector_big);
+      free(sersic_n_vector_big);
+      free(r50_kpc_vector_big);
     }
 
   delete[] send_counts;
