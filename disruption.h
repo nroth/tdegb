@@ -63,9 +63,12 @@ class Disruption {
   double Get_Peak_L();
   double Get_Topt();
   double Get_beta();
+  double Get_A_V();
+  double Get_R_V();
   double Get_Hills_Mass();
   double Get_Max_L();
   double Get_Min_Log_Lbol();
+
 
   void Set_Topt(double);
   void Set_Beta(double);
@@ -76,6 +79,7 @@ class Disruption {
   double Unobscured_Lnu(double, double, double);
   double Cardelli_Extinction(double);
   double Extincted_Flux_Observed(double, double);
+  double GarnBest_Median_SF_AHa(double);
 
 };
 

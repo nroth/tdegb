@@ -1,5 +1,6 @@
 #include <math.h>
 #include <stdio.h>
+#include <algorithm>
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 #include "physical_constants.h"
@@ -19,16 +20,15 @@ Disruption::Disruption(Galaxy gal)
   mbh = host_gal.Get_Mbh();
   L_Edd = Eddington_Luminosity();
 
-
-
+  
   // move these to galaxy?
   T_opt_mean = 3.e4;
   T_opt_sigma = 1.5e4;
   beta_mean = 1.;
   beta_sigma = 1.e-6;
-  A_V_mean = 1.e-6; // should depend on galaxy properties
-  A_V_sigma = 0.; // should depend on galaxy properties
-  R_V_mean = 3.; // should depend on galaxy properties
+  A_V_mean = 0.2; // should depend on galaxy properties
+  A_V_sigma = 0.06; // should depend on galaxy properties
+  R_V_mean = 3.3; // should depend on galaxy properties
   R_V_sigma = 1.e-6; // should depend on galaxy properties
 
   T_opt = 0.;
@@ -129,6 +129,15 @@ double Disruption::Get_Min_Log_Lbol()
   return min_log_lbol;
 }
 
+double Disruption::Get_A_V()
+{
+  return A_V;
+}
+
+double Disruption::Get_R_V()
+{
+  return R_V;
+}
 
 // This could be improved
 double Disruption::Main_Sequence_Radius()
@@ -239,14 +248,28 @@ void Disruption::Sample_Topt(gsl_rng *rangen)
 void Disruption::Sample_A_V(gsl_rng *rangen)
 {
 
-  A_V = A_V_mean + gsl_ran_gaussian(rangen, A_V_sigma);
+  if (log10(host_gal.Get_ssfr()) < -11.3)
+    {
+      A_V = std::max(A_V_mean + gsl_ran_gaussian(rangen, A_V_sigma), 0.);
+    }
+    else
+      {
+	double logmstar = log10(host_gal.Get_Total_Stellar_Mass());
+	double median_Aha = GarnBest_Median_SF_AHa(logmstar);
+	double sigma_Aha = 0.28;
+	double this_Aha = std::max(median_Aha + gsl_ran_gaussian(rangen, sigma_Aha),0.);
+	A_V = this_Aha / Cardelli_Extinction(1./(0.65645));
+      }
+
+
 
 }
 
 void Disruption::Sample_R_V(gsl_rng *rangen)
 {
   
-  R_V = R_V_mean + gsl_ran_gaussian(rangen, R_V_sigma);
+  //  R_V = R_V_mean + gsl_ran_gaussian(rangen, R_V_sigma);
+  R_V = R_V_mean;
   
 }
 
@@ -341,6 +364,19 @@ double Disruption::Cardelli_Extinction(double x)
 	  */
         
     return a + b / R_V;
+
+}
+
+// equation 5 of Garn & Best 2010. Median A_Halpha for star-forming galaxies 
+double Disruption::GarnBest_Median_SF_AHa(double logmstar)
+{
+
+  if (logmstar < 8.66) return 0.292;
+  if (logmstar > 11.96) return 2.164;
+  
+  double x = logmstar - 10.;
+
+  return 0.91 + 0.77 * x + 0.11 * x * x - 0.09 * x * x * x;
 
 }
 

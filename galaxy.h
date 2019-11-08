@@ -14,9 +14,9 @@ class Galaxy {
   double sersic_n;
   double r50_kpc;
   double nuker_gammaprime;
+  double ssfr;
   // include star formation history information? Time since starburst, durtaion of starburst?
   // could be used to set the upper truncation of IMF to make the approximate present-day mass function
-
 
   double resolution_for_nuker_gamma; // arsec. Taken to be same for all galaxies. See Lauer et al 2007. Nick Stone's rate calculations were based on Nuker gamma as measured in this paper, so to convert n_sersic to nuker gamma we want to account for how they measured gamma
 
@@ -61,8 +61,10 @@ public:
   double Get_sersic_n() const;
   double Get_nuker_gammaprime() const;
   double Get_r50_kpc() const;
+  double Get_ssfr() const;
   double Get_Mstar_Min() const;
   double Get_Mstar_Max() const;
+  double Get_Total_Stellar_Mass() const;
   double Get_imf_norm() const;
   double Get_Luminosity_Distance() const;
   double Get_Disruption_Rate_Normalization_Combined() const;

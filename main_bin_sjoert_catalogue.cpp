@@ -157,6 +157,7 @@ int main(int argc, char **argv)
   double* mass_vector_big;
   double* sersic_n_vector_big;
   double* r50_kpc_vector_big;
+  double* ssfr_vector_big;
   
   MPI_Init( &argc, &argv );
 
@@ -208,6 +209,7 @@ int main(int argc, char **argv)
       mass_vector_big = (double*) malloc(num_galaxies * sizeof(double));
       sersic_n_vector_big = (double*) malloc(num_galaxies * sizeof(double));
       r50_kpc_vector_big = (double*) malloc(num_galaxies * sizeof(double));
+      ssfr_vector_big = (double*) malloc(num_galaxies * sizeof(double));
 
       hid_t file_id = H5Fopen(catalogue_filename.c_str(),H5F_ACC_RDONLY,H5P_DEFAULT);
       
@@ -219,6 +221,7 @@ int main(int argc, char **argv)
       H5LTread_dataset_double(file_id,"mass",mass_vector_big);
       H5LTread_dataset_double(file_id,"sersic_n",sersic_n_vector_big);
       H5LTread_dataset_double(file_id,"r50_kpc",r50_kpc_vector_big);
+      H5LTread_dataset_double(file_id,"ssfr",ssfr_vector_big);
 
       H5Fclose(file_id);
 
@@ -233,6 +236,7 @@ int main(int argc, char **argv)
   double* mass = new double[my_num_gals];
   double* sersic_n = new double[my_num_gals];
   double* r50_kpc = new double[my_num_gals];
+  double* ssfr = new double[my_num_gals];
 
   MPI_Barrier(MPI_COMM_WORLD); // might not be necessary, but doesn't hurt much
 
@@ -244,6 +248,7 @@ int main(int argc, char **argv)
   MPI_Scatterv(mass_vector_big, send_counts, displacements, MPI_DOUBLE, mass, my_num_gals, MPI_DOUBLE, 0, MPI_COMM_WORLD);
   MPI_Scatterv(sersic_n_vector_big, send_counts, displacements, MPI_DOUBLE, sersic_n, my_num_gals, MPI_DOUBLE, 0, MPI_COMM_WORLD);
   MPI_Scatterv(r50_kpc_vector_big, send_counts, displacements, MPI_DOUBLE, r50_kpc, my_num_gals, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  MPI_Scatterv(ssfr_vector_big, send_counts, displacements, MPI_DOUBLE, ssfr, my_num_gals, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
     if (my_rank == 0)
     {
@@ -255,6 +260,7 @@ int main(int argc, char **argv)
       free(mass_vector_big);
       free(sersic_n_vector_big);
       free(r50_kpc_vector_big);
+      free(ssfr_vector_big);
     }
 
   delete[] send_counts;
@@ -291,7 +297,7 @@ int main(int argc, char **argv)
 
       hist_gals.Count(catalogue_data);
 
-      double galaxy_info[8] = { mass[i], mbh_sigma[i], mbh_bulge[i], z[i], sersic_n[i], r50_kpc[i], m_g[i], m_r[i]};
+      double galaxy_info[9] = { mass[i], mbh_sigma[i], mbh_bulge[i], z[i], sersic_n[i], r50_kpc[i], m_g[i], m_r[i],ssfr[i]};
 
       Galaxy this_galaxy(galaxy_info);
 

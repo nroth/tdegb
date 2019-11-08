@@ -21,7 +21,7 @@ Galaxy::Galaxy(double* galaxy_info)
   disruption_rate_powerlaw_nuker = 0.705;
 
   
-  total_stellar_mass = galaxy_info[0];  // stored as log
+  total_stellar_mass = galaxy_info[0];  
   mbh_sigma = pow(10.,galaxy_info[1]); // converting log to value
   mbh_bulge = pow(10.,galaxy_info[2]); // converting log to value
   z = galaxy_info[3];
@@ -29,6 +29,7 @@ Galaxy::Galaxy(double* galaxy_info)
   r50_kpc = galaxy_info[5];
   m_g = galaxy_info[6];
   m_r = galaxy_info[7];
+  ssfr = galaxy_info[8];
 
   resolution_for_nuker_gamma = 0.04; // arsec. See Lauer et al 2007. Nick Stone's rate calculations were based on Nuker gamma as measured in this paper, so to convert n_sersic to nuker gamma we want to account for how they measured gamma
   sersic_bn = Get_Approx_Sersic_bn();
@@ -87,6 +88,11 @@ double Galaxy::Get_r50_kpc() const
   return r50_kpc;
 }
 
+double Galaxy::Get_ssfr() const
+{
+  return ssfr;
+}
+
 double Galaxy::Get_Mstar_Min() const
 {
   return mstar_min;
@@ -95,6 +101,11 @@ double Galaxy::Get_Mstar_Min() const
 double Galaxy::Get_Mstar_Max() const
 {
   return mstar_max;
+}
+
+double Galaxy::Get_Total_Stellar_Mass() const
+{
+  return total_stellar_mass;
 }
 
 double Galaxy::Get_imf_norm() const
