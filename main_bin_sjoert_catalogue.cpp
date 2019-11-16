@@ -75,6 +75,7 @@ int main(int argc, char **argv)
   bin_specs.push_back(spec);
   dimension_names.push_back(name);
 
+  /*
   name = "sersic";
   spec[0] = 0.;   // start, stop, delta
   spec[1] = 6.;
@@ -82,6 +83,7 @@ int main(int argc, char **argv)
 
   bin_specs.push_back(spec);
   dimension_names.push_back(name);
+  */
 
   name = "sfr";
   spec[0] = -3.;   // start, stop, delta
@@ -301,8 +303,8 @@ int main(int argc, char **argv)
       catalogue_data[1] = m_g[i] - m_r[i];
       catalogue_data[2] = mbh_sigma[i]; // stored as log
       catalogue_data[3] = z[i];
-      catalogue_data[4] = sersic_n[i];
-      catalogue_data[5] = log10(ssfr[i] * mass[i]);
+      //      catalogue_data[4] = sersic_n[i];
+      catalogue_data[4] = log10(ssfr[i] * mass[i]);
 					
 
       hist_gals.Count(catalogue_data);
