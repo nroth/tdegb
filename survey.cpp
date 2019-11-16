@@ -11,8 +11,8 @@ Survey::Survey()
   nu_gband = 646243712006898.;
   nu_rband =  489696925841228.;
 
-  m_r_threshhold = 20;
-  m_g_threshhold = 20;
+  m_r_threshhold = 19;
+  m_g_threshhold = 19;
 
   host_contrast_cut = 0.5;
   

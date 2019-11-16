@@ -28,8 +28,7 @@ Disruption::Disruption(Galaxy gal)
   beta_sigma = 1.e-6;
   A_V_mean = 0.2; // should depend on galaxy properties
   A_V_sigma = 0.06; // should depend on galaxy properties
-  R_V_mean = 3.3; // should depend on galaxy properties
-  R_V_sigma = 1.e-6; // should depend on galaxy properties
+  R_V_mean = 4.05; // should depend on galaxy properties
 
   T_opt = 0.;
   beta = 0.;
@@ -258,7 +257,8 @@ void Disruption::Sample_A_V(gsl_rng *rangen)
 	double median_Aha = GarnBest_Median_SF_AHa(logmstar);
 	double sigma_Aha = 0.28;
 	double this_Aha = std::max(median_Aha + gsl_ran_gaussian(rangen, sigma_Aha),0.);
-	A_V = this_Aha / Cardelli_Extinction(1./(0.65645));
+	//A_V = this_Aha / Cardelli_Extinction(1./(0.65645));
+	A_V = this_Aha / Calzetti_Extinction(1./(0.65645));
       }
 
 
@@ -298,9 +298,11 @@ double Disruption::Dust_Flux_Factor_Reduction(double nu_emit)
   double lambda_micron = lambda_cm * 1.e4;
   double x = 1./lambda_micron;
   
-  double cardelli_factor = Cardelli_Extinction(x);
+  //  double cardelli_factor = Cardelli_Extinction(x);
+  //  return pow(10., -1. * A_V * cardelli_factor/(2.5));
 
-  return pow(10., -1. * A_V * cardelli_factor/(2.5));
+  double calzetti_factor = Calzetti_Extinction(x);
+  return pow(10., -1. * A_V * calzetti_factor/(2.5));
 
 }
 
@@ -364,6 +366,30 @@ double Disruption::Cardelli_Extinction(double x)
 	  */
         
     return a + b / R_V;
+
+}
+
+double Disruption::Calzetti_Extinction(double x)
+{
+
+  // Calzetti 2000 gives a function for k(lambda)
+  // To make this analogous to the Cardelli extinction function, here we return k(lambda) / R_V
+
+    if (x < 5./11. || x > 25./3.)
+    {
+      printf("ERROR: Calzetti extinction not defined for x < 0.45 or x > 8.33...\n");
+      return 0.;
+    }
+
+    if (x >= 5./11. && x < 1.6)
+      {
+	
+	return std::max((2.659 * (-1.857 + 1.040 * x) + R_V)/R_V,0.);
+      }
+    else
+      {
+	return (2.659 * (-2.156 + 1.509 * x - 0.198 * x *x + 0.011 * x * x * x) + R_V)/R_V;
+      }
 
 }
 

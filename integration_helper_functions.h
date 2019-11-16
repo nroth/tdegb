@@ -25,7 +25,7 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Survey surv, Galaxy gal, doub
   double nu_g_emit = (1. + z) * surv.Get_Nu_Gband();
   double nu_r_emit = (1. + z) * surv.Get_Nu_Rband();  
 
-  int num_trials = 1000;
+  int num_trials = 2000;
   vol_rate_accumulator = 0.;
   detected_rate_accumulator = 0.;
 
@@ -68,7 +68,7 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Survey surv, Galaxy gal, doub
 	  double r_mag_observed = surv.mAB_From_Fnu(disrupt.Extincted_Flux_Observed(nu_r_emit,cosmo_factor));
 	  double g_mag_observed = surv.mAB_From_Fnu(disrupt.Extincted_Flux_Observed(nu_g_emit,cosmo_factor));
 
-	  if (r_mag_observed < operating_m_r_limit && g_mag_observed < operating_m_g_limit)
+	  if (r_mag_observed < operating_m_r_limit && g_mag_observed < operating_m_g_limit && (g_mag_observed - r_mag_observed) < 0.)
 	    {
 	      detected_rate_accumulator += 1.;
 

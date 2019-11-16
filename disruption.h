@@ -25,7 +25,7 @@ class Disruption {
   double A_V_mean;
   double A_V_sigma; 
   double R_V_mean;
-  double R_V_sigma;
+  //  double R_V_sigma;
 
   double L_Edd;
   double peak_L; // beak Lbol for a given disruption
@@ -78,6 +78,7 @@ class Disruption {
   
   double Unobscured_Lnu(double, double, double);
   double Cardelli_Extinction(double);
+  double Calzetti_Extinction(double);
   double Extincted_Flux_Observed(double, double);
   double GarnBest_Median_SF_AHa(double);
 

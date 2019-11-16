@@ -49,7 +49,7 @@ int main(int argc, char **argv)
   bin_specs.push_back(spec);
   dimension_names.push_back(name);
 
-  
+  /*  
   name = "mbh_bulge";
   spec[0] = 3.;   // start, stop, delta
   spec[1] = 9.;
@@ -57,11 +57,12 @@ int main(int argc, char **argv)
 
   bin_specs.push_back(spec);
   dimension_names.push_back(name);
+  */
 
   name = "mbh_sigma";
   spec[0] = 3.;   // start, stop, delta
   spec[1] = 9.;
-  spec[2] = 0.3;
+  spec[2] = 0.15;
 
   bin_specs.push_back(spec);
   dimension_names.push_back(name);
@@ -77,6 +78,14 @@ int main(int argc, char **argv)
   name = "sersic";
   spec[0] = 0.;   // start, stop, delta
   spec[1] = 6.;
+  spec[2] = 0.25;
+
+  bin_specs.push_back(spec);
+  dimension_names.push_back(name);
+
+  name = "sfr";
+  spec[0] = -3.;   // start, stop, delta
+  spec[1] = 3.;
   spec[2] = 0.25;
 
   bin_specs.push_back(spec);
@@ -113,9 +122,9 @@ int main(int argc, char **argv)
   dimension_names.push_back(name);
 
   name = "g_minus_r";
-  spec[0] = -2.;   // start, stop, delta
-  spec[1] = 1.;
-  spec[2] = 0.1;
+  spec[0] = -1.;   // start, stop, delta
+  spec[1] = 0.5;
+  spec[2] = 0.05;
   bin_specs.push_back(spec);
   dimension_names.push_back(name);
 
@@ -290,10 +299,11 @@ int main(int argc, char **argv)
 
       catalogue_data[0] = log10(mass[i]); // stored as value, we want log
       catalogue_data[1] = m_g[i] - m_r[i];
-      catalogue_data[2] = mbh_bulge[i];// stored as log
-      catalogue_data[3] = mbh_sigma[i]; // stored as log
-      catalogue_data[4] = z[i];
-      catalogue_data[5] = sersic_n[i];
+      catalogue_data[2] = mbh_sigma[i]; // stored as log
+      catalogue_data[3] = z[i];
+      catalogue_data[4] = sersic_n[i];
+      catalogue_data[5] = log10(ssfr[i] * mass[i]);
+					
 
       hist_gals.Count(catalogue_data);
 
@@ -323,6 +333,7 @@ int main(int argc, char **argv)
   delete[] mass;
   delete[] sersic_n;
   delete[] r50_kpc;
+  delete[] ssfr;
 
   end = clock();
   elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
@@ -396,7 +407,7 @@ int main(int argc, char **argv)
   int ka[2];
 
 
-  int assigned_ranks = 3;
+  int assigned_ranks = 6;
   int rank_counter = 0;
   for (int i = 1; i < hist_gals.Get_Dimension(); i++)
     for (int j = 0; j < i; j++)
@@ -417,8 +428,8 @@ int main(int argc, char **argv)
       }
 
   
-  assigned_ranks = 3;
-  int rank_displacement = 3;
+  assigned_ranks = 6;
+  int rank_displacement = 6;
   rank_counter = 0;
   for (int i = 1; i < hist_vol_disrupt.Get_Dimension(); i++)
 	for (int j = 0; j < i; j++)
@@ -438,8 +449,8 @@ int main(int argc, char **argv)
 	    rank_counter++;
 	  }
 
-  assigned_ranks = 3;
-  rank_displacement = 6;
+  assigned_ranks = 6;
+  rank_displacement = 12;
   rank_counter = 0;
 
   for (int i = 1; i < hist_detected_disrupt.Get_Dimension(); i++)
@@ -462,7 +473,7 @@ int main(int argc, char **argv)
 
 
   assigned_ranks = 1;
-  rank_displacement = 9;
+  rank_displacement = 18;
   rank_counter = 0;
   for (int i = 1; i < hist_detected_flares.Get_Dimension(); i++)
     for (int j = 0; j < i; j++)
