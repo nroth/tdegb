@@ -134,43 +134,28 @@ double Galaxy::Get_Disruption_Rate_Powerlaw_Nuker() const
 // the params has the overall normalization, so as not to recompute it each time
 double Galaxy::Kroupa_IMF_for_integrating(double mstar, void * p)
 {
-  struct imf_params {double norm; double min_mass; double max_mass;};
+  struct imf_params {double norm; double min_mass; double max_mass;}; // not sure I really need to pass in min and max values any more
   struct imf_params params = *(struct imf_params *)p;
-  
-  double m1 = params.min_mass;
-  double m2 = 0.5;
-  double m3 = params.max_mass;
 
-  double k1 = pow(m1,-0.3 + 1.3);
-  double k2 = k1 * pow(m2,-1.3 + 2.3);
-  //  double k3 = k2 * pow(m3, -2.3 + 2.3);
-
-  if (mstar >= m1 && mstar < m2)
-    return 1./params.norm * k1 * pow(mstar,-1.3);
-  else if (mstar >= m2 && mstar <= m3)
-      return 1./params.norm * k2 * pow(mstar,-2.3);
-  else
-    return 0.;
   
+  if (mstar < 0.08)
+    return 1./params.norm * pow(mstar,-0.3);
+  else if (mstar >= 0.08 and mstar < 0.5)
+    return 1./params.norm * 0.08 * pow(mstar,-1.3);
+  else 
+    return 1./params.norm * 0.08 * pow(0.5,-1.3 + 2.3) * pow(mstar,-2.3);
 }
 
 double Galaxy::Kroupa_IMF_for_value(double mstar, double norm) const
 {
-  double m1 = mstar_min;
-  double m2 = 0.5;
-  double m3 = mstar_max;
 
-  double k1 = pow(m1,-0.3 + 1.3);
-  double k2 = k1 * pow(m2,-1.3 + 2.3);
-  //  double k3 = k2 * pow(m3, -2.3 + 2.3);
+  if (mstar < 0.08)
+    return 1./norm * pow(mstar,-0.3);
+  else if (mstar >= 0.08 and mstar < 0.5)
+    return 1./norm * 0.08 * pow(mstar,-1.3);
+  else 
+    return 1./norm * 0.08 * pow(0.5,-1.3 + 2.3) * pow(mstar,-2.3);
 
-  if (mstar >= m1 && mstar < m2)
-    return 1./norm * k1 * pow(mstar,-1.3);
-  else if (mstar >= m2 && mstar <= m3)
-      return 1./norm * k2 * pow(mstar,-2.3);
-  else
-    return 0.;
-  
 }
 
 
