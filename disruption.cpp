@@ -179,20 +179,29 @@ double Disruption::Peak_Mdot()
   if (mstar <= 1.)
     {
       // gamma = 5./3.
-      double guillochon_A = exp( (10.253 - 17.380 * beta + 5.9988 * pow(beta,2. ) )/ (1. - 0.46573 * beta - 4.5066 * pow(beta,2. )));
+      double guillochon_A = exp( (10.253 - 17.380 * beta + 5.9988 * beta * beta)/ (1. - 0.46573 * beta - 4.5066 * beta * beta));
 
       double rstar = Main_Sequence_Radius();
 
       //printf("beta is %f, rstar in solar units is %f\n",beta,rstar/R_SUN);
 
       // mstar already in solar units, but rstar in cgs
-      return guillochon_A * pow(mbh/1.e6,-0.5) * pow(mstar,2.) * pow(rstar/R_SUN,-1.5) * M_SUN / YEAR_TO_SEC;
+      return guillochon_A * pow(mbh/1.e6,-0.5) * mstar * mstar* pow(rstar/R_SUN,-1.5) * M_SUN / YEAR_TO_SEC;
     }
 
   else
     {
-      printf("ERROR: HAVE NOT DEFINED MDOT YET FOR MASSIVE STARS\n");
-      return 0.;
+      
+            // gamma = 4./3.
+      double guillochon_A = exp( (27.261 - 27.516* beta + 3.8716 * beta * beta )/ (1. - 3.2605 * beta - 1.3865 * beta * beta));
+
+      double rstar = Main_Sequence_Radius();
+
+      //printf("beta is %f, rstar in solar units is %f\n",beta,rstar/R_SUN);
+
+      // mstar already in solar units, but rstar in cgs
+      return guillochon_A * pow(mbh/1.e6,-0.5) * mstar * mstar * pow(rstar/R_SUN,-1.5) * M_SUN / YEAR_TO_SEC;
+
     }
   
 }
