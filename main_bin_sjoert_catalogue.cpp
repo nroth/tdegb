@@ -32,7 +32,7 @@ int main(int argc, char **argv)
 
   // Define the axes for a histogram of the host galaxy properties
   
-  string  name = "mstar";
+  string  name = "mstar_mendel";
   spec[0] = 8.;   // start, stop, delta
   spec[1] = 12.;
   spec[2] = 0.16;
@@ -41,10 +41,10 @@ int main(int argc, char **argv)
   dimension_names.push_back(name);
 
   
-  name = "g_minus_r";
-  spec[0] = 0.2;   // start, stop, delta
-  spec[1] = 2.;
-  spec[2] = 0.08;
+  name = "u_minus_r";
+  spec[0] = 0.;   // start, stop, delta
+  spec[1] = 4.;
+  spec[2] = 0.2;
 
   bin_specs.push_back(spec);
   dimension_names.push_back(name);
@@ -157,15 +157,17 @@ int main(int argc, char **argv)
   ////////// Start reading in the catalogue
 
 
-  int num_galaxies = 6101944; // should think more about how to make this flexible
+  int num_galaxies = 6092542; // should think more about how to make this flexible
   
   // need to define these everywhere but only want to allocate memory to them on rank 0, hence the use of malloc later for rank 0
   double* z_vector_big;
   double* m_g_vector_big; 
-  double* m_r_vector_big; 
+  double* m_r_vector_big;
+  double* M_u_vector_big;
+  double* M_r_vector_big; 
   double* mbh_bulge_vector_big;
   double* mbh_sigma_vector_big;
-  double* mass_vector_big;
+  double* mass_mendel_vector_big;
   double* sersic_n_vector_big;
   double* r50_kpc_vector_big;
   double* ssfr_vector_big;
@@ -209,15 +211,18 @@ int main(int argc, char **argv)
       printf("num_galaxies %d, n_procs %d, base_gals_per_proc %d, remainder %d\n",num_galaxies,n_procs, base_gals_per_proc, remainder);
 
       //      string catalogue_filename = "/Users/nathanielroth/Dropbox/research/TDE/host_galaxies/sjoert_catalogue/van_velzen_2018_catalogue.h5";
-      string catalogue_filename = "/lustre/nroth1/TDE/host_galaxy_binning/van_velzen_2018_catalogue.h5";
+      //      string catalogue_filename = "/lustre/nroth1/TDE/host_galaxy_binning/van_velzen_2018_catalogue.h5";
+      string catalogue_filename = "/lustre/nroth1/TDE/host_galaxy_binning/van_velzen_Nov2019_catalogue.h5";
       
 
       z_vector_big = (double*) malloc(num_galaxies * sizeof(double));
       m_g_vector_big = (double*) malloc(num_galaxies * sizeof(double));
       m_r_vector_big = (double*) malloc(num_galaxies * sizeof(double));
+      M_u_vector_big = (double*) malloc(num_galaxies * sizeof(double));
+      M_r_vector_big = (double*) malloc(num_galaxies * sizeof(double));
       mbh_bulge_vector_big = (double*) malloc(num_galaxies * sizeof(double));
       mbh_sigma_vector_big = (double*) malloc(num_galaxies * sizeof(double));
-      mass_vector_big = (double*) malloc(num_galaxies * sizeof(double));
+      mass_mendel_vector_big = (double*) malloc(num_galaxies * sizeof(double));
       sersic_n_vector_big = (double*) malloc(num_galaxies * sizeof(double));
       r50_kpc_vector_big = (double*) malloc(num_galaxies * sizeof(double));
       ssfr_vector_big = (double*) malloc(num_galaxies * sizeof(double));
@@ -227,9 +232,11 @@ int main(int argc, char **argv)
       H5LTread_dataset_double(file_id,"z",z_vector_big);
       H5LTread_dataset_double(file_id,"m_g",m_g_vector_big);
       H5LTread_dataset_double(file_id,"m_r",m_r_vector_big);
+      H5LTread_dataset_double(file_id,"M_u",M_u_vector_big);
+      H5LTread_dataset_double(file_id,"M_r",M_r_vector_big);
       H5LTread_dataset_double(file_id,"mbh_bulge",mbh_bulge_vector_big);
       H5LTread_dataset_double(file_id,"mbh_sigma",mbh_sigma_vector_big);
-      H5LTread_dataset_double(file_id,"mass",mass_vector_big);
+      H5LTread_dataset_double(file_id,"mass_mendel",mass_mendel_vector_big);
       H5LTread_dataset_double(file_id,"sersic_n",sersic_n_vector_big);
       H5LTread_dataset_double(file_id,"r50_kpc",r50_kpc_vector_big);
       H5LTread_dataset_double(file_id,"ssfr",ssfr_vector_big);
@@ -242,9 +249,11 @@ int main(int argc, char **argv)
   double* z = new double[my_num_gals]; // for some reason, the hdf5 read will only work if you do the manual memory allocation this way (and when using new operator, you should elete later)
   double* m_g = new double[my_num_gals];
   double* m_r = new double[my_num_gals];
+  double* M_u = new double[my_num_gals];
+  double* M_r = new double[my_num_gals];
   double* mbh_bulge = new double[my_num_gals];
   double* mbh_sigma = new double[my_num_gals];
-  double* mass = new double[my_num_gals];
+  double* mass_mendel = new double[my_num_gals];
   double* sersic_n = new double[my_num_gals];
   double* r50_kpc = new double[my_num_gals];
   double* ssfr = new double[my_num_gals];
@@ -254,9 +263,11 @@ int main(int argc, char **argv)
   MPI_Scatterv(z_vector_big, send_counts, displacements, MPI_DOUBLE, z, my_num_gals, MPI_DOUBLE, 0, MPI_COMM_WORLD);
   MPI_Scatterv(m_g_vector_big, send_counts, displacements, MPI_DOUBLE, m_g, my_num_gals, MPI_DOUBLE, 0, MPI_COMM_WORLD);
   MPI_Scatterv(m_r_vector_big, send_counts, displacements, MPI_DOUBLE, m_r, my_num_gals, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  MPI_Scatterv(M_u_vector_big, send_counts, displacements, MPI_DOUBLE, M_u, my_num_gals, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  MPI_Scatterv(M_r_vector_big, send_counts, displacements, MPI_DOUBLE, M_r, my_num_gals, MPI_DOUBLE, 0, MPI_COMM_WORLD);
   MPI_Scatterv(mbh_bulge_vector_big, send_counts, displacements, MPI_DOUBLE, mbh_bulge, my_num_gals, MPI_DOUBLE, 0, MPI_COMM_WORLD);
   MPI_Scatterv(mbh_sigma_vector_big, send_counts, displacements, MPI_DOUBLE, mbh_sigma, my_num_gals, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-  MPI_Scatterv(mass_vector_big, send_counts, displacements, MPI_DOUBLE, mass, my_num_gals, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  MPI_Scatterv(mass_mendel_vector_big, send_counts, displacements, MPI_DOUBLE, mass_mendel, my_num_gals, MPI_DOUBLE, 0, MPI_COMM_WORLD);
   MPI_Scatterv(sersic_n_vector_big, send_counts, displacements, MPI_DOUBLE, sersic_n, my_num_gals, MPI_DOUBLE, 0, MPI_COMM_WORLD);
   MPI_Scatterv(r50_kpc_vector_big, send_counts, displacements, MPI_DOUBLE, r50_kpc, my_num_gals, MPI_DOUBLE, 0, MPI_COMM_WORLD);
   MPI_Scatterv(ssfr_vector_big, send_counts, displacements, MPI_DOUBLE, ssfr, my_num_gals, MPI_DOUBLE, 0, MPI_COMM_WORLD);
@@ -265,10 +276,12 @@ int main(int argc, char **argv)
     {
       free(z_vector_big);
       free(m_g_vector_big); 
-      free(m_r_vector_big); 
+      free(m_r_vector_big);
+      free(M_u_vector_big); 
+      free(M_r_vector_big); 
       free(mbh_bulge_vector_big);
       free(mbh_sigma_vector_big);
-      free(mass_vector_big);
+      free(mass_mendel_vector_big);
       free(sersic_n_vector_big);
       free(r50_kpc_vector_big);
       free(ssfr_vector_big);
@@ -299,17 +312,17 @@ int main(int argc, char **argv)
   for (int i = 0; i < my_num_gals; i++)
     {
 
-      catalogue_data[0] = log10(mass[i]); // stored as value, we want log
-      catalogue_data[1] = m_g[i] - m_r[i];
+      catalogue_data[0] = log10(mass_mendel[i]); // stored as value, we want log
+      catalogue_data[1] = M_u[i] - M_r[i];
       catalogue_data[2] = mbh_sigma[i]; // stored as log
       catalogue_data[3] = z[i];
       //      catalogue_data[4] = sersic_n[i];
-      catalogue_data[4] = log10(ssfr[i] * mass[i]);
+      catalogue_data[4] = log10(ssfr[i] * mass_mendel[i]);
 					
 
       hist_gals.Count(catalogue_data);
 
-      double galaxy_info[9] = { mass[i], mbh_sigma[i], mbh_bulge[i], z[i], sersic_n[i], r50_kpc[i], m_g[i], m_r[i],ssfr[i]};
+      double galaxy_info[9] = { mass_mendel[i], mbh_sigma[i], mbh_bulge[i], z[i], sersic_n[i], r50_kpc[i], m_g[i], m_r[i],ssfr[i]};
 
       Galaxy this_galaxy(galaxy_info);
 
@@ -330,9 +343,11 @@ int main(int argc, char **argv)
   delete[] z;
   delete[] m_g;
   delete[] m_r;
+  delete[] M_u;
+  delete[] M_r;
   delete[] mbh_bulge;
   delete[] mbh_sigma;
-  delete[] mass;
+  delete[] mass_mendel;
   delete[] sersic_n;
   delete[] r50_kpc;
   delete[] ssfr;
