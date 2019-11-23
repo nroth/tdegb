@@ -15,7 +15,7 @@ Galaxy::Galaxy(double* galaxy_info)
 {
 
   mstar_max = 1.0;  // In the future these will depend on galaxy properties
-  mstar_min = 0.01; // Only considering main sequence stars
+  mstar_min = 0.08; // Only considering main sequence stars
   disruption_rate_normalization_combined = 2.9e-5;
   disruption_rate_powerlaw_mass = -0.404;
   disruption_rate_powerlaw_nuker = 0.705;
