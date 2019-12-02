@@ -14,6 +14,7 @@ class Survey {
   double m_r_threshhold;
   double m_g_threshhold;
 
+  double g_psf_arcsec;
   double r_psf_arcsec;
 
   double host_contrast_cut;

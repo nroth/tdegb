@@ -8,15 +8,17 @@
 Survey::Survey()
 {
 
-  nu_gband = 646243712006898.;
-  nu_rband =  489696925841228.;
+  nu_gband = 6.2394e14; // corresponds to lambda_mean from http://svo2.cab.inta-csic.es/svo/theory/fps3/index.php?id=Palomar/ZTF.g&&mode=browse&gname=Palomar&gname2=ZTF
+  nu_rband =  4.6574e14; // corresponds to lambda_mean from http://svo2.cab.inta-csic.es/svo/theory/fps3/index.php?id=Palomar/ZTF.r&&mode=browse&gname=Palomar&gname2=ZTF#filter
 
   m_r_threshhold = 19;
   m_g_threshhold = 19;
 
-  host_contrast_cut = 0.5;
-  
-  r_psf_arcsec = 4.4; // 2 times r-band median PSF FWHM of 2.2 arcsec. will need to distinguish how this is handled in various bands
+  host_contrast_cut = 0.36385;
+
+  g_psf_arcsec = 2.1; // g-band median PSF FWHM. Page 8 of Bellm et al 2019 https://iopscience.iop.org/article/10.1088/1538-3873/aaecbe/pdf
+  r_psf_arcsec = 2.0; // r-band median PSF FWHM. Page 8 of Bellm et al 2019 https://iopscience.iop.org/article/10.1088/1538-3873/aaecbe/pdf
+ 
 
 }
 
@@ -61,8 +63,16 @@ double Survey::Find_Host_Contrast_Magnitude(Galaxy gal, char band)
   double mu_e = gal.Get_Mu_Eff(m_tot);
   double I_e = I_From_Mu(mu_e);
 
+  double m_psf = 0.;
   //magnitude (flux) enclosed in psf
-  double m_psf = Mu_From_I(gal.Flux_Enclosed_R_Sersic(r_psf_arcsec,I_e));
+  if (band == 'g')
+    {
+      m_psf = Mu_From_I(gal.Flux_Enclosed_R_Sersic(g_psf_arcsec,I_e));
+    }
+  if (band == 'r')
+    {
+      m_psf = Mu_From_I(gal.Flux_Enclosed_R_Sersic(r_psf_arcsec,I_e));
+    }
     
   return m_psf - 2.5 * log10(pow(10.,host_contrast_cut / 2.5) - 1.);
 
