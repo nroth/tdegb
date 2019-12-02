@@ -42,9 +42,9 @@ int main(int argc, char **argv)
 
   
   name = "u_minus_r";
-  spec[0] = 0.;   // start, stop, delta
-  spec[1] = 4.;
-  spec[2] = 0.2;
+  spec[0] = 0.75;   // start, stop, delta
+  spec[1] = 3.5;
+  spec[2] = 0.1;
 
   bin_specs.push_back(spec);
   dimension_names.push_back(name);

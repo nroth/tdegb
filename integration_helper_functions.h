@@ -25,11 +25,11 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Survey surv, Galaxy gal, doub
   double nu_g_emit = (1. + z) * surv.Get_Nu_Gband();
   double nu_r_emit = (1. + z) * surv.Get_Nu_Rband();  
 
-  int num_trials = 2000;
+  int num_trials = 5000;
   vol_rate_accumulator = 0.;
   detected_rate_accumulator = 0.;
 
-  double rate_normalization = 1./( (double) num_trials) * gal.Get_Disruption_Rate_Normalization_Combined() * pow(gal.Get_nuker_gammaprime()/0.4,gal.Get_Disruption_Rate_Powerlaw_Nuker()) * 1./(1. + z);
+  double rate_normalization = 1./( (double) num_trials) * gal.Get_Disruption_Rate_Normalization_Combined() * pow(gal.Get_nuker_gammaprime()/1.0,gal.Get_Disruption_Rate_Powerlaw_Nuker()) * 1./(1. + z);
 
   vector<double> flare_properties(hist_detected_flares.Get_Dimension());
 

@@ -16,9 +16,9 @@ Galaxy::Galaxy(double* galaxy_info)
 
   mstar_max = 1.0;  // In the future these will depend on galaxy properties
   mstar_min = 0.08; // Only considering main sequence stars
-  disruption_rate_normalization_combined = 2.9e-5;
+  disruption_rate_normalization_combined =  pow(10.,-3.79);// for nuker gamma = 1 and
   disruption_rate_powerlaw_mass = -0.404;
-  disruption_rate_powerlaw_nuker = 0.705;
+  disruption_rate_powerlaw_nuker = 0.852; // for galaxies such that black hole mass is below Hills mass for 1 solar mass star
 
   
   total_stellar_mass = galaxy_info[0];  
