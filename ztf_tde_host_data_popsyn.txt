@@ -1,0 +1,18 @@
+name                     log10(mstar)     u-r color       z		log(10) ssfr
+SansaStark               9.950949         1.863897        0.088		0
+Varys                    10.247111        2.080359        0.1206	0
+GendryBaratheon          9.836247         1.902652        0.0457	-11.09214
+CerseiLannister          9.490118         1.981500        0.091		0
+Melisandre               10.014825        2.009498        0.01450	0
+BranStark                10.459184        2.185075        0.0512	0
+Brienne                  9.743655         2.057400        0.074		0
+PetyrBalish              10.195969        2.082258        0.193		0
+MargaeryTyrell           9.704483         1.985294        0.152		0
+JonSnow                  10.626332        2.121167        0.051		0
+AryaStark                10.003546        1.982306        0.138		0
+Bronn                    10.068899        1.991438        0.148		0
+JorahMormont             10.630474        2.342460        0.212		0
+NedStark                 9.949983         2.304809        0.071		0
+JaimeLannister           9.822969         1.815522        0.022		-10.55756
+RobbStark                9.863050         1.924086        0.117		0
+CatelynStark             9.305446         1.824091        0.078		0
