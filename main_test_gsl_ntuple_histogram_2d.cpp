@@ -230,7 +230,7 @@ int main(int argc, char **argv)
   gsl_ntuple_close(gal_ntuple);
   end = clock();
   elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
-  printf("#\n# It took %f seconds to open, close, and do a single histogram projectione\n",elapsed_secs);
+  //  printf("#\n# It took %f seconds to open, close, and do a single histogram projection\n",elapsed_secs);
 
 
   //string outfilename = "gsl_hist_2d_" + x_name + "_" + y_name + ".hist";
@@ -406,7 +406,7 @@ void Print_Hist2d_With_Header(gsl_histogram2d * hist2d, string name)
 void Print_Hist1d(gsl_histogram * hist1d, string name)
 {
 
-  FILE * outfile = fopen(name.c_str(),"a");
+  FILE * outfile = fopen(name.c_str(),"a"); // needs to be "a" if you're going to be using this as a step in 2D histogram output. But then be careful you're not appending to old 1D histograms that you output separately
 
   gsl_histogram_fprintf(outfile, hist1d, "%-16.6e", "%-16.6e");
 
