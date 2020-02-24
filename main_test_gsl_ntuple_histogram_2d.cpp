@@ -16,25 +16,31 @@ using std::string;
 
 struct ntuple_data
   {
-
-    // m_r, z, mbh, mstar
     double attributes[3];
-
-    /*
-    double m_r;
-    double z;
-    double mbh;
-    double mstar;
-    */
-    
   };
+
+struct bin_params_1d
+{
+
+  gsl_histogram * hist;
+  int icol; // which column in the ntuple this is tracking
+};
+
+
+struct bin_params_2d
+{
+  gsl_histogram * hist1;
+  gsl_histogram * hist2;
+  int icol1; // which column in the ntuple this is tracking
+  int icol2; // which column in the ntuple this is tracking
+  int ibin;  // which (row?, column?) you're currently working on
+};
 
 
 int main(int argc, char **argv)
 {
 
-  int Bin_Index_Hist2d(int, int,size_t,size_t); // not currently used?
-  void Print_Hist2d_With_Header(string, gsl_histogram *, gsl_histogram *, string, string, int, int);
+  void Print_Hist2d_With_Header(string, string, string, bin_params_2d);
   void Print_Hist1d(gsl_histogram *, string);
 
   int sel_func_2d (void *ntuple_data, void *params);
@@ -42,7 +48,6 @@ int main(int argc, char **argv)
 
   int sel_func_1d (void *ntuple_data, void *params);
   double val_func_1d (void *ntuple_data, void *params);
-
 
   string gal_ntuple_filename = "test_ntuple2d.dat";
   int n = gal_ntuple_filename.length(); // doing this so that gsl_ntuple_create doesn't complain
@@ -125,9 +130,6 @@ int main(int argc, char **argv)
   float elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
   printf("#\n# It took %f seconds to generate %d samples\n",elapsed_secs, num_samples);
 
-  struct bin_param_1d {gsl_histogram * hist; int icol;};
-
-
   string v_name("default");
   string h_name("default");
 
@@ -137,8 +139,8 @@ int main(int argc, char **argv)
   S.function = &sel_func_1d;
   V.function = &val_func_1d;
 
-  bin_param_1d bin_params = {hist_gals_m_r, 0};
-  V.params = &bin_params;
+  bin_params_1d binfo1d = {hist_gals_m_r, 0};
+  V.params = &binfo1d;
 
   gal_ntuple = gsl_ntuple_open (filename_array, &gal_row, sizeof (gal_row));
   gsl_ntuple_project(hist_gals_m_r,gal_ntuple,&V,&S);
@@ -155,12 +157,9 @@ int main(int argc, char **argv)
   // create 1d histogram
   begin = clock();
 
-  //  S.function = &sel_func_1d;
-  //  V.function = &val_func_1d;
-
-  bin_params.hist = hist_gals_z;
-  bin_params.icol = 1;
-  V.params = &bin_params;
+  binfo1d.hist = hist_gals_z;
+  binfo1d.icol = 1;
+  V.params = &binfo1d;
 
   gal_ntuple = gsl_ntuple_open(filename_array, &gal_row, sizeof (gal_row));
   gsl_ntuple_project(hist_gals_z,gal_ntuple,&V,&S);
@@ -181,9 +180,9 @@ int main(int argc, char **argv)
   //  S.function = &sel_func_1d;
   //  V.function = &val_func_1d;
 
-  bin_params.hist = hist_gals_mbh;
-  bin_params.icol = 2;
-  V.params = &bin_params;
+  binfo1d.hist = hist_gals_mbh;
+  binfo1d.icol = 2;
+  V.params = &binfo1d;
 
   gal_ntuple = gsl_ntuple_open(filename_array, &gal_row, sizeof (gal_row));
   gsl_ntuple_project(hist_gals_mbh,gal_ntuple,&V,&S);
@@ -201,10 +200,9 @@ int main(int argc, char **argv)
   // create 2d histogram
   v_name = "m_r";
   h_name = "z";
-  int v_icol = 0; // do this better
-  int h_icol = 1;
+  bin_params_2d binfo2d = {hist_gals_m_r, hist_gals_z,0,1,0};
   begin = clock();
-  Print_Hist2d_With_Header(gal_ntuple_filename, hist_gals_m_r, hist_gals_z, v_name, h_name, v_icol,h_icol);
+  Print_Hist2d_With_Header(gal_ntuple_filename, v_name, h_name, binfo2d);
   end = clock();
   elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
   printf("#\n# It took %f seconds to project to 2d histogram\n",elapsed_secs);
@@ -212,10 +210,9 @@ int main(int argc, char **argv)
   // create 2d histogram
   v_name = "m_r";
   h_name = "log_mbh";
-  v_icol = 0; // do this better
-  h_icol = 2;
+  binfo2d = {hist_gals_m_r,hist_gals_mbh,0,2,0};
   begin = clock();
-  Print_Hist2d_With_Header(gal_ntuple_filename, hist_gals_m_r, hist_gals_mbh, v_name, h_name,v_icol,h_icol);
+  Print_Hist2d_With_Header(gal_ntuple_filename, v_name, h_name,binfo2d);
   end = clock();
   elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
   printf("#\n# It took %f seconds to project to 2d histogram\n",elapsed_secs);
@@ -238,13 +235,12 @@ int sel_func_1d (void *this_data, void *p)
 int sel_func_2d (void *this_data, void *p)
 {
 
-  struct bin_struct { gsl_histogram * hist; gsl_histogram * hist_h; int icol; int icol_h; int ibin_h;};
-  bin_struct binfo = *(struct bin_struct *)p;
+  bin_params_2d binfo = *(struct bin_params_2d *)p;
 
-  gsl_histogram * horizontal_hist = binfo.hist_h;
+  gsl_histogram * horizontal_hist = binfo.hist2;
 
   struct ntuple_data * data = (struct ntuple_data *) this_data;
-  double this_horizontal_data = data->attributes[binfo.icol_h];
+  double this_horizontal_data = data->attributes[binfo.icol2];
 
   // handle extreme values
   if (this_horizontal_data >= gsl_histogram_max(horizontal_hist))
@@ -256,7 +252,7 @@ int sel_func_2d (void *this_data, void *p)
       this_horizontal_data = gsl_histogram_min(horizontal_hist);
     }
 
-  return ( this_horizontal_data >= horizontal_hist->range[binfo.ibin_h] && this_horizontal_data < horizontal_hist->range[binfo.ibin_h + 1]);
+  return ( this_horizontal_data >= horizontal_hist->range[binfo.ibin] && this_horizontal_data < horizontal_hist->range[binfo.ibin + 1]);
   //  return ( this_horizontal_data >= 0.1);
   // return true;
 }
@@ -264,8 +260,7 @@ int sel_func_2d (void *this_data, void *p)
 
 double val_func_1d (void *this_data, void *p)
 {
-  struct bin_struct { gsl_histogram * hist; int icol; };
-  bin_struct binfo = *(struct bin_struct *)p;
+  bin_params_1d binfo = *(struct bin_params_1d *)p;
 
   int icol = binfo.icol;
   
@@ -274,6 +269,7 @@ double val_func_1d (void *this_data, void *p)
 
   this_col_value  = data->attributes[icol];
 
+  // handle extreme values
   if (this_col_value < gsl_histogram_min(binfo.hist))
     {
       this_col_value = gsl_histogram_min(binfo.hist);
@@ -291,30 +287,23 @@ double val_func_1d (void *this_data, void *p)
 
 double val_func_2d (void *this_data, void *p)
 {
-  //  (void)(params); /* avoid unused parameter warning */
 
-  struct bin_struct { gsl_histogram * hist; gsl_histogram * hist_h; int icol; int icol_v; int ibin_v;};
-  
   struct ntuple_data * data = (struct ntuple_data *) this_data;
   double this_col_data; //, v_data;
 
-  bin_struct ph = *(struct bin_struct *)p;
+  bin_params_2d binfo = *(struct bin_params_2d *)p;
 
-  int icol = ph.icol;
+  int icol = binfo.icol1;
   this_col_data = data->attributes[icol];
-  //  v_data = data->attributes[ibin_v];
-  //  mbh = data->mbh;
-  //  mstar = data->mstar;
 
-  // replace z with generic name
-  if (this_col_data < gsl_histogram_min(ph.hist))
+  if (this_col_data < gsl_histogram_min(binfo.hist1))
     {
-      this_col_data = gsl_histogram_min(ph.hist);
+      this_col_data = gsl_histogram_min(binfo.hist1);
     }
 
-  if (this_col_data >= gsl_histogram_max(ph.hist))
+  if (this_col_data >= gsl_histogram_max(binfo.hist1))
     {
-      this_col_data = (1. - 1.e-15) * gsl_histogram_max(ph.hist);
+      this_col_data = (1. - 1.e-15) * gsl_histogram_max(binfo.hist1);
     }
 
 
@@ -322,14 +311,7 @@ double val_func_2d (void *this_data, void *p)
 }
 
 
-
-int Bin_Index_Hist2d(int i, int j,size_t nx,size_t ny)
-{
-  return i * ny + j;
-
-}
-
-void Print_Hist2d_With_Header(string ntuple_filename, gsl_histogram * hist1, gsl_histogram * hist2, string v_name, string h_name, int i1, int i2)
+void Print_Hist2d_With_Header(string ntuple_filename, string v_name, string h_name, bin_params_2d binfo)
 {
 
   //write header
@@ -343,52 +325,48 @@ void Print_Hist2d_With_Header(string ntuple_filename, gsl_histogram * hist1, gsl
   gsl_ntuple_select_fn S;
   gsl_ntuple_value_fn V;
 
-  struct bin_param_2d {gsl_histogram * hist; gsl_histogram * hist_h; int icol; int icol_v; int ibin;};
-
   S.function = &sel_func_2d;
   V.function = &val_func_2d;
 
   struct ntuple_data gal_row;
   
   // write header
-  for (int iy = 0; iy < hist2->n + 1; iy++)
+  for (int iy = 0; iy < binfo.hist2->n + 1; iy++)
     {    
-      fprintf(outfile,"%g ",hist2->range[iy]);
+      fprintf(outfile,"%g ",binfo.hist2->range[iy]);
     }
   fprintf(outfile,"\n");
-  for (int ix = 0; ix < hist1->n + 1; ix++)
+  for (int ix = 0; ix < binfo.hist1->n + 1; ix++)
     {    
-      fprintf(outfile,"%g ",hist1->range[ix]);
+      fprintf(outfile,"%g ",binfo.hist1->range[ix]);
     }
   fprintf(outfile,"\n");
   fclose(outfile);
 
 
-  //clean this up, pass these in?
-  bin_param_2d bin_params_2_V = {hist1,hist2, i1,i2, 0};
-  bin_param_2d bin_params_2_S = {hist1,hist2, i1,i2, 0}; // just starting definition
+  bin_params_2d bin_params_2_V = {binfo.hist1,binfo.hist2, binfo.icol1,binfo.icol2, 0}; // ibin of zero not used
+  bin_params_2d bin_params_2_S = {binfo.hist1,binfo.hist2, binfo.icol1,binfo.icol2, 0}; // ibin  of 0 is just initialization
 
   V.params = &bin_params_2_V;
   
-  for (int i2 = 0; i2 < (int)hist2->n; i2++)
+  for (int ibin = 0; ibin < (int)binfo.hist2->n; ibin++)
     {
 
-      bin_params_2_S.ibin = i2;
+      bin_params_2_S.ibin = ibin;
       S.params = &bin_params_2_S;
 
       gsl_ntuple *gal_ntuple = gsl_ntuple_open (ntuple_filename_array, &gal_row, sizeof (gal_row));
   
-      gsl_histogram_reset(hist1);
-      gsl_ntuple_project(hist1,gal_ntuple,&V,&S);
+      gsl_histogram_reset(binfo.hist1);
+      gsl_ntuple_project(binfo.hist1,gal_ntuple,&V,&S);
 
       outfile = fopen(outfilename.c_str(),"a"); 
-      gsl_histogram_fprintf(outfile, hist1, "%-16.6e", "%-16.6e");
+      gsl_histogram_fprintf(outfile, binfo.hist1, "%-16.6e", "%-16.6e");
       fclose(outfile);
 
       gsl_ntuple_close(gal_ntuple);
       
     }
-
 
 }
 
