@@ -36,12 +36,16 @@ struct bin_params_2d
   int ibin;  // which (row?, column?) you're currently working on
 };
 
+//gsl_ntuple_select_fn S; ? 
+//gsl_ntuple_value_fn V; ?
+
 
 int main(int argc, char **argv)
 {
 
+  void Print_Hist1d(string, string, bin_params_1d);
   void Print_Hist2d_With_Header(string, string, string, bin_params_2d);
-  void Print_Hist1d(gsl_histogram *, string);
+
 
   int sel_func_2d (void *ntuple_data, void *params);
   double val_func_2d (void *ntuple_data, void *params);
@@ -53,11 +57,6 @@ int main(int argc, char **argv)
   int n = gal_ntuple_filename.length(); // doing this so that gsl_ntuple_create doesn't complain
   char filename_array[n + 1]; // '' ''
   strcpy(filename_array, gal_ntuple_filename.c_str());  // '' ''
-
-  struct ntuple_data gal_row;
-
-  gsl_ntuple_select_fn S;
-  gsl_ntuple_value_fn V;
 
 
   double min_m_r = 10;
@@ -95,7 +94,7 @@ int main(int argc, char **argv)
   gsl_rng *rangen;
   const gsl_rng_type * TypeR;
   gsl_rng_env_setup();
-  //  gsl_rng_default_seed = (unsigned int)time(NULL);
+  //gsl_rng_default_seed = (unsigned int)time(NULL);
   gsl_rng_default_seed = 2;
   TypeR = gsl_rng_default;
   rangen = gsl_rng_alloc (TypeR);
@@ -106,7 +105,7 @@ int main(int argc, char **argv)
   clock_t begin;
   clock_t end;
   
-
+  struct ntuple_data gal_row;
   gsl_ntuple *gal_ntuple  = gsl_ntuple_create(filename_array, &gal_row, sizeof (gal_row));
 
 
@@ -133,66 +132,32 @@ int main(int argc, char **argv)
   string v_name("default");
   string h_name("default");
 
+
   // create 1d histogram
   begin = clock();
-
-  S.function = &sel_func_1d;
-  V.function = &val_func_1d;
-
-  bin_params_1d binfo1d = {hist_gals_m_r, 0};
-  V.params = &binfo1d;
-
-  gal_ntuple = gsl_ntuple_open (filename_array, &gal_row, sizeof (gal_row));
-  gsl_ntuple_project(hist_gals_m_r,gal_ntuple,&V,&S);
-  gsl_ntuple_close(gal_ntuple);
-
   h_name = "m_r";
-  string outfilename = "gsl_hist_1d_" + h_name + ".hist";
-  Print_Hist1d(hist_gals_m_r, outfilename);
-
+  bin_params_1d binfo1d = {hist_gals_m_r, 0};
+  Print_Hist1d(gal_ntuple_filename,h_name,binfo1d);
   end = clock();
   elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
   printf("#\n# It took %f seconds to project to 1d histogram\n",elapsed_secs);
 
   // create 1d histogram
   begin = clock();
-
+  h_name = "z";
   binfo1d.hist = hist_gals_z;
   binfo1d.icol = 1;
-  V.params = &binfo1d;
-
-  gal_ntuple = gsl_ntuple_open(filename_array, &gal_row, sizeof (gal_row));
-  gsl_ntuple_project(hist_gals_z,gal_ntuple,&V,&S);
-  gsl_ntuple_close(gal_ntuple);
-
-  h_name = "z";
-  outfilename = "gsl_hist_1d_" + h_name + ".hist";
-
-  Print_Hist1d(hist_gals_z, outfilename);
-
+  Print_Hist1d(gal_ntuple_filename,h_name,binfo1d);
   end = clock();
   elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
   printf("#\n# It took %f seconds to project to 1d histogram\n",elapsed_secs);
 
   // create 1d histogram
   begin = clock();
-
-  //  S.function = &sel_func_1d;
-  //  V.function = &val_func_1d;
-
+  h_name = "log_mbh";
   binfo1d.hist = hist_gals_mbh;
   binfo1d.icol = 2;
-  V.params = &binfo1d;
-
-  gal_ntuple = gsl_ntuple_open(filename_array, &gal_row, sizeof (gal_row));
-  gsl_ntuple_project(hist_gals_mbh,gal_ntuple,&V,&S);
-  gsl_ntuple_close(gal_ntuple);
-
-  h_name = "log_mbh";
-  outfilename = "gsl_hist_1d_" + h_name + ".hist";
-
-  Print_Hist1d(hist_gals_mbh, outfilename);
-
+  Print_Hist1d(gal_ntuple_filename,h_name,binfo1d);
   end = clock();
   elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
   printf("#\n# It took %f seconds to project to 1d histogram\n",elapsed_secs);
@@ -370,13 +335,29 @@ void Print_Hist2d_With_Header(string ntuple_filename, string v_name, string h_na
 
 }
 
-void Print_Hist1d(gsl_histogram * hist1d, string name)
+void Print_Hist1d(string ntuple_filename, string h_name, bin_params_1d binfo)
 {
 
-  FILE * outfile = fopen(name.c_str(),"w"); 
+  gsl_ntuple_select_fn S;
+  gsl_ntuple_value_fn V;
 
-  gsl_histogram_fprintf(outfile, hist1d, "%-16.6e", "%-16.6e");
+  S.function = &sel_func_1d;
+  V.function = &val_func_1d;
 
+  V.params = &binfo;
+
+  int n = ntuple_filename.length(); // doing this so that gsl_ntuple_create doesn't complain
+  char ntuple_filename_array[n + 1]; // '' ''
+  strcpy(ntuple_filename_array, ntuple_filename.c_str());  // '' ''
+
+  struct ntuple_data gal_row;
+  gsl_ntuple *gal_ntuple = gsl_ntuple_open (ntuple_filename_array, &gal_row, sizeof (gal_row));
+  gsl_ntuple_project(binfo.hist,gal_ntuple,&V,&S);
+  gsl_ntuple_close(gal_ntuple);
+
+  string outfilename = "gsl_hist_1d_" + h_name + ".hist";
+  FILE * outfile = fopen(outfilename.c_str(),"w");
+  gsl_histogram_fprintf(outfile, binfo.hist, "%-16.6e", "%-16.6e");
   fclose(outfile);
 
 }
