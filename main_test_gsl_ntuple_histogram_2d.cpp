@@ -5,6 +5,7 @@
 #include <vector>
 #include <string>
 #include <ctime>
+#include <mpi.h>
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 #include <gsl/gsl_histogram.h>
@@ -43,8 +44,13 @@ struct bin_params_2d
 int main(int argc, char **argv)
 {
 
-  void Print_Hist1d(string, string, bin_params_1d);
-  void Print_Hist2d_With_Header(string, string, string, bin_params_2d);
+  MPI_Init( &argc, &argv );
+  int my_rank,n_procs;
+  MPI_Comm_rank( MPI_COMM_WORLD, &my_rank );
+  MPI_Comm_size( MPI_COMM_WORLD, &n_procs);
+
+  void Print_Hist1d(char * , string, bin_params_1d);
+  void Print_Hist2d_With_Header(char * , string, string, bin_params_2d);
 
 
   int sel_func_2d (void *ntuple_data, void *params);
@@ -53,11 +59,12 @@ int main(int argc, char **argv)
   int sel_func_1d (void *ntuple_data, void *params);
   double val_func_1d (void *ntuple_data, void *params);
 
-  string gal_ntuple_filename = "test_ntuple2d.dat";
-  int n = gal_ntuple_filename.length(); // doing this so that gsl_ntuple_create doesn't complain
-  char filename_array[n + 1]; // '' ''
-  strcpy(filename_array, gal_ntuple_filename.c_str());  // '' ''
 
+  // maybe clean this up?
+  string filename_prefix = "gal_ntuple_";
+  string extension = ".dat";
+  char ntuple_filename_array[35];
+  sprintf(ntuple_filename_array, "%s%d%s", filename_prefix.c_str(),my_rank,extension.c_str());
 
   double min_m_r = 10;
   double max_m_r = 26;
@@ -94,8 +101,8 @@ int main(int argc, char **argv)
   gsl_rng *rangen;
   const gsl_rng_type * TypeR;
   gsl_rng_env_setup();
-  //gsl_rng_default_seed = (unsigned int)time(NULL);
-  gsl_rng_default_seed = 2;
+  gsl_rng_default_seed = (unsigned int)time(NULL);
+  //gsl_rng_default_seed = 2;
   TypeR = gsl_rng_default;
   rangen = gsl_rng_alloc (TypeR);
 
@@ -106,7 +113,8 @@ int main(int argc, char **argv)
   clock_t end;
   
   struct ntuple_data gal_row;
-  gsl_ntuple *gal_ntuple  = gsl_ntuple_create(filename_array, &gal_row, sizeof (gal_row));
+  
+  gsl_ntuple *gal_ntuple  = gsl_ntuple_create(ntuple_filename_array, &gal_row, sizeof (gal_row));
 
 
   begin = clock();
@@ -123,71 +131,93 @@ int main(int argc, char **argv)
   
   gsl_ntuple_close (gal_ntuple);
 
-
-  
   end = clock();
   float elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
-  printf("#\n# It took %f seconds to generate %d samples\n",elapsed_secs, num_samples);
-
-  string v_name("default");
-  string h_name("default");
+  printf("#\n# It took %f seconds to generate %d samples on rank %d\n",elapsed_secs, num_samples, my_rank);
+  MPI_Barrier(MPI_COMM_WORLD); // might not be necessary, but doesn't hurt muchw
 
 
-  // create 1d histogram
-  begin = clock();
-  h_name = "m_r";
-  bin_params_1d binfo1d = {hist_gals_m_r, 0};
-  Print_Hist1d(gal_ntuple_filename,h_name,binfo1d);
-  end = clock();
-  elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
-  printf("#\n# It took %f seconds to project to 1d histogram\n",elapsed_secs);
+  if ( my_rank == 0)
+    {
 
-  // create 1d histogram
-  begin = clock();
-  h_name = "z";
-  binfo1d.hist = hist_gals_z;
-  binfo1d.icol = 1;
-  Print_Hist1d(gal_ntuple_filename,h_name,binfo1d);
-  end = clock();
-  elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
-  printf("#\n# It took %f seconds to project to 1d histogram\n",elapsed_secs);
+      string filename = "gal_ntuple_combined.dat";
+      char combined_ntuple_filename[35];
+      strcpy(combined_ntuple_filename, filename.c_str());  
 
-  // create 1d histogram
-  begin = clock();
-  h_name = "log_mbh";
-  binfo1d.hist = hist_gals_mbh;
-  binfo1d.icol = 2;
-  Print_Hist1d(gal_ntuple_filename,h_name,binfo1d);
-  end = clock();
-  elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
-  printf("#\n# It took %f seconds to project to 1d histogram\n",elapsed_secs);
+      // combine
+      //      for (int i = 0 ; i < n_procs; i++) 
 
-  // create 2d histogram
-  v_name = "m_r";
-  h_name = "z";
-  bin_params_2d binfo2d = {hist_gals_m_r, hist_gals_z,0,1,0};
-  begin = clock();
-  Print_Hist2d_With_Header(gal_ntuple_filename, v_name, h_name, binfo2d);
-  end = clock();
-  elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
-  printf("#\n# It took %f seconds to project to 2d histogram\n",elapsed_secs);
+      std::ifstream if_a("gal_ntuple_0.dat", std::ios_base::binary);
+      std::ifstream if_b("gal_ntuple_1.dat", std::ios_base::binary);
+      std::ofstream of_c(combined_ntuple_filename, std::ios_base::binary);
 
-  // create 2d histogram
-  v_name = "m_r";
-  h_name = "log_mbh";
-  binfo2d = {hist_gals_m_r,hist_gals_mbh,0,2,0};
-  begin = clock();
-  Print_Hist2d_With_Header(gal_ntuple_filename, v_name, h_name,binfo2d);
-  end = clock();
-  elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
-  printf("#\n# It took %f seconds to project to 2d histogram\n",elapsed_secs);
+      of_c << if_a.rdbuf() << if_b.rdbuf();
 
+
+      string v_name("default");
+      string h_name("default");
+
+
+      // create 1d histogram
+      begin = clock();
+      h_name = "m_r";
+      bin_params_1d binfo1d = {hist_gals_m_r, 0};
+      Print_Hist1d(combined_ntuple_filename,h_name,binfo1d);
+      end = clock();
+      elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
+      printf("#\n# It took %f seconds to project to 1d histogram\n",elapsed_secs);
+
+      // create 1d histogram
+      begin = clock();
+      h_name = "z";
+      binfo1d.hist = hist_gals_z;
+      binfo1d.icol = 1;
+      Print_Hist1d(combined_ntuple_filename,h_name,binfo1d);
+      end = clock();
+      elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
+      printf("#\n# It took %f seconds to project to 1d histogram\n",elapsed_secs);
+
+      // create 1d histogram
+      begin = clock();
+      h_name = "log_mbh";
+      binfo1d.hist = hist_gals_mbh;
+      binfo1d.icol = 2;
+      Print_Hist1d(combined_ntuple_filename,h_name,binfo1d);
+      end = clock();
+      elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
+      printf("#\n# It took %f seconds to project to 1d histogram\n",elapsed_secs);
+
+      // create 2d histogram
+      v_name = "m_r";
+      h_name = "z";
+      bin_params_2d binfo2d = {hist_gals_m_r, hist_gals_z,0,1,0};
+      begin = clock();
+      Print_Hist2d_With_Header(combined_ntuple_filename, v_name, h_name, binfo2d);
+      end = clock();
+      elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
+      printf("#\n# It took %f seconds to project to 2d histogram\n",elapsed_secs);
+
+      // create 2d histogram
+      v_name = "m_r";
+      h_name = "log_mbh";
+      binfo2d = {hist_gals_m_r,hist_gals_mbh,0,2,0};
+      begin = clock();
+      Print_Hist2d_With_Header(combined_ntuple_filename, v_name, h_name,binfo2d);
+      end = clock();
+      elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
+      printf("#\n# It took %f seconds to project to 2d histogram\n",elapsed_secs);
+      
+    }
+
+  MPI_Barrier(MPI_COMM_WORLD); // might not be necessary, but doesn't hurt muchw
+  
   gsl_histogram_free(hist_gals_m_r);
   gsl_histogram_free(hist_gals_z);
   gsl_histogram_free(hist_gals_mbh);
   
   gsl_rng_free(rangen);
 
+  MPI_Finalize();
 
 }
 
@@ -276,16 +306,17 @@ double val_func_2d (void *this_data, void *p)
 }
 
 
-void Print_Hist2d_With_Header(string ntuple_filename, string v_name, string h_name, bin_params_2d binfo)
+//void Print_Hist2d_With_Header(string ntuple_filename, string v_name, string h_name, bin_params_2d binfo)
+void Print_Hist2d_With_Header(char *ntuple_filename, string v_name, string h_name, bin_params_2d binfo)
 {
 
   //write header
   string outfilename = "gsl_hist_2d_" + v_name + "_" + h_name + ".hist";
   FILE * outfile = fopen(outfilename.c_str(),"w");
 
-  int n = ntuple_filename.length(); // doing this so that gsl_ntuple_create doesn't complain
-  char ntuple_filename_array[n + 1]; // '' ''
-  strcpy(ntuple_filename_array, ntuple_filename.c_str());  // '' ''
+  //  int n = ntuple_filename.length(); // doing this so that gsl_ntuple_create doesn't complain
+  //  char ntuple_filename_array[n + 1]; // '' ''
+  //  strcpy(ntuple_filename_array, ntuple_filename.c_str());  // '' ''
 
   gsl_ntuple_select_fn S;
   gsl_ntuple_value_fn V;
@@ -320,7 +351,8 @@ void Print_Hist2d_With_Header(string ntuple_filename, string v_name, string h_na
       bin_params_2_S.ibin = ibin;
       S.params = &bin_params_2_S;
 
-      gsl_ntuple *gal_ntuple = gsl_ntuple_open (ntuple_filename_array, &gal_row, sizeof (gal_row));
+      //      gsl_ntuple *gal_ntuple = gsl_ntuple_open (ntuple_filename_array, &gal_row, sizeof (gal_row));
+      gsl_ntuple *gal_ntuple = gsl_ntuple_open (ntuple_filename, &gal_row, sizeof (gal_row));
   
       gsl_histogram_reset(binfo.hist1);
       gsl_ntuple_project(binfo.hist1,gal_ntuple,&V,&S);
@@ -335,7 +367,8 @@ void Print_Hist2d_With_Header(string ntuple_filename, string v_name, string h_na
 
 }
 
-void Print_Hist1d(string ntuple_filename, string h_name, bin_params_1d binfo)
+//void Print_Hist1d(string ntuple_filename, string h_name, bin_params_1d binfo)
+void Print_Hist1d(char *ntuple_filename, string h_name, bin_params_1d binfo)
 {
 
   gsl_ntuple_select_fn S;
@@ -346,12 +379,13 @@ void Print_Hist1d(string ntuple_filename, string h_name, bin_params_1d binfo)
 
   V.params = &binfo;
 
-  int n = ntuple_filename.length(); // doing this so that gsl_ntuple_create doesn't complain
-  char ntuple_filename_array[n + 1]; // '' ''
-  strcpy(ntuple_filename_array, ntuple_filename.c_str());  // '' ''
+  //  int n = ntuple_filename.length(); // doing this so that gsl_ntuple_create doesn't complain
+  //  char ntuple_filename_array[n + 1]; // '' ''
+  //  strcpy(ntuple_filename_array, ntuple_filename.c_str());  // '' ''
 
   struct ntuple_data gal_row;
-  gsl_ntuple *gal_ntuple = gsl_ntuple_open (ntuple_filename_array, &gal_row, sizeof (gal_row));
+  //  gsl_ntuple *gal_ntuple = gsl_ntuple_open (ntuple_filename_array, &gal_row, sizeof (gal_row));
+  gsl_ntuple *gal_ntuple = gsl_ntuple_open (ntuple_filename, &gal_row, sizeof (gal_row));  
   gsl_ntuple_project(binfo.hist,gal_ntuple,&V,&S);
   gsl_ntuple_close(gal_ntuple);
 
