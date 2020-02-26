@@ -104,6 +104,7 @@ int main(int argc, char **argv)
   //gsl_rng_default_seed = (unsigned int)time(NULL);
   //gsl_rng_default_seed = 2;
   gsl_rng_default_seed = my_rank;
+  //gsl_rng_default_seed = my_rank + (unsigned int)time(NULL);
   TypeR = gsl_rng_default;
   rangen = gsl_rng_alloc (TypeR);
 
@@ -150,37 +151,32 @@ int main(int argc, char **argv)
       strcpy(combined_ntuple_filename, filename.c_str());
       gsl_ntuple *combined_ntuple  = gsl_ntuple_create(combined_ntuple_filename, &combined_gal_row, sizeof (combined_gal_row));
       
-      
-      // loop over files
-      filename = "gal_ntuple_0.dat";
+
       char working_ntuple_filename[35];
-      strcpy(working_ntuple_filename, filename.c_str());
-      gsl_ntuple *working_ntuple = gsl_ntuple_open(working_ntuple_filename, &gal_row, sizeof (gal_row));
-      
-      for (int t = 0; t < num_samples; t++)
+      filename_prefix = "gal_ntuple_";
+      extension = ".dat";
+      gsl_ntuple *working_ntuple; 
+	
+      // loop over files
+      for (int i =0; i < n_procs; i++)
 	{
-
-	  gsl_ntuple_read(working_ntuple);
-	  memcpy(combined_gal_row.attributes, gal_row.attributes, sizeof(combined_gal_row.attributes));
-	  gsl_ntuple_write(combined_ntuple);
 	  
-	}
-
-      gsl_ntuple_close (working_ntuple);
-      filename = "gal_ntuple_1.dat";
-      strcpy(working_ntuple_filename, filename.c_str());
-      working_ntuple = gsl_ntuple_open(working_ntuple_filename, &gal_row, sizeof (gal_row));
+	sprintf(working_ntuple_filename, "%s%d%s", filename_prefix.c_str(),i,extension.c_str());
+	working_ntuple = gsl_ntuple_open(working_ntuple_filename, &gal_row, sizeof (gal_row));
       
-      for (int t = 0; t < num_samples; t++)
-	{
+	for (int t = 0; t < num_samples; t++)
+	  {
 
-	  gsl_ntuple_read(working_ntuple);
-	  memcpy(combined_gal_row.attributes, gal_row.attributes, sizeof(combined_gal_row.attributes));
-	  gsl_ntuple_write(combined_ntuple);
+	    gsl_ntuple_read(working_ntuple);
+	    memcpy(combined_gal_row.attributes, gal_row.attributes, sizeof(combined_gal_row.attributes));
+	    gsl_ntuple_write(combined_ntuple);
 	  
 	}
       
-      gsl_ntuple_close (working_ntuple);
+	gsl_ntuple_close (working_ntuple);
+	
+	}
+
       gsl_ntuple_close (combined_ntuple);
 
       //delete files with "remove?" http://www.cplusplus.com/reference/cstdio/remove/
@@ -193,9 +189,10 @@ int main(int argc, char **argv)
       combined_ntuple  = gsl_ntuple_open(combined_ntuple_filename, &gal_row, sizeof (gal_row));
 
 
+      // can this be split up among processes?
+
       string v_name("default");
       string h_name("default");
-
 
       // create 1d histogram
       begin = clock();
