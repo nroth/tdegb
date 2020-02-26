@@ -109,7 +109,7 @@ int main(int argc, char **argv)
   rangen = gsl_rng_alloc (TypeR);
 
 
-  int num_samples = 1000000;
+  int num_samples = 10;
 
   clock_t begin;
   clock_t end;
@@ -136,9 +136,14 @@ int main(int argc, char **argv)
   end = clock();
   float elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
   printf("#\n# It took %f seconds to generate %d samples on rank %d\n",elapsed_secs, num_samples, my_rank);
-  MPI_Barrier(MPI_COMM_WORLD); // might not be necessary, but doesn't hurt muchw
+  MPI_Barrier(MPI_COMM_WORLD); // might not be necessary, but doesn't hurt much
 
 
+  char combined_ntuple_filename[35];
+  string filename = "gal_ntuple_combined.dat";
+  strcpy(combined_ntuple_filename, filename.c_str());
+  
+  
   if ( my_rank == 0)
     {
 
@@ -146,16 +151,12 @@ int main(int argc, char **argv)
 
       struct data combined_gal_row;
 
-      string filename = "gal_ntuple_combined.dat";
-      char combined_ntuple_filename[35];
-      strcpy(combined_ntuple_filename, filename.c_str());
-      gsl_ntuple *combined_ntuple  = gsl_ntuple_create(combined_ntuple_filename, &combined_gal_row, sizeof (combined_gal_row));
-      
-
       char working_ntuple_filename[35];
       filename_prefix = "gal_ntuple_";
       extension = ".dat";
-      gsl_ntuple *working_ntuple; 
+      gsl_ntuple *working_ntuple;
+
+      gsl_ntuple *combined_ntuple  = gsl_ntuple_create(combined_ntuple_filename, &combined_gal_row, sizeof (combined_gal_row));
 	
       // loop over files
       for (int i =0; i < n_procs; i++)
@@ -171,7 +172,7 @@ int main(int argc, char **argv)
 	    memcpy(combined_gal_row.attributes, gal_row.attributes, sizeof(combined_gal_row.attributes));
 	    gsl_ntuple_write(combined_ntuple);
 	  
-	}
+	  }
       
 	gsl_ntuple_close (working_ntuple);
 	
@@ -185,19 +186,31 @@ int main(int argc, char **argv)
       float elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
       printf("#\n# It took %f seconds to copy events into single file\n",elapsed_secs);
 
-      //now open for reading and binning
-      combined_ntuple  = gsl_ntuple_open(combined_ntuple_filename, &gal_row, sizeof (gal_row));
+    }
+
+  
+  MPI_Barrier(MPI_COMM_WORLD); // might not be necessary, but doesn't hurt much
+
+  
+  // can this be split up among processes?
+
+  string v_name("default");
+  string h_name("default");
+  
+  bin_params_1d binfo1d;
+  bin_params_2d binfo2d;
 
 
-      // can this be split up among processes?
-
-      string v_name("default");
-      string h_name("default");
-
+  if (my_rank == 0)
+    {
+        //now open for reading and binning
+      //      gsl_ntuple *my_combined_ntuple  = gsl_ntuple_open(combined_ntuple_filename, &gal_row, sizeof (gal_row));
+      
       // create 1d histogram
       begin = clock();
       h_name = "m_r";
-      bin_params_1d binfo1d = {hist_gals_m_r, 0};
+      binfo1d.hist = hist_gals_m_r;
+      binfo1d.icol = 0;
       Print_Hist1d(combined_ntuple_filename,h_name,binfo1d);
       end = clock();
       elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
@@ -226,26 +239,35 @@ int main(int argc, char **argv)
       // create 2d histogram
       v_name = "m_r";
       h_name = "z";
-      bin_params_2d binfo2d = {hist_gals_m_r, hist_gals_z,0,1,0};
+      binfo2d.hist1 = hist_gals_m_r; 
+      binfo2d.hist2 = hist_gals_z;
+      binfo2d.icol1 = 0;
+      binfo2d.icol2 = 1;
+      binfo2d.ibin = 0;
       begin = clock();
       Print_Hist2d_With_Header(combined_ntuple_filename, v_name, h_name, binfo2d);
       end = clock();
       elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
       printf("#\n# It took %f seconds to project to 2d histogram\n",elapsed_secs);
-
+      
       // create 2d histogram
       v_name = "m_r";
       h_name = "log_mbh";
-      binfo2d = {hist_gals_m_r,hist_gals_mbh,0,2,0};
+      binfo2d.hist1 = hist_gals_m_r; 
+      binfo2d.hist2 = hist_gals_mbh;
+      binfo2d.icol1 = 0;
+      binfo2d.icol2 = 2;
+      binfo2d.ibin = 0;
       begin = clock();
       Print_Hist2d_With_Header(combined_ntuple_filename, v_name, h_name,binfo2d);
       end = clock();
       elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
       printf("#\n# It took %f seconds to project to 2d histogram\n",elapsed_secs);
-      
     }
-
+      
   MPI_Barrier(MPI_COMM_WORLD); // might not be necessary, but doesn't hurt much
+
+
   
   gsl_histogram_free(hist_gals_m_r);
   gsl_histogram_free(hist_gals_z);
