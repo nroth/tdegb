@@ -15,7 +15,7 @@
 using std::vector;
 using std::string;
 
-struct ntuple_data
+struct data
   {
     double attributes[3];
   };
@@ -101,8 +101,9 @@ int main(int argc, char **argv)
   gsl_rng *rangen;
   const gsl_rng_type * TypeR;
   gsl_rng_env_setup();
-  gsl_rng_default_seed = (unsigned int)time(NULL);
+  //gsl_rng_default_seed = (unsigned int)time(NULL);
   //gsl_rng_default_seed = 2;
+  gsl_rng_default_seed = my_rank;
   TypeR = gsl_rng_default;
   rangen = gsl_rng_alloc (TypeR);
 
@@ -112,7 +113,7 @@ int main(int argc, char **argv)
   clock_t begin;
   clock_t end;
   
-  struct ntuple_data gal_row;
+  struct data gal_row;
   
   gsl_ntuple *gal_ntuple  = gsl_ntuple_create(ntuple_filename_array, &gal_row, sizeof (gal_row));
 
@@ -123,7 +124,7 @@ int main(int argc, char **argv)
 
       gal_row.attributes[0] = mean_m_r + gsl_ran_gaussian(rangen, sigma_m_r);
       gal_row.attributes[1] = mean_z + gsl_ran_gaussian(rangen, sigma_z);
-      gal_row.attributes[2] = mean_log_mbh + gsl_ran_gaussian(rangen, sigma_log_mbh);;
+      gal_row.attributes[2] = mean_log_mbh + gsl_ran_gaussian(rangen, sigma_log_mbh);
 
       gsl_ntuple_write(gal_ntuple);
     }
@@ -140,18 +141,56 @@ int main(int argc, char **argv)
   if ( my_rank == 0)
     {
 
+      begin = clock();
+
+      struct data combined_gal_row;
+
       string filename = "gal_ntuple_combined.dat";
       char combined_ntuple_filename[35];
-      strcpy(combined_ntuple_filename, filename.c_str());  
+      strcpy(combined_ntuple_filename, filename.c_str());
+      gsl_ntuple *combined_ntuple  = gsl_ntuple_create(combined_ntuple_filename, &combined_gal_row, sizeof (combined_gal_row));
+      
+      
+      // loop over files
+      filename = "gal_ntuple_0.dat";
+      char working_ntuple_filename[35];
+      strcpy(working_ntuple_filename, filename.c_str());
+      gsl_ntuple *working_ntuple = gsl_ntuple_open(working_ntuple_filename, &gal_row, sizeof (gal_row));
+      
+      for (int t = 0; t < num_samples; t++)
+	{
 
-      // combine
-      //      for (int i = 0 ; i < n_procs; i++) 
+	  gsl_ntuple_read(working_ntuple);
+	  memcpy(combined_gal_row.attributes, gal_row.attributes, sizeof(combined_gal_row.attributes));
+	  gsl_ntuple_write(combined_ntuple);
+	  
+	}
 
-      std::ifstream if_a("gal_ntuple_0.dat", std::ios_base::binary);
-      std::ifstream if_b("gal_ntuple_1.dat", std::ios_base::binary);
-      std::ofstream of_c(combined_ntuple_filename, std::ios_base::binary);
+      gsl_ntuple_close (working_ntuple);
+      filename = "gal_ntuple_1.dat";
+      strcpy(working_ntuple_filename, filename.c_str());
+      working_ntuple = gsl_ntuple_open(working_ntuple_filename, &gal_row, sizeof (gal_row));
+      
+      for (int t = 0; t < num_samples; t++)
+	{
 
-      of_c << if_a.rdbuf() << if_b.rdbuf();
+	  gsl_ntuple_read(working_ntuple);
+	  memcpy(combined_gal_row.attributes, gal_row.attributes, sizeof(combined_gal_row.attributes));
+	  gsl_ntuple_write(combined_ntuple);
+	  
+	}
+      
+      gsl_ntuple_close (working_ntuple);
+      gsl_ntuple_close (combined_ntuple);
+
+      //delete files with "remove?" http://www.cplusplus.com/reference/cstdio/remove/
+      
+      end = clock();
+      float elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
+      printf("#\n# It took %f seconds to copy events into single file\n",elapsed_secs);
+
+      //now open for reading and binning
+      combined_ntuple  = gsl_ntuple_open(combined_ntuple_filename, &gal_row, sizeof (gal_row));
 
 
       string v_name("default");
@@ -209,7 +248,7 @@ int main(int argc, char **argv)
       
     }
 
-  MPI_Barrier(MPI_COMM_WORLD); // might not be necessary, but doesn't hurt muchw
+  MPI_Barrier(MPI_COMM_WORLD); // might not be necessary, but doesn't hurt much
   
   gsl_histogram_free(hist_gals_m_r);
   gsl_histogram_free(hist_gals_z);
@@ -234,8 +273,8 @@ int sel_func_2d (void *this_data, void *p)
 
   gsl_histogram * horizontal_hist = binfo.hist2;
 
-  struct ntuple_data * data = (struct ntuple_data *) this_data;
-  double this_horizontal_data = data->attributes[binfo.icol2];
+  struct data * data_pointer = (struct data *) this_data;
+  double this_horizontal_data = data_pointer->attributes[binfo.icol2];
 
   // handle extreme values
   if (this_horizontal_data >= gsl_histogram_max(horizontal_hist))
@@ -259,10 +298,10 @@ double val_func_1d (void *this_data, void *p)
 
   int icol = binfo.icol;
   
-  struct ntuple_data * data = (struct ntuple_data *) this_data;
+  struct data * data_pointer = (struct data *) this_data;
   double this_col_value;
 
-  this_col_value  = data->attributes[icol];
+  this_col_value  = data_pointer->attributes[icol];
 
   // handle extreme values
   if (this_col_value < gsl_histogram_min(binfo.hist))
@@ -283,13 +322,13 @@ double val_func_1d (void *this_data, void *p)
 double val_func_2d (void *this_data, void *p)
 {
 
-  struct ntuple_data * data = (struct ntuple_data *) this_data;
+  struct data * data_pointer = (struct data *) this_data;
   double this_col_data; //, v_data;
 
   bin_params_2d binfo = *(struct bin_params_2d *)p;
 
   int icol = binfo.icol1;
-  this_col_data = data->attributes[icol];
+  this_col_data = data_pointer->attributes[icol];
 
   if (this_col_data < gsl_histogram_min(binfo.hist1))
     {
@@ -324,7 +363,7 @@ void Print_Hist2d_With_Header(char *ntuple_filename, string v_name, string h_nam
   S.function = &sel_func_2d;
   V.function = &val_func_2d;
 
-  struct ntuple_data gal_row;
+  struct data gal_row;
   
   // write header
   for (int iy = 0; iy < binfo.hist2->n + 1; iy++)
@@ -383,7 +422,7 @@ void Print_Hist1d(char *ntuple_filename, string h_name, bin_params_1d binfo)
   //  char ntuple_filename_array[n + 1]; // '' ''
   //  strcpy(ntuple_filename_array, ntuple_filename.c_str());  // '' ''
 
-  struct ntuple_data gal_row;
+  struct data gal_row;
   //  gsl_ntuple *gal_ntuple = gsl_ntuple_open (ntuple_filename_array, &gal_row, sizeof (gal_row));
   gsl_ntuple *gal_ntuple = gsl_ntuple_open (ntuple_filename, &gal_row, sizeof (gal_row));  
   gsl_ntuple_project(binfo.hist,gal_ntuple,&V,&S);
@@ -395,7 +434,3 @@ void Print_Hist1d(char *ntuple_filename, string h_name, bin_params_1d binfo)
   fclose(outfile);
 
 }
-
-
-
-  
