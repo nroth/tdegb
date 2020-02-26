@@ -109,7 +109,7 @@ int main(int argc, char **argv)
   rangen = gsl_rng_alloc (TypeR);
 
 
-  int num_samples = 10;
+  int num_samples = 1000000;
 
   clock_t begin;
   clock_t end;
@@ -143,7 +143,8 @@ int main(int argc, char **argv)
   string filename = "gal_ntuple_combined.dat";
   strcpy(combined_ntuple_filename, filename.c_str());
   
-  
+
+  // combine the ntuples
   if ( my_rank == 0)
     {
 
@@ -214,7 +215,7 @@ int main(int argc, char **argv)
       Print_Hist1d(combined_ntuple_filename,h_name,binfo1d);
       end = clock();
       elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
-      printf("#\n# It took %f seconds to project to 1d histogram\n",elapsed_secs);
+      printf("#\n# It took %f seconds to project to 1d histogram on rank %d\n",elapsed_secs, my_rank);
 
       // create 1d histogram
       begin = clock();
@@ -224,7 +225,7 @@ int main(int argc, char **argv)
       Print_Hist1d(combined_ntuple_filename,h_name,binfo1d);
       end = clock();
       elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
-      printf("#\n# It took %f seconds to project to 1d histogram\n",elapsed_secs);
+      printf("#\n# It took %f seconds to project to 1d histogram on rank %d\n",elapsed_secs, my_rank);
 
       // create 1d histogram
       begin = clock();
@@ -234,8 +235,12 @@ int main(int argc, char **argv)
       Print_Hist1d(combined_ntuple_filename,h_name,binfo1d);
       end = clock();
       elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
-      printf("#\n# It took %f seconds to project to 1d histogram\n",elapsed_secs);
+      printf("#\n# It took %f seconds to project to 1d histogram on rank %d\n",elapsed_secs, my_rank);
 
+    }
+
+  if (my_rank == 1)
+    {
       // create 2d histogram
       v_name = "m_r";
       h_name = "z";
@@ -248,8 +253,11 @@ int main(int argc, char **argv)
       Print_Hist2d_With_Header(combined_ntuple_filename, v_name, h_name, binfo2d);
       end = clock();
       elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
-      printf("#\n# It took %f seconds to project to 2d histogram\n",elapsed_secs);
-      
+      printf("#\n# It took %f seconds to project to 2d histogram on rank %d\n",elapsed_secs, my_rank);
+    }
+
+  if (my_rank == 2)
+    {
       // create 2d histogram
       v_name = "m_r";
       h_name = "log_mbh";
@@ -262,7 +270,7 @@ int main(int argc, char **argv)
       Print_Hist2d_With_Header(combined_ntuple_filename, v_name, h_name,binfo2d);
       end = clock();
       elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
-      printf("#\n# It took %f seconds to project to 2d histogram\n",elapsed_secs);
+      printf("#\n# It took %f seconds to project to 2d histogram on rank %d\n",elapsed_secs,my_rank);
     }
       
   MPI_Barrier(MPI_COMM_WORLD); // might not be necessary, but doesn't hurt much
