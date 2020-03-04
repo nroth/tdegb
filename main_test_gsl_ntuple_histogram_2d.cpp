@@ -11,22 +11,10 @@
 #include <gsl/gsl_histogram.h>
 #include <gsl/gsl_histogram2d.h>
 #include <gsl/gsl_ntuple.h>
+#include "histogram1d_ntuple.h"
 
 using std::vector;
 using std::string;
-
-struct data
-  {
-    double attributes[3];
-  };
-
-struct bin_params_1d
-{
-
-  gsl_histogram * hist;
-  int icol; // which column in the ntuple this is tracking
-};
-
 
 struct bin_params_2d
 {
@@ -37,10 +25,6 @@ struct bin_params_2d
   int ibin;  // which (row?, column?) you're currently working on
 };
 
-//gsl_ntuple_select_fn S; ? 
-//gsl_ntuple_value_fn V; ?
-
-
 int main(int argc, char **argv)
 {
 
@@ -49,16 +33,14 @@ int main(int argc, char **argv)
   MPI_Comm_rank( MPI_COMM_WORLD, &my_rank );
   MPI_Comm_size( MPI_COMM_WORLD, &n_procs);
 
-  void Print_Hist1d(char * , string, bin_params_1d);
+  vector<double> bin_specs;
+  string base_name;
+  string axis_name;
+  int icol;
+  int num_bins;
+
+  //  void Print_Hist1d(char * , string, bin_params_1d);
   void Print_Hist2d_With_Header(char * , string, string, bin_params_2d);
-
-
-  int sel_func_2d (void *ntuple_data, void *params);
-  double val_func_2d (void *ntuple_data, void *params);
-
-  int sel_func_1d (void *ntuple_data, void *params);
-  double val_func_1d (void *ntuple_data, void *params);
-
 
   // maybe clean this up?
   string filename_prefix = "gal_ntuple_";
@@ -66,36 +48,15 @@ int main(int argc, char **argv)
   char ntuple_filename_array[35];
   sprintf(ntuple_filename_array, "%s%d%s", filename_prefix.c_str(),my_rank,extension.c_str());
 
-  double min_m_r = 10;
-  double max_m_r = 26;
-  int num_bins_m_r = 50;
 
-  double mean_m_r = min_m_r + 0.5 * (max_m_r - min_m_r);
-  double sigma_m_r = 0.2 * (max_m_r - min_m_r);
+  double mean_m_r = 10. + 0.5 * (26. - 10.);
+  double sigma_m_r = 0.2 * (26. - 10.);
 
-  gsl_histogram * hist_gals_m_r = gsl_histogram_alloc(num_bins_m_r);
-  gsl_histogram_set_ranges_uniform(hist_gals_m_r, min_m_r, max_m_r);
-    
-  double min_z = 0;
-  double max_z = 0.2;
-  int num_bins_z = 40;
+  double mean_z = 0. + 0.5 * (0.2 - 0.);
+  double sigma_z = 0.2 * (0.2 - 0.);
 
-  double mean_z = min_z + 0.5 * (max_z - min_z);
-  double sigma_z = 0.2 * (max_z - min_z);
-
-  gsl_histogram * hist_gals_z = gsl_histogram_alloc(num_bins_z);
-  gsl_histogram_set_ranges_uniform(hist_gals_z, min_z, max_z);
-
-  double min_log_mbh = 5.;
-  double max_log_mbh = 8.;
-  int num_bins_mbh = 30;
-
-  double mean_log_mbh = min_log_mbh + 0.5 * (max_log_mbh - min_log_mbh);
-  double sigma_log_mbh = 0.2 * (max_log_mbh - min_log_mbh);
-
-  gsl_histogram * hist_gals_mbh = gsl_histogram_alloc(num_bins_mbh);
-  gsl_histogram_set_ranges_uniform(hist_gals_mbh, min_log_mbh, max_log_mbh);
-  
+  double mean_log_mbh = 5. + 0.5 * (8. - 5.);
+  double sigma_log_mbh = 0.2 * (8. - 5.);
 
   // setup random num generator
   gsl_rng *rangen;
@@ -142,6 +103,7 @@ int main(int argc, char **argv)
   char combined_ntuple_filename[35];
   string filename = "gal_ntuple_combined.dat";
   strcpy(combined_ntuple_filename, filename.c_str());
+
   
 
   // combine the ntuples
@@ -198,41 +160,54 @@ int main(int argc, char **argv)
   string v_name("default");
   string h_name("default");
   
-  bin_params_1d binfo1d;
+  //  bin_params_1d binfo1d;
   bin_params_2d binfo2d;
 
 
   if (my_rank == 0)
     {
-        //now open for reading and binning
-      //      gsl_ntuple *my_combined_ntuple  = gsl_ntuple_open(combined_ntuple_filename, &gal_row, sizeof (gal_row));
+      // create 1d histogram
+      begin = clock();
+      bin_specs.push_back(10.);
+      bin_specs.push_back(26.);
+      base_name = "gals";
+      axis_name = "m_r";
+      icol = 0;
+      num_bins = 50;
+      Histogram1dNtuple hist_gals_m_r(num_bins,bin_specs,base_name, axis_name,icol,combined_ntuple_filename);
+      bin_specs.clear();
+      hist_gals_m_r.Print_Histogram_1D();
+      end = clock();
+      elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
+      printf("#\n# It took %f seconds to project to 1d histogram on rank %d\n",elapsed_secs, my_rank);
+
+      // create 1d histogram
+      begin = clock();
+      bin_specs.push_back(0.);
+      bin_specs.push_back(0.2);
+      base_name = "gals";
+      axis_name = "z";
+      icol = 1;
+      num_bins = 40;
+      Histogram1dNtuple hist_gals_z(num_bins,bin_specs,base_name, axis_name,icol,combined_ntuple_filename);
+      bin_specs.clear();
+      hist_gals_z.Print_Histogram_1D();
+      end = clock();
+      elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
+      printf("#\n# It took %f seconds to project to 1d histogram on rank %d\n",elapsed_secs, my_rank);
+
       
       // create 1d histogram
       begin = clock();
-      h_name = "m_r";
-      binfo1d.hist = hist_gals_m_r;
-      binfo1d.icol = 0;
-      Print_Hist1d(combined_ntuple_filename,h_name,binfo1d);
-      end = clock();
-      elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
-      printf("#\n# It took %f seconds to project to 1d histogram on rank %d\n",elapsed_secs, my_rank);
-
-      // create 1d histogram
-      begin = clock();
-      h_name = "z";
-      binfo1d.hist = hist_gals_z;
-      binfo1d.icol = 1;
-      Print_Hist1d(combined_ntuple_filename,h_name,binfo1d);
-      end = clock();
-      elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
-      printf("#\n# It took %f seconds to project to 1d histogram on rank %d\n",elapsed_secs, my_rank);
-
-      // create 1d histogram
-      begin = clock();
-      h_name = "log_mbh";
-      binfo1d.hist = hist_gals_mbh;
-      binfo1d.icol = 2;
-      Print_Hist1d(combined_ntuple_filename,h_name,binfo1d);
+      bin_specs.push_back(5.);
+      bin_specs.push_back(8.);
+      base_name = "gals";
+      axis_name = "log_mbh";
+      icol = 2;
+      num_bins = 30;
+      Histogram1dNtuple hist_gals_mbh(num_bins,bin_specs,base_name, axis_name,icol,combined_ntuple_filename);
+      bin_specs.clear();
+      hist_gals_mbh.Print_Histogram_1D();
       end = clock();
       elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
       printf("#\n# It took %f seconds to project to 1d histogram on rank %d\n",elapsed_secs, my_rank);
@@ -241,6 +216,7 @@ int main(int argc, char **argv)
 
   if (my_rank == 1)
     {
+      /*
       // create 2d histogram
       v_name = "m_r";
       h_name = "z";
@@ -254,8 +230,26 @@ int main(int argc, char **argv)
       end = clock();
       elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
       printf("#\n# It took %f seconds to project to 2d histogram on rank %d\n",elapsed_secs, my_rank);
+      */
+
+      // create 2d histogram
+      /*
+      v_name = "z";
+      h_name = "log_mbh";
+      binfo2d.hist1 = hist_gals_z; 
+      binfo2d.hist2 = hist_gals_mbh;
+      binfo2d.icol1 = 1;
+      binfo2d.icol2 = 2;
+      binfo2d.ibin = 0;
+      begin = clock();
+      Print_Hist2d_With_Header(combined_ntuple_filename, v_name, h_name, binfo2d);
+      end = clock();
+      elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
+      printf("#\n# It took %f seconds to project to 2d histogram on rank %d\n",elapsed_secs, my_rank);
+      */
     }
 
+  /*
   if (my_rank == 2)
     {
       // create 2d histogram
@@ -271,26 +265,23 @@ int main(int argc, char **argv)
       end = clock();
       elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
       printf("#\n# It took %f seconds to project to 2d histogram on rank %d\n",elapsed_secs,my_rank);
-    }
+}
+  */
       
   MPI_Barrier(MPI_COMM_WORLD); // might not be necessary, but doesn't hurt much
 
-
-  
-  gsl_histogram_free(hist_gals_m_r);
-  gsl_histogram_free(hist_gals_z);
-  gsl_histogram_free(hist_gals_mbh);
-  
   gsl_rng_free(rangen);
 
   MPI_Finalize();
 
 }
 
+/*
 int sel_func_1d (void *this_data, void *p)
 {
   return 1;
 }
+*/
 
 
 int sel_func_2d (void *this_data, void *p)
@@ -319,6 +310,7 @@ int sel_func_2d (void *this_data, void *p)
 }
 
 
+/*
 double val_func_1d (void *this_data, void *p)
 {
   bin_params_1d binfo = *(struct bin_params_1d *)p;
@@ -344,7 +336,7 @@ double val_func_1d (void *this_data, void *p)
 
   return this_col_value;
 }
-
+*/
 
 double val_func_2d (void *this_data, void *p)
 {
@@ -433,6 +425,7 @@ void Print_Hist2d_With_Header(char *ntuple_filename, string v_name, string h_nam
 
 }
 
+/*
 //void Print_Hist1d(string ntuple_filename, string h_name, bin_params_1d binfo)
 void Print_Hist1d(char *ntuple_filename, string h_name, bin_params_1d binfo)
 {
@@ -461,3 +454,4 @@ void Print_Hist1d(char *ntuple_filename, string h_name, bin_params_1d binfo)
   fclose(outfile);
 
 }
+*/
