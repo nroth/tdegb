@@ -59,9 +59,6 @@ void Histogram1dNtuple::Init (int num_bins, vector<double> bin_specs, string b_n
 // GSL helper functions
 //***************************************************************
 
-
-
-//these are global, not scoped to the class
 int Histogram1dNtuple::sel_func_1d (void *this_data)
 {
   return 1;
@@ -73,7 +70,6 @@ double Histogram1dNtuple::val_func_1d (void *this_data)
 {
   
   struct data * data_pointer = (struct data *) this_data;
-  //double this_col_value;
 
   double this_col_value  = data_pointer->attributes[icol];
 
