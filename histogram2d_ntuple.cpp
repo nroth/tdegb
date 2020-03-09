@@ -153,7 +153,6 @@ void Histogram2dNtuple::Print_Histogram_2D_With_Header()
       gsl_histogram_reset(hist1);
       gsl_ntuple_project(hist1,this_ntuple,V,S);
 
-      outfile = fopen(outfilename.c_str(),"a"); 
       gsl_histogram_fprintf(outfile, hist1, "%-16.6e", "%-16.6e");
 
       gsl_ntuple_close(this_ntuple);
