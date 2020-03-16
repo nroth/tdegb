@@ -7,18 +7,14 @@
 #include <ctime>
 #include <mpi.h>
 #include <gsl/gsl_rng.h>
-#include <gsl/gsl_ntuple.h>
-#include "galaxy.h"
-#include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 #include <gsl/gsl_histogram.h>
 #include <gsl/gsl_histogram2d.h>
 #include <gsl/gsl_ntuple.h>
+#include <hdf5.h>
+#include <hdf5_hl.h>
 #include "histogram1d_ntuple.h"
 #include "histogram2d_ntuple.h"
-#include "hdf5.h"
-#include "hdf5_hl.h"
-
 
 using std::vector;
 using std::string;
@@ -192,12 +188,16 @@ int main(int argc, char **argv)
   begin = clock();
 
   /////// MAIN LOOP
-  printf("starting to read catalogue\n");
+  printf("starting to read catalogue on rank %d\n",my_rank);
   for (int i = 0; i < my_num_gals; i++)
     {
-      double galaxy_info[11] = { mass_mendel[i], mbh_sigma[i], mbh_bulge[i], z[i], sersic_n[i], r50_kpc[i], m_g[i], m_r[i],ssfr[i],M_u[i],M_r[i]};
+      double galaxy_info[11] = { log10(mass_mendel[i]), mbh_sigma[i], mbh_bulge[i], z[i], sersic_n[i], r50_kpc[i], m_g[i], m_r[i],ssfr[i],M_u[i],M_r[i]};
 
-      std::copy(std::begin(galaxy_info), std::end(galaxy_info), gal_row.attributes);
+      //      std::copy(std::begin(galaxy_info), std::end(galaxy_info), gal_row.attributes);
+      for (int j = 0; j < 11; j++)
+	{
+	  gal_row.attributes[j] = galaxy_info[j];
+	}
       gsl_ntuple_write(gal_ntuple);
 
     }
@@ -229,7 +229,7 @@ int main(int argc, char **argv)
 
   end = clock();
   elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
-  printf("#\n# It took %f seconds to write ntuples to file \n",elapsed_secs);
+  printf("#\n# It took %f seconds to write ntuples to file on rank %d\n",elapsed_secs,my_rank);
 
   char combined_ntuple_filename[35];
   string filename = "gal_catalogue_ntuple_combined.dat";
@@ -245,8 +245,8 @@ int main(int argc, char **argv)
       struct data combined_gal_row;
 
       char working_ntuple_filename[35];
-      filename_prefix = "gal_ntuple_";
-      extension = ".dat";
+
+
       gsl_ntuple *working_ntuple;
 
       gsl_ntuple *combined_ntuple  = gsl_ntuple_create(combined_ntuple_filename, &combined_gal_row, sizeof (combined_gal_row));
@@ -254,7 +254,8 @@ int main(int argc, char **argv)
       // loop over files
       for (int i =0; i < n_procs; i++)
 	{
-	  
+
+	  //using the filename_prefix and extension that you defined earlier when you originally wrote the files
 	sprintf(working_ntuple_filename, "%s%d%s", filename_prefix.c_str(),i,extension.c_str());
 	working_ntuple = gsl_ntuple_open(working_ntuple_filename, &gal_row, sizeof (gal_row));
       

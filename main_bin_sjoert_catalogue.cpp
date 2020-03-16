@@ -246,7 +246,7 @@ int main(int argc, char **argv)
     }
 
 
-  double* z = new double[my_num_gals]; // for some reason, the hdf5 read will only work if you do the manual memory allocation this way (and when using new operator, you should elete later)
+  double* z = new double[my_num_gals]; // for some reason, the hdf5 read will only work if you do the manual memory allocation this way (and when using new operator, you should delete later)
   double* m_g = new double[my_num_gals];
   double* m_r = new double[my_num_gals];
   double* M_u = new double[my_num_gals];
