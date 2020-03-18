@@ -4,7 +4,7 @@
 // GSL ntuple requires a struct
 struct data
   {
-    double attributes[11];
+    double attributes[12];
   };
 
 

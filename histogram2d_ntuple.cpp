@@ -113,7 +113,7 @@ double Histogram2dNtuple::val_func_2d (void *this_data)
 void Histogram2dNtuple::Print_Histogram_2D_With_Header()
 {
 
-  string outfilename = "gsl_hist_2d_" + v_axis_name + "_" + h_axis_name + ".hist";
+  string outfilename = base_name + "_" + v_axis_name + "_" + h_axis_name + "_2d.hist";
 
 
   Histogram2dNtuple* ptr2S = this;

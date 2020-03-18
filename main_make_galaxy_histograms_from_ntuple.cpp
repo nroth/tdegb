@@ -54,23 +54,22 @@ int main(int argc, char **argv)
       spec[1] = 12.;
       h_name = "mstar_mendel";
       icols[0] = 0;
-      num_bins[0] = 12;
+      num_bins[0] = 24;
       Histogram1dNtuple this_hist1d(num_bins[0],spec,base_name, h_name,icols[0],ntuple_filename);
       this_hist1d.Print_Histogram_1D();
       end = clock();
       elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
       printf("#\n# It took %f seconds to project to 1d histogram on rank %d\n",elapsed_secs, my_rank);
 
-      /*
 
       // create 1d histogram
       begin = clock();
       spec[0] = 0.;
-      spec[1] = 0.2;
+      spec[1] = 1.;
       h_name = "z";
-      icols[0] = 1;
-      num_bins[0] = 40;
-      this_hist1d.Init(num_bins[0],spec,base_name,h_name,icols[0],combined_ntuple_filename);
+      icols[0] = 3;
+      num_bins[0] = 20;
+      this_hist1d.Init(num_bins[0],spec,base_name,h_name,icols[0],ntuple_filename);
       this_hist1d.Print_Histogram_1D();
       end = clock();
       elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
@@ -79,46 +78,46 @@ int main(int argc, char **argv)
       
       // create 1d histogram
       begin = clock();
-      spec[0] = 5.;
-      spec[1] = 8.;
-      h_name = "log_mbh";
-      icols[0] = 2;
-      num_bins[0] = 30;
-      this_hist1d.Init(num_bins[0],spec,base_name, h_name,icols[0],combined_ntuple_filename);
+      spec[0] = 3.;
+      spec[1] = 9.;
+      h_name = "log_mbh_sigma";
+      icols[0] = 1;
+      num_bins[0] = 40;
+      this_hist1d.Init(num_bins[0],spec,base_name, h_name,icols[0],ntuple_filename);
       this_hist1d.Print_Histogram_1D();
       end = clock();
       elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
       printf("#\n# It took %f seconds to project to 1d histogram on rank %d\n",elapsed_secs, my_rank);
-      */
+
 
     }
 
   if (my_rank == 1)
     {
 
-      /*
+
       // create 2d histogram
       begin = clock();
-      v_name = "m_r";
-      h_name = "z";
-      num_bins[0] = 32;
-      spec[0] = 10.;
-      spec[1] = 26.;
+      v_name = "z";
+      h_name = "log_mbh_sigma";
+      num_bins[0] = 20;
+      spec[0] = 0;
+      spec[1] = 1.;
       bin_specs.push_back(spec);
-      num_bins[1] = 20;
-      spec[0] = 0.;
-      spec[1] = 0.2;
+      num_bins[1] = 40;
+      spec[0] = 3.;
+      spec[1] = 9.;
       bin_specs.push_back(spec);
-      icols[0] = 0;
+      icols[0] = 3;
       icols[1] = 1;
       ibin = 0;
-      Histogram2dNtuple this_hist2d(num_bins,bin_specs,base_name, v_name,h_name,icols,ibin, combined_ntuple_filename);
+      Histogram2dNtuple this_hist2d(num_bins,bin_specs,base_name, v_name,h_name,icols,ibin, ntuple_filename);
       bin_specs.clear();
       this_hist2d.Print_Histogram_2D_With_Header();
       end = clock();
       elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
       printf("#\n# It took %f seconds to project to 2d histogram on rank %d\n",elapsed_secs, my_rank);
-      */     
+
 
     }
 
@@ -126,29 +125,29 @@ int main(int argc, char **argv)
   if (my_rank == 2)
     {
 
-      /*
+
       // create 2d histogram
       begin = clock();
-      v_name = "m_r";
-      h_name = "log_mbh";
-      num_bins[0] = 32;
-      spec[0] = 10.;
-      spec[1] = 26.;
+      v_name = "mstar_mendel";
+      h_name = "UminusR";
+      num_bins[0] = 25;
+      spec[0] = 8.;
+      spec[1] = 12.;
       bin_specs.push_back(spec);
-      num_bins[1] = 31;
-      spec[0] = 5.;
-      spec[1] = 8.;
+      num_bins[1] = 27;
+      spec[0] = 0.75;
+      spec[1] = 3.45;
       bin_specs.push_back(spec);
       icols[0] = 0;
-      icols[1] = 2;
+      icols[1] = 11;
       ibin = 0;
-      Histogram2dNtuple this_hist2d(num_bins,bin_specs,base_name, v_name,h_name,icols,ibin, combined_ntuple_filename);
+      Histogram2dNtuple this_hist2d(num_bins,bin_specs,base_name, v_name,h_name,icols,ibin, ntuple_filename);
       bin_specs.clear();
       this_hist2d.Print_Histogram_2D_With_Header();
       end = clock();
       elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
       printf("#\n# It took %f seconds to project to 2d histogram on rank %d\n",elapsed_secs, my_rank);
-      */
+
     }
 
       
