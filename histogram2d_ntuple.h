@@ -7,6 +7,7 @@
 #include <gsl/gsl_ntuple.h>
 #include "ntuple_data.h"
 
+
 using std::string;
 using std::vector;
 
@@ -25,11 +26,13 @@ private:
   int icol2;
   int ibin;
 
+  bool use_weights = 0;
+
   char ntuple_filename_array[35];
 
   int sel_func_2d (void *);
   double val_func_2d (void *);
-
+  
 
 public:
 
@@ -40,6 +43,7 @@ public:
   // Initialize
   void Init(vector<int>, vector<vector<double>>, string, string, string, vector<int>, int, string);
   void Print_Histogram_2D_With_Header();
+  void Print_Weighted_Histogram_2D_With_Header();
 
   ~Histogram2dNtuple();
   

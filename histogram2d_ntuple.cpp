@@ -2,6 +2,7 @@
 #include <math.h>
 #include "histogram2d_ntuple.h"
 
+
 using std::vector;
 using std::string;
 
@@ -106,7 +107,6 @@ double Histogram2dNtuple::val_func_2d (void *this_data)
 }
 
 
-
 //***************************************************************
 // n-tuple projection to histogram, and output
 //***************************************************************
@@ -152,6 +152,59 @@ void Histogram2dNtuple::Print_Histogram_2D_With_Header()
   
       gsl_histogram_reset(hist1);
       gsl_ntuple_project(hist1,this_ntuple,V,S);
+
+      gsl_histogram_fprintf(outfile, hist1, "%-16.6e", "%-16.6e");
+
+      gsl_ntuple_close(this_ntuple);
+      
+    }
+
+  fclose(outfile);
+
+}
+
+void Histogram2dNtuple::Print_Weighted_Histogram_2D_With_Header()
+{
+
+  string outfilename = base_name + "_" + v_axis_name + "_" + h_axis_name + "_2d.hist";
+
+
+  Histogram2dNtuple* ptr2S = this;
+  auto ptrS = [=](void *ntuple_data)->int{return ptr2S->sel_func_2d(ntuple_data);};
+  gsl_ntuple_select_fn_pp<decltype(ptrS)> FpS(ptrS);     
+  gsl_ntuple_select_fn *S = static_cast<gsl_ntuple_select_fn*>(&FpS);
+
+  Histogram2dNtuple* ptr2V = this;
+  auto ptrV = [=](void *ntuple_data)->double{return ptr2V->val_func_2d(ntuple_data);};
+  gsl_ntuple_value_fn_pp<decltype(ptrV)> FpV(ptrV);     
+  gsl_ntuple_value_fn *V = static_cast<gsl_ntuple_value_fn*>(&FpV);
+
+  struct data data_row;
+
+  // write header
+  FILE * outfile = fopen(outfilename.c_str(),"w");
+  for (int iy = 0; iy < hist2->n + 1; iy++)
+    {    
+      fprintf(outfile,"%g ",hist2->range[iy]);
+    }
+  fprintf(outfile,"\n");
+  for (int ix = 0; ix < hist1->n + 1; ix++)
+    {    
+      fprintf(outfile,"%g ",hist1->range[ix]);
+    }
+  fprintf(outfile,"\n");
+  fclose(outfile);
+
+  outfile = fopen(outfilename.c_str(),"a");
+
+    for (int i = 0; i < hist2->n; i++)
+    {
+      ibin = i;
+
+      gsl_ntuple *this_ntuple = gsl_ntuple_open (ntuple_filename_array, &data_row, sizeof (data_row));
+  
+      gsl_histogram_reset(hist1);
+      gsl_ntuple_project_weighted(hist1,this_ntuple,V,S);
 
       gsl_histogram_fprintf(outfile, hist1, "%-16.6e", "%-16.6e");
 

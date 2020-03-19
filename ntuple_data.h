@@ -1,10 +1,15 @@
 #ifndef NTUPLE_DATA_H
 #define NTUPLE_DATA_H
 
+#include <gsl/gsl_errno.h>
+#include <gsl/gsl_histogram.h>
+#include <gsl/gsl_ntuple.h>
+
 // GSL ntuple requires a struct
 struct data
   {
-    double attributes[12];
+    double attributes[13];
+    //    double weight; // can't do this for some reason?
   };
 
 
@@ -39,6 +44,10 @@ class gsl_ntuple_value_fn_pp : public gsl_ntuple_value_fn {
   }
 };
 
+
+
+int gsl_ntuple_project_weighted (gsl_histogram *, gsl_ntuple *,gsl_ntuple_value_fn *, 
+				 gsl_ntuple_select_fn*);
 
 
 #endif

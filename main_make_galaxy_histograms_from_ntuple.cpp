@@ -113,7 +113,8 @@ int main(int argc, char **argv)
       ibin = 0;
       Histogram2dNtuple this_hist2d(num_bins,bin_specs,base_name, v_name,h_name,icols,ibin, ntuple_filename);
       bin_specs.clear();
-      this_hist2d.Print_Histogram_2D_With_Header();
+      //this_hist2d.Print_Histogram_2D_With_Header();
+      this_hist2d.Print_Weighted_Histogram_2D_With_Header();
       end = clock();
       elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
       printf("#\n# It took %f seconds to project to 2d histogram on rank %d\n",elapsed_secs, my_rank);
@@ -143,7 +144,8 @@ int main(int argc, char **argv)
       ibin = 0;
       Histogram2dNtuple this_hist2d(num_bins,bin_specs,base_name, v_name,h_name,icols,ibin, ntuple_filename);
       bin_specs.clear();
-      this_hist2d.Print_Histogram_2D_With_Header();
+      //this_hist2d.Print_Histogram_2D_With_Header();
+      this_hist2d.Print_Weighted_Histogram_2D_With_Header();
       end = clock();
       elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
       printf("#\n# It took %f seconds to project to 2d histogram on rank %d\n",elapsed_secs, my_rank);

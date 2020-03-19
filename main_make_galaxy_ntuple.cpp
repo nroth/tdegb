@@ -191,10 +191,21 @@ int main(int argc, char **argv)
   printf("starting to read catalogue on rank %d\n",my_rank);
   for (int i = 0; i < my_num_gals; i++)
     {
-      double galaxy_info[12] = { log10(mass_mendel[i]), mbh_sigma[i], mbh_bulge[i], z[i], sersic_n[i], r50_kpc[i], m_g[i], m_r[i],ssfr[i],M_u[i],M_r[i], M_u[i] - M_r[i]};
+      double galaxy_info[13] = { log10(mass_mendel[i]), mbh_sigma[i], mbh_bulge[i], z[i], sersic_n[i], r50_kpc[i], m_g[i], m_r[i],ssfr[i],M_u[i],M_r[i], M_u[i] - M_r[i],1};
 
-      //      std::copy(std::begin(galaxy_info), std::end(galaxy_info), gal_row.attributes);
-      for (int j = 0; j < 12; j++)
+
+      // example weight
+      //      if (z[i] > 0.2)
+      //	galaxy_info[12] = 0.01;
+
+
+      // example weight that doesn't work for some reason, if 'weight' is separate entry in data struct
+      //      if (z[i] > 0.2) // debug, remove
+      //	gal_row.weight = 0.01;// debug, remove
+      //      else // debug, remove
+      //	gal_row.weight = 1.;// debug, remove
+
+      for (int j = 0; j < 13; j++)
 	{
 	  gal_row.attributes[j] = galaxy_info[j];
 	}
@@ -225,12 +236,6 @@ int main(int argc, char **argv)
 
   MPI_Barrier(MPI_COMM_WORLD); // might not be necessary, but doesn't hurt much
   
-
-
-  end = clock();
-  elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
-  printf("#\n# It took %f seconds to write ntuples to file on rank %d\n",elapsed_secs,my_rank);
-
   char combined_ntuple_filename[35];
   string filename = "gal_catalogue_ntuple_combined.dat";
   strcpy(combined_ntuple_filename, filename.c_str());
