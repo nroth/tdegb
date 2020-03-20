@@ -191,10 +191,11 @@ int main(int argc, char **argv)
   printf("starting to read catalogue on rank %d\n",my_rank);
   for (int i = 0; i < my_num_gals; i++)
     {
-      double galaxy_info[12] = { log10(mass_mendel[i]), mbh_sigma[i], mbh_bulge[i], z[i], sersic_n[i], r50_kpc[i], m_g[i], m_r[i],ssfr[i],M_u[i],M_r[i], M_u[i] - M_r[i]};
+
+      double galaxy_info[11] = { log10(mass_mendel[i]), mbh_sigma[i], mbh_bulge[i], z[i], sersic_n[i], r50_kpc[i], m_g[i], m_r[i],ssfr[i],M_u[i],M_r[i]};
 
       gal_row.weight = 1.;
-      for (int j = 0; j < 12; j++)
+      for (int j = 0; j < 11; j++)
 	{
 	  gal_row.attributes[j] = galaxy_info[j];
 	}

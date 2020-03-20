@@ -26,8 +26,6 @@ private:
   int icol2;
   int ibin;
 
-  bool use_weights = 0;
-
   char ntuple_filename_array[35];
 
   int sel_func_2d (void *);

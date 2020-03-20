@@ -79,6 +79,7 @@ int Histogram2dNtuple::sel_func_2d (void *this_data)
     }
 
   return ( this_horizontal_data >= hist2->range[ibin] && this_horizontal_data < hist2->range[ibin + 1]);
+  //  return ( this_horizontal_data >= hist2->range[ibin] && this_horizontal_data < hist2->range[ibin + 1] && data_pointer->attributes[3] < 0.5);
   //  return ( this_horizontal_data >= 0.1);
   // return true;
 
@@ -88,9 +89,10 @@ double Histogram2dNtuple::val_func_2d (void *this_data)
 {
   
   struct data * data_pointer = (struct data *) this_data;
-  double this_col_data; //, v_data;
+  double this_col_data;
 
-  this_col_data = data_pointer->attributes[icol1];
+  //this_col_data = data_pointer->attributes[icol1];
+  this_col_data = data_pointer->attributes[9] - data_pointer->attributes[10];
 
   if (this_col_data < gsl_histogram_min(hist1))
     {
