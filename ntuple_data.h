@@ -8,8 +8,8 @@
 // GSL ntuple requires a struct
 struct data
   {
-    double attributes[13];
-    //    double weight; // can't do this for some reason?
+    double attributes[12];
+    double weight; 
   };
 
 

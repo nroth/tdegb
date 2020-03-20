@@ -191,21 +191,10 @@ int main(int argc, char **argv)
   printf("starting to read catalogue on rank %d\n",my_rank);
   for (int i = 0; i < my_num_gals; i++)
     {
-      double galaxy_info[13] = { log10(mass_mendel[i]), mbh_sigma[i], mbh_bulge[i], z[i], sersic_n[i], r50_kpc[i], m_g[i], m_r[i],ssfr[i],M_u[i],M_r[i], M_u[i] - M_r[i],1};
+      double galaxy_info[12] = { log10(mass_mendel[i]), mbh_sigma[i], mbh_bulge[i], z[i], sersic_n[i], r50_kpc[i], m_g[i], m_r[i],ssfr[i],M_u[i],M_r[i], M_u[i] - M_r[i]};
 
-
-      // example weight
-      //      if (z[i] > 0.2)
-      //	galaxy_info[12] = 0.01;
-
-
-      // example weight that doesn't work for some reason, if 'weight' is separate entry in data struct
-      //      if (z[i] > 0.2) // debug, remove
-      //	gal_row.weight = 0.01;// debug, remove
-      //      else // debug, remove
-      //	gal_row.weight = 1.;// debug, remove
-
-      for (int j = 0; j < 13; j++)
+      gal_row.weight = 1.;
+      for (int j = 0; j < 12; j++)
 	{
 	  gal_row.attributes[j] = galaxy_info[j];
 	}
@@ -251,7 +240,6 @@ int main(int argc, char **argv)
 
       char working_ntuple_filename[35];
 
-
       gsl_ntuple *working_ntuple;
 
       gsl_ntuple *combined_ntuple  = gsl_ntuple_create(combined_ntuple_filename, &combined_gal_row, sizeof (combined_gal_row));
@@ -267,7 +255,11 @@ int main(int argc, char **argv)
 	for (int t = 0; t < num_gals_per_proc[i]; t++)
 	  {
 	    gsl_ntuple_read(working_ntuple);
+
+	    //make sure you copy all entries in the strut here
 	    memcpy(combined_gal_row.attributes, gal_row.attributes, sizeof(combined_gal_row.attributes));
+	    combined_gal_row.weight = gal_row.weight;
+	    
 	    gsl_ntuple_write(combined_ntuple);
 	  }
       

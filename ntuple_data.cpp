@@ -27,12 +27,8 @@ int gsl_ntuple_project_weighted (gsl_histogram * h, gsl_ntuple * ntuple,
        if (EVAL(select_func, ntuple->ntuple_data))
          {
 	   struct data * data_pointer = (data *) ntuple->ntuple_data;
-
-	   double this_weight = data_pointer->attributes[12];
-	   //double this_weight = data_pointer->weight;
 	   
-	   gsl_histogram_accumulate (h, EVAL(value_func, ntuple->ntuple_data),this_weight);
-	   //gsl_histogram_accumulate (h, EVAL(value_func, ntuple->ntuple_data),0.5);
+	   gsl_histogram_accumulate (h, EVAL(value_func, ntuple->ntuple_data),data_pointer->weight);
          }
      }
    while (1);
