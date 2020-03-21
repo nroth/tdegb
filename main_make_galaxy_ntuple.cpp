@@ -13,6 +13,7 @@
 #include <gsl/gsl_ntuple.h>
 #include <hdf5.h>
 #include <hdf5_hl.h>
+#include "galaxy.h"
 #include "histogram1d_ntuple.h"
 #include "histogram2d_ntuple.h"
 
@@ -33,7 +34,7 @@ int main(int argc, char **argv)
   float elapsed_secs;
 
   begin = clock();
-  struct data gal_row;
+  struct galaxy_catalogue_data gal_row;
 
   // maybe clean this up?
   string filename_prefix = "gal_catalogue_ntuple_";
@@ -237,7 +238,7 @@ int main(int argc, char **argv)
 
       begin = clock();
 
-      struct data combined_gal_row;
+      struct galaxy_catalogue_data combined_gal_row;
 
       char working_ntuple_filename[35];
 

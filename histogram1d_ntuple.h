@@ -4,8 +4,6 @@
 #include <string>
 #include <vector>
 #include <gsl/gsl_histogram.h>
-#include <gsl/gsl_ntuple.h>
-#include "ntuple_data.h"
 
 using std::string;
 using std::vector;
@@ -34,7 +32,7 @@ public:
   
   // Initialize
   void Init(int, vector<double>, string, string, int, string);
-  void Print_Histogram_1D();
+  void Print_Histogram_1D(bool);
 
   ~Histogram1dNtuple();
   

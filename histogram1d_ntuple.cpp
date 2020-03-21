@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include <math.h>
+#include <gsl/gsl_ntuple.h>
 #include "histogram1d_ntuple.h"
+#include "galaxy.h" // to use the galaxy catalogue data struct
+#include "ntuple_data.h"
 
 using std::vector;
 using std::string;
@@ -68,8 +71,9 @@ int Histogram1dNtuple::sel_func_1d (void *this_data)
   
 double Histogram1dNtuple::val_func_1d (void *this_data)
 {
-  
-  struct data * data_pointer = (struct data *) this_data;
+
+  // How do you easily specify here what type of data struct to use? Templating?
+  struct galaxy_catalogue_data * data_pointer = (struct galaxy_catalogue_data *) this_data;
 
   double this_col_value  = data_pointer->attributes[icol];
 
@@ -93,7 +97,7 @@ double Histogram1dNtuple::val_func_1d (void *this_data)
 //***************************************************************
 // n-tuple projection to histogram, and output
 //***************************************************************
-void Histogram1dNtuple::Print_Histogram_1D()
+void Histogram1dNtuple::Print_Histogram_1D(bool weighted)
 {
 
   Histogram1dNtuple* ptr2S = this;
@@ -106,10 +110,18 @@ void Histogram1dNtuple::Print_Histogram_1D()
   gsl_ntuple_value_fn_pp<decltype(ptrV)> FpV(ptrV);     
   gsl_ntuple_value_fn *V = static_cast<gsl_ntuple_value_fn*>(&FpV);
 
-  struct data data_row;
-  gsl_ntuple *this_ntuple = gsl_ntuple_open(ntuple_filename_array, &data_row, sizeof (data_row));  
-  //gsl_ntuple_project(hist,this_ntuple,&V,&S);
-  gsl_ntuple_project(hist,this_ntuple,V,S);
+  // How do you easily specify here what type of data struct to use? Templating?
+  struct galaxy_catalogue_data data_row;
+  gsl_ntuple *this_ntuple = gsl_ntuple_open(ntuple_filename_array, &data_row, sizeof (data_row));
+
+  if (weighted)
+    {
+      gsl_ntuple_project_weighted(hist,this_ntuple,V,S);
+    }
+  else
+    {
+      gsl_ntuple_project(hist,this_ntuple,V,S);
+    }
   gsl_ntuple_close(this_ntuple);
 
   string outfilename = base_name + "_" + axis_name + "_1d.hist";

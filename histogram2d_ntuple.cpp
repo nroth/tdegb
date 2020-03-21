@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include <math.h>
+#include <gsl/gsl_ntuple.h>
 #include "histogram2d_ntuple.h"
+#include "galaxy.h" // to use the galaxy catalogue data struct
+#include "ntuple_data.h"
 
 
 using std::vector;
@@ -64,8 +67,9 @@ void Histogram2dNtuple::Init (vector<int> num_bins, vector<vector<double>> bin_s
 
 int Histogram2dNtuple::sel_func_2d (void *this_data)
 {
-  
-  struct data * data_pointer = (struct data *) this_data;
+
+  // How do you easily specify here what type of data struct to use? Templating?
+  struct galaxy_catalogue_data * data_pointer = (struct galaxy_catalogue_data *) this_data;
   double this_horizontal_data = data_pointer->attributes[icol2];
 
   // handle extreme values
@@ -88,11 +92,11 @@ int Histogram2dNtuple::sel_func_2d (void *this_data)
 double Histogram2dNtuple::val_func_2d (void *this_data)
 {
   
-  struct data * data_pointer = (struct data *) this_data;
+  struct galaxy_catalogue_data * data_pointer = (struct galaxy_catalogue_data *) this_data;
   double this_col_data;
 
   //this_col_data = data_pointer->attributes[icol1];
-  this_col_data = data_pointer->attributes[9] - data_pointer->attributes[10];
+  this_col_data = data_pointer->attributes[M_u_i] - data_pointer->attributes[M_r_i];
 
   if (this_col_data < gsl_histogram_min(hist1))
     {
@@ -112,7 +116,7 @@ double Histogram2dNtuple::val_func_2d (void *this_data)
 //***************************************************************
 // n-tuple projection to histogram, and output
 //***************************************************************
-void Histogram2dNtuple::Print_Histogram_2D_With_Header()
+void Histogram2dNtuple::Print_Histogram_2D_With_Header(bool weighted)
 {
 
   string outfilename = base_name + "_" + v_axis_name + "_" + h_axis_name + "_2d.hist";
@@ -128,7 +132,7 @@ void Histogram2dNtuple::Print_Histogram_2D_With_Header()
   gsl_ntuple_value_fn_pp<decltype(ptrV)> FpV(ptrV);     
   gsl_ntuple_value_fn *V = static_cast<gsl_ntuple_value_fn*>(&FpV);
 
-  struct data data_row;
+  struct galaxy_catalogue_data data_row;
 
   // write header
   FILE * outfile = fopen(outfilename.c_str(),"w");
@@ -153,8 +157,14 @@ void Histogram2dNtuple::Print_Histogram_2D_With_Header()
       gsl_ntuple *this_ntuple = gsl_ntuple_open (ntuple_filename_array, &data_row, sizeof (data_row));
   
       gsl_histogram_reset(hist1);
-      gsl_ntuple_project(hist1,this_ntuple,V,S);
-
+      if (weighted)
+	{
+	  gsl_ntuple_project_weighted(hist1,this_ntuple,V,S);
+	}
+      else
+	{
+	  gsl_ntuple_project(hist1,this_ntuple,V,S);
+	}
       gsl_histogram_fprintf(outfile, hist1, "%-16.6e", "%-16.6e");
 
       gsl_ntuple_close(this_ntuple);
@@ -162,59 +172,5 @@ void Histogram2dNtuple::Print_Histogram_2D_With_Header()
     }
 
   fclose(outfile);
-
-}
-
-void Histogram2dNtuple::Print_Weighted_Histogram_2D_With_Header()
-{
-
-  string outfilename = base_name + "_" + v_axis_name + "_" + h_axis_name + "_2d.hist";
-
-
-  Histogram2dNtuple* ptr2S = this;
-  auto ptrS = [=](void *ntuple_data)->int{return ptr2S->sel_func_2d(ntuple_data);};
-  gsl_ntuple_select_fn_pp<decltype(ptrS)> FpS(ptrS);     
-  gsl_ntuple_select_fn *S = static_cast<gsl_ntuple_select_fn*>(&FpS);
-
-  Histogram2dNtuple* ptr2V = this;
-  auto ptrV = [=](void *ntuple_data)->double{return ptr2V->val_func_2d(ntuple_data);};
-  gsl_ntuple_value_fn_pp<decltype(ptrV)> FpV(ptrV);     
-  gsl_ntuple_value_fn *V = static_cast<gsl_ntuple_value_fn*>(&FpV);
-
-  struct data data_row;
-
-  // write header
-  FILE * outfile = fopen(outfilename.c_str(),"w");
-  for (int iy = 0; iy < hist2->n + 1; iy++)
-    {    
-      fprintf(outfile,"%g ",hist2->range[iy]);
-    }
-  fprintf(outfile,"\n");
-  for (int ix = 0; ix < hist1->n + 1; ix++)
-    {    
-      fprintf(outfile,"%g ",hist1->range[ix]);
-    }
-  fprintf(outfile,"\n");
-  fclose(outfile);
-
-  outfile = fopen(outfilename.c_str(),"a");
-
-    for (int i = 0; i < hist2->n; i++)
-    {
-      ibin = i;
-
-      gsl_ntuple *this_ntuple = gsl_ntuple_open (ntuple_filename_array, &data_row, sizeof (data_row));
-  
-      gsl_histogram_reset(hist1);
-      gsl_ntuple_project_weighted(hist1,this_ntuple,V,S);
-
-      gsl_histogram_fprintf(outfile, hist1, "%-16.6e", "%-16.6e");
-
-      gsl_ntuple_close(this_ntuple);
-      
-    }
-
-  fclose(outfile);
-
 }
 

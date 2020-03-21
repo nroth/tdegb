@@ -1,10 +1,23 @@
 #ifndef GALAXY_H
 #define GALAXY_H
 
+
+// GSL ntuple requires a struct
+struct galaxy_catalogue_data
+{
+  double attributes[11];
+  double weight; // for determining volumetric disruption rate
+};
+
+// just for convenience
+  enum galaxy_catalogue_indices{ mstar_mendel_i, mbh_sigma_i,  mbh_bulge_i, z_i, sersic_n_i, r50_kpc_i, m_g_i, m_r_i,ssfr_i,M_u_i,M_r_i };
+
+
 class Galaxy {
 
  private:
 
+  // entries contained in the catalogue data struct
   double total_stellar_mass; // in solar mass
   double m_g;
   double m_r;
@@ -13,7 +26,6 @@ class Galaxy {
   double z;
   double sersic_n;
   double r50_kpc;
-  double nuker_gammaprime;
   double ssfr;
   // include star formation history information? Time since starburst, durtaion of starburst?
   // could be used to set the upper truncation of IMF to make the approximate present-day mass function
@@ -29,10 +41,10 @@ class Galaxy {
   double disruption_rate_powerlaw_mass;
   double disruption_rate_powerlaw_nuker;
 
-  
   //derived quantities
   double re_arcsec;
   double sersic_bn;
+  double nuker_gammaprime;
 
   double imf_normalization;
 
