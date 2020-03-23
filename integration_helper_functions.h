@@ -8,7 +8,7 @@
 #include "survey.h"
 
 
-void Sample_Disruption_Parameters(gsl_rng *rangen, Survey surv, Galaxy gal, double& vol_rate_accumulator, double& detected_rate_accumulator, HistogramNd& hist_detected_flares)
+void Sample_Disruption_Parameters(gsl_rng *rangen, Survey surv, Galaxy gal, double& vol_rate_accumulator, double& detected_rate_accumulator)
 {
 
   double m_r_limit_contrast = surv.Find_Host_Contrast_Magnitude(gal,'r');
@@ -25,13 +25,13 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Survey surv, Galaxy gal, doub
   double nu_g_emit = (1. + z) * surv.Get_Nu_Gband();
   double nu_r_emit = (1. + z) * surv.Get_Nu_Rband();  
 
-  int num_trials = 5000;
+  int num_trials = 100;
   vol_rate_accumulator = 0.;
   detected_rate_accumulator = 0.;
 
   double rate_normalization = 1./( (double) num_trials) * gal.Get_Disruption_Rate_Normalization_Combined() * pow(gal.Get_nuker_gammaprime()/1.0,gal.Get_Disruption_Rate_Powerlaw_Nuker()) * 1./(1. + z);
 
-  vector<double> flare_properties(hist_detected_flares.Get_Dimension());
+  //  vector<double> flare_properties(hist_detected_flares.Get_Dimension());
 
   Disruption disrupt(gal); // default values filled in now
 
@@ -48,10 +48,10 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Survey surv, Galaxy gal, doub
 	  // will then have to do the flare observability criteria for each flare when doing detected disrupt. For volumteric disrupt, accept all of these
 
 	  vol_rate_accumulator += 1.;
-
+	  /*
 	  disrupt.Sample_Beta(rangen);
 	  
-	  // need to haave sampled mstar, beta (and mbh) already 
+	  // need to have sampled mstar, beta (and mbh) already 
 	  disrupt.Determine_Max_L();
       	  double max_L = disrupt.Get_Max_L();  // will also be used to convert the sampled x to a phsyical L
 	  if (log10(max_L) < disrupt.Get_Min_Log_Lbol()) continue;
@@ -80,7 +80,7 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Survey surv, Galaxy gal, doub
 
 	      hist_detected_flares.Count(flare_properties,rate_normalization);
 	    }
-
+	  */
 
 
 	}

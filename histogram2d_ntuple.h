@@ -138,8 +138,8 @@ double Histogram2dNtuple<data_struct>::val_func_2d (void *this_data)
   data_struct * data_pointer = (data_struct *) this_data;
   double this_col_data;
 
-  //this_col_data = data_pointer->attributes[icol1];
-  this_col_data = data_pointer->attributes[M_u_i] - data_pointer->attributes[M_r_i];
+  this_col_data = data_pointer->attributes[icol1];
+  //this_col_data = data_pointer->attributes[M_u_i] - data_pointer->attributes[M_r_i];
 
   if (this_col_data < gsl_histogram_min(hist1))
     {

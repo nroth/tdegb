@@ -27,6 +27,8 @@ class Galaxy {
   double sersic_n;
   double r50_kpc;
   double ssfr;
+  double M_u;
+  double M_r;
   // include star formation history information? Time since starburst, durtaion of starburst?
   // could be used to set the upper truncation of IMF to make the approximate present-day mass function
 

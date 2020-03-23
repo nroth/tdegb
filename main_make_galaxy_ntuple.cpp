@@ -16,6 +16,7 @@
 #include "galaxy.h"
 #include "histogram1d_ntuple.h"
 #include "histogram2d_ntuple.h"
+#include "integration_helper_functions.h"
 
 using std::vector;
 using std::string;
@@ -187,7 +188,7 @@ int main(int argc, char **argv)
   printf("#\n# It took %f seconds to prepare everything on rank %d\n",elapsed_secs,my_rank );
 
   begin = clock();
-
+  Survey surv;  
   /////// MAIN LOOP
   printf("starting to read catalogue on rank %d\n",my_rank);
   for (int i = 0; i < my_num_gals; i++)
@@ -195,12 +196,21 @@ int main(int argc, char **argv)
 
       double galaxy_info[11] = { log10(mass_mendel[i]), mbh_sigma[i], mbh_bulge[i], z[i], sersic_n[i], r50_kpc[i], m_g[i], m_r[i],ssfr[i],M_u[i],M_r[i]};
 
-      gal_row.weight = 1.;
+      Galaxy this_galaxy(galaxy_info);
+      
+      double vol_rate_weight;
+      double detected_rate_weight;
+
+      Sample_Disruption_Parameters(rangen,surv,this_galaxy,vol_rate_weight, detected_rate_weight);
+      
+      gal_row.weight = vol_rate_weight;
       for (int j = 0; j < 11; j++)
 	{
 	  gal_row.attributes[j] = galaxy_info[j];
 	}
       gsl_ntuple_write(gal_ntuple);
+
+      if (i % 100000 == 0) printf("gal %d vol rate %e\n",i,vol_rate_weight);
 
     }
 
