@@ -203,11 +203,13 @@ int main(int argc, char **argv)
 
       Sample_Disruption_Parameters(rangen,surv,this_galaxy,vol_rate_weight, detected_rate_weight);
       
-      gal_row.weight = vol_rate_weight;
       for (int j = 0; j < 11; j++)
 	{
 	  gal_row.attributes[j] = galaxy_info[j];
 	}
+      gal_row.attributes[11] = this_galaxy.Get_nuker_gammaprime();
+      gal_row.weight = vol_rate_weight;
+
       gsl_ntuple_write(gal_ntuple);
 
       if (i % 100000 == 0) printf("gal %d vol rate %e\n",i,vol_rate_weight);

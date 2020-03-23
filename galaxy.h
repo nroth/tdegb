@@ -5,12 +5,12 @@
 // GSL ntuple requires a struct
 struct galaxy_catalogue_data
 {
-  double attributes[11];
+  double attributes[12];
   double weight; // for determining volumetric disruption rate
 };
 
 // just for convenience
-  enum galaxy_catalogue_indices{ mstar_mendel_i, mbh_sigma_i,  mbh_bulge_i, z_i, sersic_n_i, r50_kpc_i, m_g_i, m_r_i,ssfr_i,M_u_i,M_r_i };
+enum galaxy_catalogue_indices{ mstar_mendel_i, mbh_sigma_i,  mbh_bulge_i, z_i, sersic_n_i, r50_kpc_i, m_g_i, m_r_i,ssfr_i,M_u_i,M_r_i,nuker_gamma_i };
 
 
 class Galaxy {
