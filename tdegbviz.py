@@ -118,7 +118,7 @@ def plot_2d_contours(prefix ='./', hist_type = 'gals',axis1 = 'mstar_mendel', ax
     if (transpose_default == 0):
         plt.contour(h_mesh,v_mesh,hist_2d_counts,contour_levels,colors='w',linewidths=3)
     else:
-        plt.contour(v_mesh,h_mesh,hist_2d_countsd_counts,contour_levels,colors='w',linewidths=3)
+        plt.contour(v_mesh,h_mesh,hist_2d_counts,contour_levels,colors='w',linewidths=3)
 
     print("Total counts is %f" % hist_2d_counts.sum())
 
