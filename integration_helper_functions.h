@@ -79,8 +79,8 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Survey surv, Galaxy gal, doub
 	    {
 
 	      //could use your enum(s)
-	      flare_row->attributes[0] = gal.Get_Total_Stellar_Mass();
-	      flare_row->attributes[1] = gal.Get_Mbh();
+	      flare_row->attributes[0] = log10(gal.Get_Total_Stellar_Mass());
+	      flare_row->attributes[1] = log10(gal.Get_Mbh());
 	      flare_row->attributes[2] = gal.Get_Mbh_bulge();
 	      flare_row->attributes[3] = gal.Get_z();
 	      flare_row->attributes[4] = gal.Get_sersic_n();

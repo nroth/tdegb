@@ -36,22 +36,20 @@ int main(int argc, char **argv)
 
   begin = clock();
   struct galaxy_catalogue_data gal_row;
-  struct flare_data flare_row; 
+  struct flare_data flare_row;
 
-
-  char flare_ntuple_filename_array[35];
-  string filename_prefix = "flare_ntuple_";
-  string extension = ".dat";
-  sprintf(flare_ntuple_filename_array, "%s%d%s", filename_prefix.c_str(),my_rank,extension.c_str());
-  gsl_ntuple *flare_ntuple  = gsl_ntuple_create(flare_ntuple_filename_array, &flare_row, sizeof (flare_row));
-
-    // maybe clean this up?
-  filename_prefix = "gal_catalogue_ntuple_";
-  extension = ".dat";
+  // maybe clean this up?
   char gal_ntuple_filename_array[35];
-  sprintf(gal_ntuple_filename_array, "%s%d%s", filename_prefix.c_str(),my_rank,extension.c_str());
+  string filename_prefix_gals = "gal_catalogue_ntuple_";
+  string extension_gals = ".dat";
+  sprintf(gal_ntuple_filename_array, "%s%d%s", filename_prefix_gals.c_str(),my_rank,extension_gals.c_str());
   gsl_ntuple *gal_ntuple  = gsl_ntuple_create(gal_ntuple_filename_array, &gal_row, sizeof (gal_row));
 
+  char flare_ntuple_filename_array[35];
+  string filename_prefix_flares = "flare_ntuple_";
+  string extension_flares = ".dat";
+  sprintf(flare_ntuple_filename_array, "%s%d%s", filename_prefix_flares.c_str(),my_rank,extension_flares.c_str());
+  gsl_ntuple *flare_ntuple  = gsl_ntuple_create(flare_ntuple_filename_array, &flare_row, sizeof (flare_row));
 
   // setup random num generator - just putting this here as placeholder, not actually used in this main()
   gsl_rng *rangen;
@@ -249,12 +247,16 @@ int main(int argc, char **argv)
 
   MPI_Barrier(MPI_COMM_WORLD); // might not be necessary, but doesn't hurt much
   
-  char combined_ntuple_filename[35];
+  char combined_gal_ntuple_filename[35];
   string filename = "gal_catalogue_ntuple_combined.dat";
-  strcpy(combined_ntuple_filename, filename.c_str());
+  strcpy(combined_gal_ntuple_filename, filename.c_str());
+
+  char combined_flare_ntuple_filename[35];
+  filename = "flare_ntuple_combined.dat";
+  strcpy(combined_flare_ntuple_filename, filename.c_str());
 
 
-  // combine the ntuples
+  // combine the galaxy ntuples
   if ( my_rank == 0)
     {
 
@@ -266,21 +268,19 @@ int main(int argc, char **argv)
 
       gsl_ntuple *working_ntuple;
 
-      gsl_ntuple *combined_ntuple  = gsl_ntuple_create(combined_ntuple_filename, &combined_gal_row, sizeof (combined_gal_row));
+      gsl_ntuple *combined_ntuple  = gsl_ntuple_create(combined_gal_ntuple_filename, &combined_gal_row, sizeof (combined_gal_row));
 	
       // loop over files
       for (int i =0; i < n_procs; i++)
 	{
 
 	  //using the filename_prefix and extension that you defined earlier when you originally wrote the files
-	sprintf(working_ntuple_filename, "%s%d%s", filename_prefix.c_str(),i,extension.c_str());
+	sprintf(working_ntuple_filename, "%s%d%s", filename_prefix_gals.c_str(),i,extension_gals.c_str());
 	working_ntuple = gsl_ntuple_open(working_ntuple_filename, &gal_row, sizeof (gal_row));
       
-	for (int t = 0; t < num_gals_per_proc[i]; t++)
+	while(gsl_ntuple_read(working_ntuple) != GSL_EOF)
 	  {
-	    gsl_ntuple_read(working_ntuple);
 
-	    //make sure you copy all entries in the strut here
 	    memcpy(combined_gal_row.attributes, gal_row.attributes, sizeof(combined_gal_row.attributes));
 	    combined_gal_row.weight = gal_row.weight;
 	    
@@ -298,9 +298,58 @@ int main(int argc, char **argv)
       
       end = clock();
       float elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
-      printf("#\n# It took %f seconds to copy events into single file\n",elapsed_secs);
+      printf("#\n# It took %f seconds to copy galaxy entries into single file\n",elapsed_secs);
 
     }
+
+
+    // combine the flare ntuples
+  if ( my_rank == 1)
+    {
+
+      begin = clock();
+
+      struct flare_data combined_flare_row;
+
+      char working_ntuple_filename[35];
+
+      gsl_ntuple *working_ntuple;
+
+      gsl_ntuple *combined_ntuple  = gsl_ntuple_create(combined_flare_ntuple_filename, &combined_flare_row, sizeof (combined_flare_row));
+	
+      // loop over files
+      for (int i =0; i < n_procs; i++)
+	{
+
+	  //using the filename_prefix and extension that you defined earlier when you originally wrote the files
+	sprintf(working_ntuple_filename, "%s%d%s", filename_prefix_flares.c_str(),i,extension_flares.c_str());
+	working_ntuple = gsl_ntuple_open(working_ntuple_filename, &flare_row, sizeof (flare_row));
+
+
+	while(gsl_ntuple_read(working_ntuple) != GSL_EOF)
+	  {
+
+	    memcpy(combined_flare_row.attributes, flare_row.attributes, sizeof(combined_flare_row.attributes));
+	    combined_flare_row.weight = flare_row.weight;
+	    
+	    gsl_ntuple_write(combined_ntuple);
+	  }
+
+
+	gsl_ntuple_close (working_ntuple);
+	
+	}
+
+      gsl_ntuple_close (combined_ntuple);
+
+      //delete files with "remove?" http://www.cplusplus.com/reference/cstdio/remove/
+      
+      end = clock();
+      float elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
+      printf("#\n# It took %f seconds to copy flare events into single file\n",elapsed_secs);
+
+    }
+
 
   MPI_Barrier(MPI_COMM_WORLD); // might not be necessary, but doesn't hurt much
 
