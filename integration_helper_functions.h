@@ -1,15 +1,24 @@
 #include <math.h>
 #include <algorithm>
 #include <gsl/gsl_rng.h>
+#include <gsl/gsl_ntuple.h>
 #include "physical_constants.h"
 #include "galaxy.h"
 #include "disruption.h"
 #include "histogramNd.h"
 #include "survey.h"
 
-
-void Sample_Disruption_Parameters(gsl_rng *rangen, Survey surv, Galaxy gal, double& vol_rate_accumulator, double& detected_rate_accumulator)
+// move this to where appropriate. 
+struct flare_data
 {
+  double attributes[19]; // 12 for galaxy, 7 for flare
+  double weight; // for determining volumetric disruption rate
+};
+
+
+void Sample_Disruption_Parameters(gsl_rng *rangen, Survey surv, Galaxy gal, double& vol_rate_accumulator, gsl_ntuple *flare_ntuple, flare_data *flare_row ) 
+{
+
 
   double m_r_limit_contrast = surv.Find_Host_Contrast_Magnitude(gal,'r');
   double m_g_limit_contrast = surv.Find_Host_Contrast_Magnitude(gal,'g'); 
@@ -27,11 +36,8 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Survey surv, Galaxy gal, doub
 
   int num_trials = 100;
   vol_rate_accumulator = 0.;
-  detected_rate_accumulator = 0.;
 
   double rate_normalization = 1./( (double) num_trials) * gal.Get_Disruption_Rate_Normalization_Combined() * pow(gal.Get_nuker_gammaprime()/1.0,gal.Get_Disruption_Rate_Powerlaw_Nuker()) * 1./(1. + z);
-
-  //  vector<double> flare_properties(hist_detected_flares.Get_Dimension());
 
   Disruption disrupt(gal); // default values filled in now
 
@@ -48,7 +54,8 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Survey surv, Galaxy gal, doub
 	  // will then have to do the flare observability criteria for each flare when doing detected disrupt. For volumteric disrupt, accept all of these
 
 	  vol_rate_accumulator += 1.;
-	  /*
+
+
 	  disrupt.Sample_Beta(rangen);
 	  
 	  // need to have sampled mstar, beta (and mbh) already 
@@ -70,32 +77,42 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Survey surv, Galaxy gal, doub
 
 	  if (r_mag_observed < operating_m_r_limit && g_mag_observed < operating_m_g_limit && (g_mag_observed - r_mag_observed) < 0.)
 	    {
-	      detected_rate_accumulator += 1.;
 
-	      flare_properties[0] = r_mag_observed;
-	      flare_properties[1] = g_mag_observed - r_mag_observed;
-	      flare_properties[2] = z;
-	      flare_properties[3] = log10(disrupt.Get_Peak_L());
-	      flare_properties[4] = log10(mbh);
+	      //could use your enum(s)
+	      flare_row->attributes[0] = gal.Get_Total_Stellar_Mass();
+	      flare_row->attributes[1] = gal.Get_Mbh();
+	      flare_row->attributes[2] = gal.Get_Mbh_bulge();
+	      flare_row->attributes[3] = gal.Get_z();
+	      flare_row->attributes[4] = gal.Get_sersic_n();
+	      flare_row->attributes[5] = gal.Get_r50_kpc();
+	      flare_row->attributes[6] = gal.Get_m_g();
+	      flare_row->attributes[7] = gal.Get_m_r();
+	      flare_row->attributes[8] = gal.Get_ssfr();
+	      flare_row->attributes[9] = gal.Get_M_u();
+	      flare_row->attributes[10] = gal.Get_M_r();
+	      flare_row->attributes[11] = gal.Get_nuker_gammaprime();
 
-	      hist_detected_flares.Count(flare_properties,rate_normalization);
-	    }
-	  */
+	      flare_row->attributes[12] = disrupt.Get_Mstar();
+	      flare_row->attributes[13] = disrupt.Get_beta();
+	      flare_row->attributes[14] = disrupt.Get_Peak_L();
+	      flare_row->attributes[15] = disrupt.Get_Topt();
+	      flare_row->attributes[16] = g_mag_observed;
+	      flare_row->attributes[17] = g_mag_observed - r_mag_observed;
+	      flare_row->attributes[18] = disrupt.Get_A_V();
+	      
+	      flare_row->weight = rate_normalization;
 
+	      gsl_ntuple_write(flare_ntuple);
+
+	    }	    
 
 	}
 
     }
 
-  // this can be done at the end to save time
-  // normalize by number of trials
-  vol_rate_accumulator *=  rate_normalization;
-
-
     // this can be done at the end to save time
   // normalize by number of trials
-  detected_rate_accumulator *= rate_normalization;
-
+  vol_rate_accumulator *=  rate_normalization;
 
 }
 

@@ -69,9 +69,12 @@ public:
   Galaxy(double*); //  including a pre-computed IMF normalization, and a temperature for the disrutpions. will want to clean this up
 
   double Get_Mbh() const; // const member functions can be called by constant objects
+  double Get_Mbh_bulge() const; 
   double Get_z() const;
   double Get_m_g() const;
   double Get_m_r() const;
+  double Get_M_u() const;
+  double Get_M_r() const;
   double Get_sersic_n() const;
   double Get_nuker_gammaprime() const;
   double Get_r50_kpc() const;

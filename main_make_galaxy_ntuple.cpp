@@ -36,13 +36,22 @@ int main(int argc, char **argv)
 
   begin = clock();
   struct galaxy_catalogue_data gal_row;
+  struct flare_data flare_row; 
 
-  // maybe clean this up?
-  string filename_prefix = "gal_catalogue_ntuple_";
+
+  char flare_ntuple_filename_array[35];
+  string filename_prefix = "flare_ntuple_";
   string extension = ".dat";
-  char ntuple_filename_array[35];
-  sprintf(ntuple_filename_array, "%s%d%s", filename_prefix.c_str(),my_rank,extension.c_str());
-  gsl_ntuple *gal_ntuple  = gsl_ntuple_create(ntuple_filename_array, &gal_row, sizeof (gal_row));
+  sprintf(flare_ntuple_filename_array, "%s%d%s", filename_prefix.c_str(),my_rank,extension.c_str());
+  gsl_ntuple *flare_ntuple  = gsl_ntuple_create(flare_ntuple_filename_array, &flare_row, sizeof (flare_row));
+
+    // maybe clean this up?
+  filename_prefix = "gal_catalogue_ntuple_";
+  extension = ".dat";
+  char gal_ntuple_filename_array[35];
+  sprintf(gal_ntuple_filename_array, "%s%d%s", filename_prefix.c_str(),my_rank,extension.c_str());
+  gsl_ntuple *gal_ntuple  = gsl_ntuple_create(gal_ntuple_filename_array, &gal_row, sizeof (gal_row));
+
 
   // setup random num generator - just putting this here as placeholder, not actually used in this main()
   gsl_rng *rangen;
@@ -70,7 +79,6 @@ int main(int argc, char **argv)
   double* r50_kpc_vector_big;
   double* ssfr_vector_big;
   
-
   
   int base_gals_per_proc = num_galaxies / n_procs; // integer division is automatically floored
   int remainder = num_galaxies % n_procs;
@@ -187,10 +195,12 @@ int main(int argc, char **argv)
   elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
   printf("#\n# It took %f seconds to prepare everything on rank %d\n",elapsed_secs,my_rank );
 
-  begin = clock();
   Survey surv;  
-  /////// MAIN LOOP
+
   printf("starting to read catalogue on rank %d\n",my_rank);
+  begin = clock();
+
+  /////// MAIN LOOP
   for (int i = 0; i < my_num_gals; i++)
     {
 
@@ -199,9 +209,8 @@ int main(int argc, char **argv)
       Galaxy this_galaxy(galaxy_info);
       
       double vol_rate_weight;
-      double detected_rate_weight;
 
-      Sample_Disruption_Parameters(rangen,surv,this_galaxy,vol_rate_weight, detected_rate_weight);
+      Sample_Disruption_Parameters(rangen,surv,this_galaxy,vol_rate_weight,flare_ntuple,&flare_row);
       
       for (int j = 0; j < 11; j++)
 	{
@@ -217,8 +226,9 @@ int main(int argc, char **argv)
     }
 
   gsl_ntuple_close (gal_ntuple);
+  gsl_ntuple_close (flare_ntuple);
 
-  gsl_rng_free(rangen); // we don't need more random numbers
+  gsl_rng_free(rangen); // we don't need any more random numbers
 
   // we've finished with the input now, only need the histograms
   delete[] z;
@@ -276,7 +286,8 @@ int main(int argc, char **argv)
 	    
 	    gsl_ntuple_write(combined_ntuple);
 	  }
-      
+
+
 	gsl_ntuple_close (working_ntuple);
 	
 	}

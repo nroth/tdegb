@@ -61,6 +61,11 @@ double Galaxy::Get_Mbh() const
   return mbh;
 }
 
+double Galaxy::Get_Mbh_bulge() const
+{
+  return mbh_bulge;
+}
+
 double Galaxy::Get_z() const
 {
   return z;
@@ -96,6 +101,17 @@ double Galaxy::Get_ssfr() const
 {
   return ssfr;
 }
+
+double Galaxy::Get_M_u() const
+{
+  return M_u;
+}
+
+double Galaxy::Get_M_r() const
+{
+  return M_r;
+}
+
 
 double Galaxy::Get_Mstar_Min() const
 {
