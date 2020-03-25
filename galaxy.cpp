@@ -23,7 +23,7 @@ Galaxy::Galaxy(double* galaxy_info)
   resolution_for_nuker_gamma = 0.04; // arsec. See Lauer et al 2007. Nick Stone's rate calculations were based on Nuker gamma as measured in this paper, so to convert n_sersic to nuker gamma we want to account for how they measured gamma
 
   
-  total_stellar_mass = galaxy_info[0];  
+  total_stellar_mass = pow(10.,galaxy_info[0]); // you passeed it as log  
   mbh_sigma = pow(10.,galaxy_info[1]); // converting log to value
   mbh_bulge = pow(10.,galaxy_info[2]); // converting log to value
   z = galaxy_info[3];
