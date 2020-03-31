@@ -21,7 +21,7 @@ private:
   string axis_name; 
   int icol;
 
-  char ntuple_filename_array[35];
+  string ntuple_filename_string;
 
   int sel_func_1d (void *);
   double val_func_1d (void *);
@@ -87,9 +87,10 @@ void Histogram1dNtuple<data_struct>::Init (int num_bins, vector<double> bin_spec
   base_name = b_name;
   axis_name = a_name;
 
-  strcpy(ntuple_filename_array, ntuple_filename.c_str());
+  ntuple_filename_string = ntuple_filename;
 
 }
+
 
 //***************************************************************
 // Functions for specifying how histograms are constructed (with GSL)
@@ -145,8 +146,13 @@ void Histogram1dNtuple<data_struct>::Print_Histogram_1D(bool weighted)
   gsl_ntuple_value_fn_pp<decltype(ptrV)> FpV(ptrV);     
   gsl_ntuple_value_fn *V = static_cast<gsl_ntuple_value_fn*>(&FpV);
 
+  int name_length = ntuple_filename_string.length();
+  char* ntuple_filename_array = new char[name_length];
+  strcpy(ntuple_filename_array, ntuple_filename_string.c_str());
+  
   data_struct data_row;
   gsl_ntuple *this_ntuple = gsl_ntuple_open(ntuple_filename_array, &data_row, sizeof (data_row));
+  delete [] ntuple_filename_array;
 
   if (weighted)
     {

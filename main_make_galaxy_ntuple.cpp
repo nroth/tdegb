@@ -38,20 +38,30 @@ int main(int argc, char **argv)
   struct galaxy_catalogue_data gal_row;
   struct flare_data flare_row;
 
-  // maybe clean this up?
-  char gal_ntuple_filename_array[35];
+  string full_filename_string;
+  int name_length;
+
   string filename_prefix_gals = "gal_catalogue_ntuple_";
   string extension_gals = ".dat";
-  sprintf(gal_ntuple_filename_array, "%s%d%s", filename_prefix_gals.c_str(),my_rank,extension_gals.c_str());
+  full_filename_string = filename_prefix_gals + std::to_string(my_rank);
+  full_filename_string += extension_gals;
+  name_length = full_filename_string.length();
+  char* gal_ntuple_filename_array = new char[name_length];
+  strcpy(gal_ntuple_filename_array, full_filename_string.c_str());
   gsl_ntuple *gal_ntuple  = gsl_ntuple_create(gal_ntuple_filename_array, &gal_row, sizeof (gal_row));
+  delete [] gal_ntuple_filename_array;
 
-  char flare_ntuple_filename_array[35];
   string filename_prefix_flares = "flare_ntuple_";
   string extension_flares = ".dat";
-  sprintf(flare_ntuple_filename_array, "%s%d%s", filename_prefix_flares.c_str(),my_rank,extension_flares.c_str());
+  full_filename_string = filename_prefix_flares + std::to_string(my_rank);
+  full_filename_string += extension_flares;
+  name_length = full_filename_string.length();
+  char* flare_ntuple_filename_array = new char[name_length];
+  strcpy(flare_ntuple_filename_array, full_filename_string.c_str());
   gsl_ntuple *flare_ntuple  = gsl_ntuple_create(flare_ntuple_filename_array, &flare_row, sizeof (flare_row));
+  delete [] flare_ntuple_filename_array;
 
-  // setup random num generator - just putting this here as placeholder, not actually used in this main()
+  // setup random num generator
   gsl_rng *rangen;
   const gsl_rng_type * TypeR;
   gsl_rng_env_setup();

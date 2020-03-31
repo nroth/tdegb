@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string>
 #include <vector>
+#include <math.h>
 #include <gsl/gsl_histogram.h>
 #include <gsl/gsl_ntuple.h>
 #include "ntuple_data.h"
@@ -27,7 +28,7 @@ private:
   int icol2;
   int ibin;
 
-  char ntuple_filename_array[35];
+  string ntuple_filename_string;
 
   int sel_func_2d (void *);
   double val_func_2d (void *);
@@ -100,7 +101,7 @@ void Histogram2dNtuple<data_struct>::Init (vector<int> num_bins, vector<vector<d
   v_axis_name = v_name;
   h_axis_name = h_name;
 
-  strcpy(ntuple_filename_array, ntuple_filename.c_str());
+  ntuple_filename_string = ntuple_filename;
 
 }
 
@@ -128,6 +129,7 @@ int Histogram2dNtuple<data_struct>::sel_func_2d (void *this_data)
     }
 
   return ( this_horizontal_data >= hist2->range[ibin] && this_horizontal_data < hist2->range[ibin + 1]);
+  //  return ( this_horizontal_data >= hist2->range[ibin] && this_horizontal_data < hist2->range[ibin + 1] && data_pointer->attributes[mbh_sigma_i] < 8);
 
 }
 
@@ -137,9 +139,10 @@ double Histogram2dNtuple<data_struct>::val_func_2d (void *this_data)
   
   data_struct * data_pointer = (data_struct *) this_data;
   double this_col_data;
-
+  
   this_col_data = data_pointer->attributes[icol1];
-  //this_col_data = data_pointer->attributes[M_u_i] - data_pointer->attributes[M_r_i];
+  //this_col_data = log10(data_pointer->attributes[icol1]);
+  //  this_col_data = data_pointer->attributes[M_u_i] - data_pointer->attributes[M_r_i];
 
   if (this_col_data < gsl_histogram_min(hist1))
     {
@@ -177,6 +180,10 @@ void Histogram2dNtuple<data_struct>::Print_Histogram_2D_With_Header(bool weighte
 
   data_struct data_row;
 
+  int name_length = ntuple_filename_string.length();
+  char* ntuple_filename_array = new char[name_length];
+  strcpy(ntuple_filename_array, ntuple_filename_string.c_str());
+
   // write header
   FILE * outfile = fopen(outfilename.c_str(),"w");
   for (int iy = 0; iy < hist2->n + 1; iy++)
@@ -198,6 +205,7 @@ void Histogram2dNtuple<data_struct>::Print_Histogram_2D_With_Header(bool weighte
       ibin = i;
 
       gsl_ntuple *this_ntuple = gsl_ntuple_open (ntuple_filename_array, &data_row, sizeof (data_row));
+
   
       gsl_histogram_reset(hist1);
       if (weighted)
@@ -214,7 +222,8 @@ void Histogram2dNtuple<data_struct>::Print_Histogram_2D_With_Header(bool weighte
       
     }
 
-  fclose(outfile);
+    delete [] ntuple_filename_array;
+    fclose(outfile);
 }
 
 
