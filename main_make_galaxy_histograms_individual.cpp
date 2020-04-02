@@ -7,71 +7,158 @@
 #include "galaxy.h"
 #include "histogram1d_ntuple.h"
 #include "histogram2d_ntuple.h"
+#include "integration_helper_functions.h" // for now just to get flare data struct
 
 
 using std::vector;
 using std::string;
 
-int main(int argc, char **argv)
+
+void make_1d_bins(vector<string> identifiers, int num_bins, vector<double> bin_specs, int bin_index)
 {
 
+  string data_path = identifiers[0];
+  string save_path = identifiers[1];
+  string base_name = identifiers[2];
+  string axis_name = identifiers[3];
+
+  string ntuple_filename = data_path;
+
+  if (base_name == "gals" || base_name == "vol_disrupt")
+    {
+
+      ntuple_filename.append("gal_catalogue_ntuple_combined.dat");
+      Histogram1dNtuple<galaxy_catalogue_data> hist1d(num_bins,bin_specs,base_name, axis_name,bin_index,ntuple_filename);
+
+      if (base_name == "vol_disrupt")
+	hist1d.Print_Histogram_1D(1, save_path);
+      if (base_name == "gals")
+	hist1d.Print_Histogram_1D(0, save_path);
+
+    }
+  else if (base_name == "flares" || base_name == "flares_unweighted")
+    {
+      ntuple_filename.append("flare_ntuple_combined.dat");
+      Histogram1dNtuple<flare_data> hist1d(num_bins,bin_specs,base_name, axis_name,bin_index,ntuple_filename);
+
+      if (base_name == "flares")
+	hist1d.Print_Histogram_1D(1, save_path);
+      if (base_name == "flares_unweighted")
+	hist1d.Print_Histogram_1D(0, save_path);
+    }
+  else
+    {
+      printf("Error: histogram type (the type should be one of: gals, vol_disrupt, flares, or flares_unweighted)\n");
+      exit(1);
+    }
+
+}
+
+
+//get rid of ibin?
+void make_2d_bins(vector<string> identifiers, vector<int> num_bins, vector<vector<double>> bin_specs_2d, vector<int> bin_indices, int ibin)
+{
+
+  string data_path = identifiers[0];
+  string save_path = identifiers[1];
+  string base_name = identifiers[2];
+  string axis1_name = identifiers[3];
+  string axis2_name = identifiers[4];
+
+  string ntuple_filename = data_path;
+
+  if (base_name == "gals" || base_name == "vol_disrupt")
+    {
+
+      ntuple_filename.append("gal_catalogue_ntuple_combined.dat");
+      Histogram2dNtuple<galaxy_catalogue_data> hist2d(num_bins,bin_specs_2d,base_name,axis1_name,axis2_name,bin_indices,ibin, ntuple_filename);
+
+      if (base_name == "vol_disrupt")
+	hist2d.Print_Histogram_2D_With_Header(1, save_path);
+      if (base_name == "gals")
+	hist2d.Print_Histogram_2D_With_Header(0, save_path);
+
+    }
+  else if (base_name == "flares" || base_name == "flares_unweighted")
+    {
+      ntuple_filename.append("flare_ntuple_combined.dat");
+      Histogram2dNtuple<flare_data> hist2d(num_bins,bin_specs_2d,base_name, axis1_name,  axis2_name, bin_indices,ibin,ntuple_filename);
+
+      if (base_name == "flares")
+	hist2d.Print_Histogram_2D_With_Header(1, save_path);
+      if (base_name == "flares_unweighted")
+	hist2d.Print_Histogram_2D_With_Header(0, save_path);
+    }
+  else
+    {
+      printf("Error: histogram type (the type should be one of: gals, vol_disrupt, flares, or flares_unweighted)\n");
+      exit(1);
+    }
+
+}
+
+
+int main(int argc, char **argv)
+{
 
   clock_t begin;
   clock_t end;
   float elapsed_secs;
 
-  begin = clock();
-
   vector<int> num_bins(2);
   vector<int> icols(2);
-  vector<double> spec(2);
+  vector<double> bin_specs(2);
+  vector<vector<double>> bin_specs_2d;
   int ibin;
-  vector<vector<double>> bin_specs;
-  string base_name;
-  string v_name("default"); 
-  string h_name("default");
-
-  
-  string ntuple_filename = "gal_catalogue_ntuple_combined.dat";
-  
+  vector<string> identifiers(4); // careful, though, different for 1d vs 2d
+  string data_path;
+  string save_path;
 
 
-  // create 1d histogram
+  // make 1d histogram
+  data_path = "results/third_production_runs/v7/";
+  save_path = data_path;
+  identifiers[2] = "vol_disrupt";
+  identifiers[3] = "log_mbh_sigma";
+  num_bins[0] = 15;
+  bin_specs[0] = 4.;
+  bin_specs[1] = 9.;
+  icols[0] = 1; // use an enum, avoid specifying this again? Also end of inpu
+  identifiers[0] = data_path;
+  identifiers[1] = save_path;
   begin = clock();
-  base_name = "gals";
-  spec[0] = 0.;
-  spec[1] = 1.;
-  h_name = "z";
-  icols[0] = z_i;
-  num_bins[0] = 25;
-  Histogram1dNtuple<galaxy_catalogue_data> this_hist1d(num_bins[0],spec,base_name, h_name,icols[0],ntuple_filename);
-  this_hist1d.Print_Histogram_1D(0);
+  make_1d_bins(identifiers,num_bins[0],bin_specs,icols[0]);
   end = clock();
   elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
   printf("#\n# It took %f seconds to project to 1d histogram\n",elapsed_secs);
 
 
-  begin = clock();
-  base_name = "vol_disrupt";
-  v_name = "z"; // for now, if you're going to be computing a function, put it here
-  num_bins[0] = 20;
-  spec[0] = 0.;
-  spec[1] = 1.;
-  icols[0] = z_i; // function
-  bin_specs.push_back(spec);
-  h_name = "log_mbh_sigma";
-  num_bins[1] = 40;
-  spec[0] = 3.;
-  spec[1] = 9.;
-  icols[1] = mbh_sigma_i;
-  bin_specs.push_back(spec);
+  // make 2d histogram
+  identifiers.resize(5);
+  data_path = "results/third_production_runs/v7/";
+  save_path = data_path;
+  identifiers[2] = "vol_disrupt";
+  identifiers[3] = "UminusR";
+  num_bins[0] = 27;
+  bin_specs[0] = 0.75;
+  bin_specs[1] = 3.45;
+  icols[0] = -1; // function
+  bin_specs_2d.push_back(bin_specs);
+  identifiers[4] = "mstar_mendel";
+  num_bins[1] = 25;
+  bin_specs[0] = 8.;
+  bin_specs[1] = 12.;
+  icols[1] = mstar_mendel_i;
+  bin_specs_2d.push_back(bin_specs);
+  identifiers[0] = data_path;
+  identifiers[1] = save_path;
   ibin = 0;
-  Histogram2dNtuple<galaxy_catalogue_data> this_hist2d(num_bins,bin_specs,base_name, v_name,h_name,icols,ibin, ntuple_filename);
-  bin_specs.clear();
-  this_hist2d.Print_Histogram_2D_With_Header(1);
+  begin = clock();
+  make_2d_bins(identifiers,num_bins,bin_specs_2d,icols,ibin);
   end = clock();
   elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
   printf("#\n# It took %f seconds to project to 2d histogram\n",elapsed_secs);
+  bin_specs_2d.clear(); // had put this here in case you wanted to use it again
   
 
 }
