@@ -83,8 +83,8 @@ class Binner:
                 plt.ylabel(axis1,fontsize=16)  
 
 
-
-    def plot_2d_histogram(self, zlim = 0, cmap_name = 'jet',cm_maxval = 1.,cm_minval = 0.):
+    # trying to use gouraud shading will result in error: I think it needs a different grid shape
+    def plot_2d_histogram(self, zlim = 0, cmap_name = 'jet',cm_maxval = 1.,cm_minval = 0.,bin_shading = 'flat'):
 
 
         h_grid = np.loadtxt(self.working_filename,max_rows=1) # edges
@@ -98,9 +98,9 @@ class Binner:
         new_cmap = truncate_colormap(cmap,  maxval = cm_maxval, minval=cm_minval,)
 
         if (self.transpose_default == 0):
-            hist2d = plt.pcolormesh(h_mesh,v_mesh, hist_2d_counts,shading='flat',cmap=new_cmap)  
+            hist2d = plt.pcolormesh(h_mesh,v_mesh, hist_2d_counts,shading=bin_shading,cmap=new_cmap)  
         else:
-            hist2d = plt.pcolormesh(v_mesh,h_mesh, hist_2d_counts,shading='flat',cmap=new_cmap)
+            hist2d = plt.pcolormesh(v_mesh,h_mesh, hist_2d_counts,shading=bin_shading,cmap=new_cmap)
 
 
         cbar = plt.colorbar()                                                                          

@@ -35,7 +35,7 @@ public:
   
   // Initialize
   void Init(int, vector<double>, string, string, int, string);
-  void Print_Histogram_1D(bool);
+  void Print_Histogram_1D(bool, string);
 
   ~Histogram1dNtuple();
   
@@ -133,7 +133,7 @@ double Histogram1dNtuple<data_struct>::val_func_1d (void *this_data)
 // n-tuple projection to histogram, and output
 //***************************************************************
 template <class data_struct>
-void Histogram1dNtuple<data_struct>::Print_Histogram_1D(bool weighted)
+void Histogram1dNtuple<data_struct>::Print_Histogram_1D(bool weighted, string save_path)
 {
 
   Histogram1dNtuple* ptr2S = this;
@@ -164,7 +164,7 @@ void Histogram1dNtuple<data_struct>::Print_Histogram_1D(bool weighted)
     }
   gsl_ntuple_close(this_ntuple);
 
-  string outfilename = base_name + "_" + axis_name + "_1d.hist";
+  string outfilename = save_path + '/' + base_name + "_" + axis_name + "_1d.hist";
   FILE * outfile = fopen(outfilename.c_str(),"w");
   gsl_histogram_fprintf(outfile, hist, "%-16.6e", "%-16.6e");
   fclose(outfile);
