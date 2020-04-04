@@ -8,7 +8,7 @@ class Disruption {
 
  private:
 
-  Galaxy host_gal;
+  Galaxy* host_gal;
   double mbh; // could in principle randomly sample this from scatter in galaxy observables correlation
 
   double mstar;
@@ -17,15 +17,10 @@ class Disruption {
   double A_V; // can vary along lines of sight so will vary between disruptions
   double R_V; // can vary along lines of sight so will vary between disruptions
 
-  // should these be galaxy variables?
   double beta_mean;
   double beta_sigma;
   double T_opt_mean;
   double T_opt_sigma;
-  double A_V_mean;
-  double A_V_sigma; 
-  double R_V_mean;
-  //  double R_V_sigma;
 
   double L_Edd;
   double peak_L; // beak Lbol for a given disruption
@@ -49,7 +44,7 @@ class Disruption {
 
  public:
 
-  Disruption(Galaxy);
+  Disruption(Galaxy*);
 
   void Rejection_Sample_Mstar(gsl_rng *);
   void Determine_Max_L();
@@ -69,7 +64,6 @@ class Disruption {
   double Get_Max_L();
   double Get_Min_Log_Lbol();
 
-
   void Set_Topt(double);
   void Set_Beta(double);
   void Set_Peak_L(double);
@@ -77,10 +71,7 @@ class Disruption {
   void Set_R_V(double);
   
   double Unobscured_Lnu(double, double, double);
-  double Cardelli_Extinction(double);
-  double Calzetti_Extinction(double);
   double Extincted_Flux_Observed(double, double);
-  double GarnBest_Median_SF_AHa(double);
 
 };
 

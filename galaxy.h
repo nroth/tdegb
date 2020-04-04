@@ -47,6 +47,11 @@ class Galaxy {
   double re_arcsec;
   double sersic_bn;
   double nuker_gammaprime;
+  double median_R_V;
+  double median_A_Ha;
+  double sigma_A_Ha;
+  double median_A_V;
+  double sigma_A_V;
 
   double imf_normalization;
 
@@ -83,6 +88,11 @@ public:
   double Get_Mstar_Max() const;
   double Get_Total_Stellar_Mass() const;
   double Get_imf_norm() const;
+  double Get_median_R_V() const;
+  double Get_median_A_Ha() const;
+  double Get_sigma_A_Ha() const;
+  double Get_median_A_V() const;
+  double Get_sigma_A_V() const;
   double Get_Luminosity_Distance() const;
   double Get_Disruption_Rate_Normalization_Combined() const;
   double Get_Disruption_Rate_Powerlaw_Mass() const;
@@ -92,7 +102,13 @@ public:
 
   static double Kroupa_IMF_for_integrating(double, void *); // static needed for gsl integration to work
   double Kroupa_IMF_for_value(double, double) const; // static needed for gsl integration to work
+  double GarnBest_Median_SF_AHa(double);
+
+  double Calzetti_Extinction(double, double);
+  double Cardelli_Extinction(double, double);  
+  
   void Set_IMF_Normalization();
+  void Set_Median_Extinction();
 
   double Flux_Enclosed_R_Sersic(double, double); // not totally sure this belongs here
 

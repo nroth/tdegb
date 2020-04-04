@@ -39,7 +39,8 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Survey surv, Galaxy gal, doub
 
   double rate_normalization = 1./( (double) num_trials) * gal.Get_Disruption_Rate_Normalization_Combined() * pow(gal.Get_nuker_gammaprime()/1.0,gal.Get_Disruption_Rate_Powerlaw_Nuker()) * 1./(1. + z);
 
-  Disruption disrupt(gal); // default values filled in now
+  Galaxy* gal_pointer = &gal;
+  Disruption disrupt(gal_pointer); // default values filled in now
 
   for (int i = 0; i < num_trials; ++i)
     {

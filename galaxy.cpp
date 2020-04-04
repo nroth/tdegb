@@ -1,4 +1,6 @@
 #include <math.h>
+#include <algorithm> // for std::max
+#include <stdio.h>
 #include <gsl/gsl_integration.h>
 #include <gsl/gsl_sf_gamma.h>
 #include "physical_constants.h"
@@ -45,6 +47,9 @@ Galaxy::Galaxy(double* galaxy_info)
   re_arcsec = R_Arcsec_From_Kpc(r50_kpc);
 
   Set_IMF_Normalization();
+
+  median_R_V = 4.05; // should depend on galaxy properties
+  Set_Median_Extinction(); // values are hard-coded here, will probably want to make it more clear how to modif
 
 }
 
@@ -133,6 +138,34 @@ double Galaxy::Get_imf_norm() const
   return imf_normalization;
 }
 
+double Galaxy::Get_median_R_V() const
+{
+  return median_R_V;
+}
+
+double Galaxy::Get_median_A_V() const
+{
+  return median_A_V;
+}
+
+double Galaxy::Get_sigma_A_V() const
+{
+  return sigma_A_V;
+}
+
+double Galaxy::Get_median_A_Ha() const
+{
+  return median_A_Ha;
+}
+
+double Galaxy::Get_sigma_A_Ha() const
+{
+  return sigma_A_Ha;
+}
+
+
+
+
 double Galaxy::Get_Disruption_Rate_Normalization_Combined() const
 {
   return disruption_rate_normalization_combined;
@@ -199,6 +232,121 @@ void Galaxy::Set_IMF_Normalization()
   
   imf_normalization = result;
 
+}
+
+
+// equation 5 of Garn & Best 2010. Median A_Halpha for star-forming galaxies 
+double Galaxy::GarnBest_Median_SF_AHa(double logmstar)
+{
+
+  if (logmstar < 8.66) return 0.292;
+  if (logmstar > 11.96) return 2.164;
+  
+  double x = logmstar - 10.;
+
+  return 0.91 + 0.77 * x + 0.11 * x * x - 0.09 * x * x * x;
+
+}
+
+double Galaxy::Cardelli_Extinction(double x, double rv)
+{
+
+  double a = 0.;
+  double b = 0.;
+
+  if (x < 0.3 || x > 10.)
+    {
+      printf("ERROR: Cardelli extinction not defined for x < 0.3 or x > 10.\n");
+      return 0.;
+    }
+  if (x >= 0.3 && x < 1.1)
+    {
+      a = 0.574 * pow(x,1.61);
+      b = -0.527 * pow(x,1.61);
+    }
+  if (x >= 1.1 and x < 3.3)
+    {
+      double y = x - 1.82;
+      a = 1. + 0.17699 * y - 0.50447 * pow(y,2.) -0.02427 * pow(y,3.) + 0.72085 * pow(y,4.) + 0.01979 * pow(y,5.) - 0.77530 * pow(y,6.) + 0.32999 * pow(y,7.);
+      b = 1.41338 * y + 2.28305 * pow(y,2.) + 1.07233 * pow(y,3.) - 5.38434 * pow(y,4.) - 0.62251 * pow(y,5.) + 5.3026 * pow(y,6) - 2.09002 * pow(y,7.);
+    }
+    if (x >= 3.3 and x < 8.)
+      {
+	double Fa = 0.;
+	double Fb = 0.;
+	if (x >= 5.9)
+	  {
+            Fa = -0.04473 * pow(x - 5.9,2.) - 0.009779 *pow(x - 5.9,3.);
+            Fb = 0.213 * pow(x - 5.9,2.) + 0.1207 *pow(x - 5.9,3.);
+	  }
+        a = 1.752 - 0.316 * x - 0.104/(pow(x - 4.67,2.) + 0.341) + Fa;
+        b = -3.09 + 1.825 * x + 1.206/(pow(x - 4.62,2.) + 0.263) + Fb;
+      }
+    if (x >= 8. && x <= 10.)
+      {
+        a = -1.073 - 0.628 * (x - 8.) + 0.137 * pow(x - 8.,2.) - 0.070 * pow(x - 8.,3.);
+        b = 13.67 + 4.257 * (x - 8.) - 0.42 * pow(x - 8.,2.) + 0.374 * pow(x - 8.,3.);
+      }
+	  /*
+    #if (x > 10. and x < 10.96):
+    #    #print "ERROR, Cardelli extinction not defined"
+    #    a = -1.073 - 0.628 * (10. - 8.) + 0.137 * pow(10. - 8.,2.) - 0.070 * pow(10. - 8.,3.)
+    #    b = 13.67 + 4.257 * (10. - 8.) - 0.42 * pow(10. - 8.,2.) + 0.374 * pow(10. - 8.,3.)
+    #    ref_value = a + b / R
+    #    return ref_value + (x - 10.)
+    #if (x >= 10.96):
+    #    return 1000.
+	  */
+        
+    return a + b / rv;
+
+}
+
+
+double Galaxy::Calzetti_Extinction(double x, double rv)
+{
+
+  // Calzetti 2000 gives a function for k(lambda)
+  // To make this analogous to the Cardelli extinction function, here we return k(lambda) / R_V
+  
+
+    if (x < 5./11. || x > 25./3.)
+    {
+      printf("ERROR: Calzetti extinction not defined for x < 0.45 or x > 8.33...\n");
+      return 0.;
+    }
+
+    if (x >= 5./11. && x < 1.6)
+      {
+	
+	return std::max((2.659 * (-1.857 + 1.040 * x) + rv)/rv,0.);
+      }
+    else
+      {
+	return (2.659 * (-2.156 + 1.509 * x - 0.198 * x *x + 0.011 * x * x * x) + rv)/rv;
+      }
+
+}
+
+
+
+void Galaxy::Set_Median_Extinction()
+{
+
+  if (log10(ssfr) >= -11.3) // maybe make this more sophisticated?
+    {
+      median_A_Ha = GarnBest_Median_SF_AHa(log10(total_stellar_mass));
+      median_A_V = median_A_Ha / Calzetti_Extinction(1./(0.65645),median_R_V);
+      sigma_A_Ha = 0.28;
+      // sigma_A_V not used directly
+
+    }
+  else
+    {
+      median_A_V = 0.2;
+      sigma_A_V = 0.06;
+      //sigma_A_Ha not used directly
+    }
 }
 
 

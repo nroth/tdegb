@@ -8,7 +8,7 @@
 #include "disruption.h"
 
 
-Disruption::Disruption(Galaxy gal)
+Disruption::Disruption(Galaxy* gal)
 {
 
   lf_log_powerlaw = 1.5;
@@ -17,7 +17,7 @@ Disruption::Disruption(Galaxy gal)
   max_edd_ratio = 2.;
 
   host_gal = gal;
-  mbh = host_gal.Get_Mbh();
+  mbh = host_gal->Get_Mbh();
   L_Edd = Eddington_Luminosity();
 
   
@@ -26,9 +26,6 @@ Disruption::Disruption(Galaxy gal)
   T_opt_sigma = 1.5e4;
   beta_mean = 1.;
   beta_sigma = 1.e-6;
-  A_V_mean = 0.2; // should depend on galaxy properties
-  A_V_sigma = 0.06; // should depend on galaxy properties
-  R_V_mean = 4.05; // should depend on galaxy properties
 
   T_opt = 0.;
   beta = 0.;
@@ -71,13 +68,13 @@ void Disruption::Set_R_V(double rv)
 void Disruption::Rejection_Sample_Mstar(gsl_rng *rangen)
 {
 
-  double mstar_min = host_gal.Get_Mstar_Min(); //really will want to allow this to be different in different galaxies
-  double mstar_max = host_gal.Get_Mstar_Max();
+  double mstar_min = host_gal->Get_Mstar_Min(); //really will want to allow this to be different in different galaxies
+  double mstar_max = host_gal->Get_Mstar_Max();
   
-  double imf_norm = host_gal.Get_imf_norm();
+  double imf_norm = host_gal->Get_imf_norm();
 
   // careful about this if you end up using different IMF that is not monotonically decreasing with stellar mass
-  double envelope = host_gal.Kroupa_IMF_for_value(mstar_min, imf_norm);
+  double envelope = host_gal->Kroupa_IMF_for_value(mstar_min, imf_norm);
 
   while (true)
   {
@@ -86,7 +83,7 @@ void Disruption::Rejection_Sample_Mstar(gsl_rng *rangen)
     double mstar_e = mstar_min + (mstar_max - mstar_min)*gsl_rng_uniform(rangen);
 
     // calculate the probability from the present day mass function
-    double P = 1./envelope * host_gal.Kroupa_IMF_for_value(mstar_e, imf_norm);
+    double P = 1./envelope * host_gal->Kroupa_IMF_for_value(mstar_e, imf_norm);
     if (gsl_rng_uniform(rangen) < P)
       {
 	mstar = mstar_e;
@@ -226,7 +223,7 @@ void Disruption::Determine_Max_L()
 
 
 
-//Not rejection sampling, inverse transform sampling
+//Inverse transform sampling (not rejection sampling here)
 void Disruption::Sample_Peak_L(gsl_rng *rangen)
 {
 
@@ -255,22 +252,19 @@ void Disruption::Sample_Topt(gsl_rng *rangen)
 
 void Disruption::Sample_A_V(gsl_rng *rangen)
 {
+  
+  Sample_R_V(rangen);
 
-  if (log10(host_gal.Get_ssfr()) < -11.3)
+  if (log10(host_gal->Get_ssfr()) < -11.3)
     {
-      A_V = std::max(A_V_mean + gsl_ran_gaussian(rangen, A_V_sigma), 0.);
+
+      A_V = std::max(host_gal->Get_median_A_V() + gsl_ran_gaussian(rangen, host_gal->Get_sigma_A_V()), 0.);
     }
     else
       {
-	double logmstar = log10(host_gal.Get_Total_Stellar_Mass());
-	double median_Aha = GarnBest_Median_SF_AHa(logmstar);
-	double sigma_Aha = 0.28;
-	double this_Aha = std::max(median_Aha + gsl_ran_gaussian(rangen, sigma_Aha),0.);
-	//A_V = this_Aha / Cardelli_Extinction(1./(0.65645));
-	A_V = this_Aha / Calzetti_Extinction(1./(0.65645));
+	double this_Aha = std::max(host_gal->Get_median_A_Ha() + gsl_ran_gaussian(rangen, host_gal->Get_sigma_A_Ha()),0.);
+	A_V = this_Aha / host_gal->Calzetti_Extinction(1./(0.65645),R_V);
       }
-
-
 
 }
 
@@ -278,7 +272,7 @@ void Disruption::Sample_R_V(gsl_rng *rangen)
 {
   
   //  R_V = R_V_mean + gsl_ran_gaussian(rangen, R_V_sigma);
-  R_V = R_V_mean;
+  R_V = host_gal->Get_median_R_V();
   
 }
 
@@ -310,7 +304,7 @@ double Disruption::Dust_Flux_Factor_Reduction(double nu_emit)
   //  double cardelli_factor = Cardelli_Extinction(x);
   //  return pow(10., -1. * A_V * cardelli_factor/(2.5));
 
-  double calzetti_factor = Calzetti_Extinction(x);
+  double calzetti_factor = host_gal->Calzetti_Extinction(x,R_V);
   return pow(10., -1. * A_V * calzetti_factor/(2.5));
 
 }
@@ -324,96 +318,7 @@ double Disruption::Extincted_Flux_Observed(double nu_emit, double cosmo_factor)
 
 }
 
-double Disruption::Cardelli_Extinction(double x)
-{
 
-  double a = 0.;
-  double b = 0.;
-
-  if (x < 0.3 || x > 10.)
-    {
-      printf("ERROR: Cardelli extinction not defined for x < 0.3 or x > 10.\n");
-      return 0.;
-    }
-  if (x >= 0.3 && x < 1.1)
-    {
-      a = 0.574 * pow(x,1.61);
-      b = -0.527 * pow(x,1.61);
-    }
-  if (x >= 1.1 and x < 3.3)
-    {
-      double y = x - 1.82;
-      a = 1. + 0.17699 * y - 0.50447 * pow(y,2.) -0.02427 * pow(y,3.) + 0.72085 * pow(y,4.) + 0.01979 * pow(y,5.) - 0.77530 * pow(y,6.) + 0.32999 * pow(y,7.);
-      b = 1.41338 * y + 2.28305 * pow(y,2.) + 1.07233 * pow(y,3.) - 5.38434 * pow(y,4.) - 0.62251 * pow(y,5.) + 5.3026 * pow(y,6) - 2.09002 * pow(y,7.);
-    }
-    if (x >= 3.3 and x < 8.)
-      {
-	double Fa = 0.;
-	double Fb = 0.;
-	if (x >= 5.9)
-	  {
-            Fa = -0.04473 * pow(x - 5.9,2.) - 0.009779 *pow(x - 5.9,3.);
-            Fb = 0.213 * pow(x - 5.9,2.) + 0.1207 *pow(x - 5.9,3.);
-	  }
-        a = 1.752 - 0.316 * x - 0.104/(pow(x - 4.67,2.) + 0.341) + Fa;
-        b = -3.09 + 1.825 * x + 1.206/(pow(x - 4.62,2.) + 0.263) + Fb;
-      }
-    if (x >= 8. && x <= 10.)
-      {
-        a = -1.073 - 0.628 * (x - 8.) + 0.137 * pow(x - 8.,2.) - 0.070 * pow(x - 8.,3.);
-        b = 13.67 + 4.257 * (x - 8.) - 0.42 * pow(x - 8.,2.) + 0.374 * pow(x - 8.,3.);
-      }
-	  /*
-    #if (x > 10. and x < 10.96):
-    #    #print "ERROR, Cardelli extinction not defined"
-    #    a = -1.073 - 0.628 * (10. - 8.) + 0.137 * pow(10. - 8.,2.) - 0.070 * pow(10. - 8.,3.)
-    #    b = 13.67 + 4.257 * (10. - 8.) - 0.42 * pow(10. - 8.,2.) + 0.374 * pow(10. - 8.,3.)
-    #    ref_value = a + b / R
-    #    return ref_value + (x - 10.)
-    #if (x >= 10.96):
-    #    return 1000.
-	  */
-        
-    return a + b / R_V;
-
-}
-
-double Disruption::Calzetti_Extinction(double x)
-{
-
-  // Calzetti 2000 gives a function for k(lambda)
-  // To make this analogous to the Cardelli extinction function, here we return k(lambda) / R_V
-
-    if (x < 5./11. || x > 25./3.)
-    {
-      printf("ERROR: Calzetti extinction not defined for x < 0.45 or x > 8.33...\n");
-      return 0.;
-    }
-
-    if (x >= 5./11. && x < 1.6)
-      {
-	
-	return std::max((2.659 * (-1.857 + 1.040 * x) + R_V)/R_V,0.);
-      }
-    else
-      {
-	return (2.659 * (-2.156 + 1.509 * x - 0.198 * x *x + 0.011 * x * x * x) + R_V)/R_V;
-      }
-
-}
-
-// equation 5 of Garn & Best 2010. Median A_Halpha for star-forming galaxies 
-double Disruption::GarnBest_Median_SF_AHa(double logmstar)
-{
-
-  if (logmstar < 8.66) return 0.292;
-  if (logmstar > 11.96) return 2.164;
-  
-  double x = logmstar - 10.;
-
-  return 0.91 + 0.77 * x + 0.11 * x * x - 0.09 * x * x * x;
-
-}
 
 
 
