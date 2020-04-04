@@ -11,7 +11,7 @@
 // move this to where appropriate. 
 struct flare_data
 {
-  double attributes[19]; // 12 for galaxy, 7 for flare
+  double attributes[21]; // 14 for galaxy, 7 for flare
   double weight; // for determining volumetric disruption rate
 };
 
@@ -41,6 +41,7 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Survey surv, Galaxy gal, doub
 
   Galaxy* gal_pointer = &gal;
   Disruption disrupt(gal_pointer); // default values filled in now
+  //  Disruption disrupt(gal); // default values filled in now
 
   for (int i = 0; i < num_trials; ++i)
     {
@@ -92,14 +93,16 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Survey surv, Galaxy gal, doub
 	      flare_row->attributes[9] = gal.Get_M_u();
 	      flare_row->attributes[10] = gal.Get_M_r();
 	      flare_row->attributes[11] = gal.Get_nuker_gammaprime();
+	      flare_row->attributes[12] = gal.Get_median_A_V();
+	      flare_row->attributes[13] = gal.Get_sigma_A_V();
 
-	      flare_row->attributes[12] = disrupt.Get_Mstar();
-	      flare_row->attributes[13] = disrupt.Get_beta();
-	      flare_row->attributes[14] = disrupt.Get_Peak_L();
-	      flare_row->attributes[15] = disrupt.Get_Topt();
-	      flare_row->attributes[16] = g_mag_observed;
-	      flare_row->attributes[17] = g_mag_observed - r_mag_observed;
-	      flare_row->attributes[18] = disrupt.Get_A_V();
+	      flare_row->attributes[14] = disrupt.Get_Mstar();
+	      flare_row->attributes[15] = disrupt.Get_beta();
+	      flare_row->attributes[16] = disrupt.Get_Peak_L();
+	      flare_row->attributes[17] = disrupt.Get_Topt();
+	      flare_row->attributes[18] = g_mag_observed;
+	      flare_row->attributes[19] = g_mag_observed - r_mag_observed;
+	      flare_row->attributes[20] = disrupt.Get_A_V();
 	      
 	      flare_row->weight = rate_normalization;
 
