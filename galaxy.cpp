@@ -338,14 +338,15 @@ void Galaxy::Set_Median_Extinction()
       median_A_Ha = GarnBest_Median_SF_AHa(log10(total_stellar_mass));
       median_A_V = median_A_Ha / Calzetti_Extinction(1./(0.65645),median_R_V);
       sigma_A_Ha = 0.28;
-      // sigma_A_V not used directly
+      sigma_A_V = sigma_A_Ha / Calzetti_Extinction(1./(0.65645),median_R_V); // sigma_A_V not used directly
 
     }
   else
     {
       median_A_V = 0.2;
       sigma_A_V = 0.06;
-      //sigma_A_Ha not used directly
+      sigma_A_Ha = sigma_A_V * Calzetti_Extinction(1./(0.65645),median_R_V); //sigma_A_Ha not used directly
+
     }
 }
 
