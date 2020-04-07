@@ -72,7 +72,14 @@ int main(int argc, char **argv)
   TypeR = gsl_rng_default;
   rangen = gsl_rng_alloc (TypeR);
 
-  int num_galaxies = 6092542; // should think more about how to make this flexible
+
+  string catalogue_filename = "/Users/nathanielroth/Dropbox/research/TDE/host_galaxies/sjoert_catalogue/van_velzen_Nov2019_catalogue.h5";
+  hid_t catalogue_id = H5Fopen(catalogue_filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+  hsize_t num_galaxies;
+  H5LTget_dataset_info(catalogue_id,"/z",&num_galaxies,NULL,NULL);
+  //  int num_galaxies = catalogue_length;
+  printf("number of galaxies is %llu\n", num_galaxies);
+  H5Fclose (catalogue_id);
 
     // need to define these everywhere but only want to allocate memory to them on rank 0, hence the use of malloc later for rank 0
   double* z_vector_big;
@@ -114,16 +121,17 @@ int main(int argc, char **argv)
       offset += num_gals_per_proc[i];
     }
 
+
   int my_num_gals = num_gals_per_proc[my_rank];
 
   
 
   if (my_rank == 0)
     {
-      printf("num_galaxies %d, n_procs %d, base_gals_per_proc %d, remainder %d\n",num_galaxies,n_procs, base_gals_per_proc, remainder);
+      printf("num_galaxies %llu, n_procs %d, base_gals_per_proc %d, remainder %d\n",num_galaxies,n_procs, base_gals_per_proc, remainder);
 
       //read this in
-      string catalogue_filename = "/Users/nathanielroth/Dropbox/research/TDE/host_galaxies/sjoert_catalogue/van_velzen_Nov2019_catalogue.h5";
+
 
       z_vector_big = (double*) malloc(num_galaxies * sizeof(double));
       m_g_vector_big = (double*) malloc(num_galaxies * sizeof(double));
