@@ -8,8 +8,12 @@
 Survey::Survey()
 {
 
-  nu_gband = 6.2394e14; // corresponds to lambda_mean from http://svo2.cab.inta-csic.es/svo/theory/fps3/index.php?id=Palomar/ZTF.g&&mode=browse&gname=Palomar&gname2=ZTF
-  nu_rband =  4.6574e14; // corresponds to lambda_mean from http://svo2.cab.inta-csic.es/svo/theory/fps3/index.php?id=Palomar/ZTF.r&&mode=browse&gname=Palomar&gname2=ZTF#filter
+  // see e.g. http://svo2.cab.inta-csic.es/svo/theory/fps3/index.php?id=Swift/UVOT.UVW2&&mode=browse&gname=Swift&gname2=UVOT#filter  
+  nu_bands.push_back(C_LIGHT / (6436.92 * 1.e-8)); // ZTF_r
+  nu_bands.push_back(C_LIGHT / (4804.79 * 1.e-8)); // ZTF_g
+  nu_bands.push_back(C_LIGHT / (2688.46 * 1.e-8)); // Swift UVW1
+  nu_bands.push_back(C_LIGHT / (2272.71 * 1.e-8)); // Swift UVM2
+  nu_bands.push_back(C_LIGHT / (2140.26 * 1.e-8)); // Swift UVW2
 
   m_r_threshhold = 19;
   m_g_threshhold = 19;
@@ -22,14 +26,9 @@ Survey::Survey()
 
 }
 
-double Survey::Get_Nu_Gband()
+double Survey::Get_Band_Nu(int index)
 {
-  return nu_gband;
-}
-
-double Survey::Get_Nu_Rband()
-{
-  return nu_rband;
+  return nu_bands[index];
 }
 
 double Survey::Get_m_r_Threshhold()

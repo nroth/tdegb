@@ -31,8 +31,8 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Survey surv, Galaxy gal, doub
   double z = gal.Get_z();
 
   double cosmo_factor = (1. + z)/(4. * PI * pow(gal.Get_Luminosity_Distance(),2.));
-  double nu_g_emit = (1. + z) * surv.Get_Nu_Gband();
-  double nu_r_emit = (1. + z) * surv.Get_Nu_Rband();  
+  double nu_g_emit = (1. + z) * surv.Get_Band_Nu(ZTF_g);
+  double nu_r_emit = (1. + z) * surv.Get_Band_Nu(ZTF_r);  
 
   int num_trials = 100;
   vol_rate_accumulator = 0.;

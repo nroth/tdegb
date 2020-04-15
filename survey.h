@@ -2,14 +2,17 @@
 #define SURVEY_H
 
 #include "galaxy.h"
+#include <vector>
 
+using std::vector;
 
-class Survey {
+enum survey_bands {ZTF_r, ZTF_g, UVW1, UVM2, UVW2};
 
+class Survey 
+{
  private:
 
-  double nu_gband;
-  double nu_rband;
+  vector<double> nu_bands;
 
   double m_r_threshhold;
   double m_g_threshhold;
@@ -27,8 +30,7 @@ class Survey {
   double mAB_From_Fnu(double);
   double Find_Host_Contrast_Magnitude(Galaxy, char);
 
-  double Get_Nu_Gband();
-  double Get_Nu_Rband();
+double Get_Band_Nu(int);
   double Get_m_r_Threshhold();
   double Get_m_g_Threshhold();
 
