@@ -40,7 +40,7 @@ class Disruption {
 
   double Planck_Function_Frequency(double, double);
 
-  double Dust_Flux_Factor_Reduction(double);
+
 
  public:
 
@@ -71,6 +71,7 @@ class Disruption {
   void Set_R_V(double);
   
   double Unobscured_Lnu(double, double, double);
+  double Dust_Flux_Factor_Reduction(double);
   double Extincted_Flux_Observed(double, double);
 
 };

@@ -3,12 +3,16 @@
 #include "physical_constants.h"
 #include "galaxy.h"
 #include "survey.h"
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
+#include <gsl/gsl_blas.h>
 
 
 Survey::Survey()
 {
 
-  // see e.g. http://svo2.cab.inta-csic.es/svo/theory/fps3/index.php?id=Swift/UVOT.UVW2&&mode=browse&gname=Swift&gname2=UVOT#filter  
+  // see e.g. http://svo2.cab.inta-csic.es/svo/theory/fps3/index.php?id=Swift/UVOT.UVW2&&mode=browse&gname=Swift&gname2=UVOT#filter
+  // later, when reading in, put this in a loop
   nu_bands.push_back(C_LIGHT / (6436.92 * 1.e-8)); // ZTF_r
   nu_bands.push_back(C_LIGHT / (4804.79 * 1.e-8)); // ZTF_g
   nu_bands.push_back(C_LIGHT / (2688.46 * 1.e-8)); // Swift UVW1
@@ -22,8 +26,68 @@ Survey::Survey()
 
   g_psf_arcsec = 2.1; // g-band median PSF FWHM. Page 8 of Bellm et al 2019 https://iopscience.iop.org/article/10.1088/1538-3873/aaecbe/pdf
   r_psf_arcsec = 2.0; // r-band median PSF FWHM. Page 8 of Bellm et al 2019 https://iopscience.iop.org/article/10.1088/1538-3873/aaecbe/pdf
- 
 
+  ///// Stuff related to temperature fit /////
+
+  num_fit_p = 2; // should read this in?
+  mag_frac_error = 0.000001; // 0.1 mag error corresponds to ~ 0.1 fractional error
+  nu_ref = 1.e15; // Hz
+  T_ref = 3.e4; // K
+  R_ref = 3.e14; // cm
+  lnu_ref = 4. * PI * PI * 2. * H_PLANCK /(C_LIGHT * C_LIGHT) * nu_ref * nu_ref * nu_ref * R_ref * R_ref;
+  xtol = 1.e-8; // tolerance for small step sizes
+  gtol = 1.e-8; // tolerance for gradient near cost function minimum
+  ftol = 0.; // By setting this to zero, which is the tolerance in the actual residual value, you force the other tolerances to be used (I think)
+
+  Type = gsl_multifit_nlinear_trust; // GSL only provides this one option for the type right now (although it could be multifit or multilarge).
+  fdf_params = gsl_multifit_nlinear_default_parameters(); // you might want to tune some of these
+
+  Nbands = nu_bands.size(); 
+
+  // using malloc here so I could put the declarations in the header
+  //  nuprimes = (double*) malloc(Nbands * sizeof(double));
+  //  y = (double*) malloc(Nbands * sizeof(double));
+  //  weights = (double*) malloc(Nbands * sizeof(double));
+  
+  // The struct is storing arrays, which really means storing pointers. When nuprime or y are updated, the struct d knows about the changes
+  d.n = Nbands;
+  d.nu_prime = nuprimes;
+  d.l_prime = y;
+  d.alpha = H_PLANCK * nu_ref/( K_BOLTZ * T_ref);
+  
+  // the starting guesses for the fit parameters, for every time the fit is run
+  //  x_init =  (double*) malloc(2 * sizeof(double));
+  x_init[0] = 1.;
+  x_init[1] = 1.; 
+
+  x = gsl_vector_view_array (x_init, num_fit_p);
+  wts = gsl_vector_view_array(weights, Nbands); // if weights gets updated, wts does too
+
+  // define the function to be minimized //
+  fdf.f = Bbfit_f;
+  fdf.df = Bbfit_df;   // set to NULL for finite-difference Jacobian //
+  fdf.fvv = NULL;     // not using geodesic acceleration //
+  fdf.n = Nbands;
+  fdf.p = num_fit_p;
+  fdf.params = &d;
+
+  /* allocate workspace with default parameters */
+  w = gsl_multifit_nlinear_alloc (Type, &fdf_params, Nbands, num_fit_p);
+
+}
+
+Survey::~Survey()
+{
+
+  //  free(nuprimes);
+  //  free(y);
+  //  free(weights);
+  //  free(x_init);
+}
+
+int Survey::Get_Nbands()
+{
+  return Nbands;
 }
 
 double Survey::Get_Band_Nu(int index)
@@ -89,3 +153,135 @@ double Survey::Mu_From_I(double I)
 {    
   return -2.5 * log10(I);
 }
+
+//////// Functions relating to temperature fit ////////
+
+// Model, before nondimensionalization: Lnu_e = 4 pi^2 R^2 B_nu(T) 
+double Survey::Bb_nondim(double nu_prime, double R_prime, double T_prime, double alpha)
+{
+  return pow(nu_prime,3) * pow(R_prime,2) /(exp(alpha * nu_prime/T_prime) - 1.);
+}
+
+// x is vector of parameters, in this case [R_prime, T_prime]
+int Survey::Bbfit_f (const gsl_vector * x, void *phot_data, gsl_vector * f)
+{
+  size_t n = ((struct phot_data *)phot_data)->n;
+  double *nu_prime = ((struct phot_data *)phot_data)->nu_prime;
+  double *l_prime = ((struct phot_data *)phot_data)->l_prime;
+  double alpha = ((struct phot_data *)phot_data)->alpha;
+
+  double R_prime = gsl_vector_get (x, 0);
+  double T_prime = gsl_vector_get (x, 1);
+
+  size_t i;
+
+  for (i = 0; i < n; i++)
+    {
+      double Yi = Bb_nondim(nu_prime[i],R_prime,T_prime,alpha); 
+      gsl_vector_set (f, i, Yi - l_prime[i]);
+    }
+
+  return GSL_SUCCESS;
+}
+
+
+int Survey::Bbfit_df (const gsl_vector * x, void *phot_data, gsl_matrix * J)
+{
+  size_t n = ((struct phot_data *)phot_data)->n;
+  double *nu_prime = ((struct phot_data *)phot_data)->nu_prime;
+  double alpha = ((struct phot_data *)phot_data)->alpha;
+
+  double R_prime = gsl_vector_get (x, 0);
+  double T_prime = gsl_vector_get (x, 1);
+
+  size_t i;
+
+  for (i = 0; i < n; i++)
+    {
+
+      double expf = exp(alpha*nu_prime[i]/T_prime);
+      double denom = expf - 1.;
+      gsl_matrix_set (J, i, 0, 2. * pow(nu_prime[i],3) * R_prime / denom);
+      gsl_matrix_set (J, i, 1, alpha * pow(nu_prime[i],4) * pow(R_prime,2) * expf/(pow(T_prime * denom,2)));
+    }
+
+  return GSL_SUCCESS;
+}
+
+void Survey::Provide_Temperature_Fit_Data(double* nu_rests, double* lnus, gsl_rng *r)
+{
+
+  for (int i = 0; i < Nbands; i++)
+    {
+
+      double yi = lnus[i]/lnu_ref;
+      double si = mag_frac_error * yi; 
+      double dy = gsl_ran_gaussian(r, si);
+
+      nuprimes[i] = nu_rests[i] / nu_ref; // updates the pointer in the data struct
+      y[i] = yi + dy; // '' ''
+      weights[i] = 1.0/(si * si); // '' ''
+      //      printf("nuprime %d is %f\n",i,nuprimes[i]);
+      //      printf("y %d is %f\n",i,y[i]);
+
+    }
+
+  int status = Perform_Temperature_Fit(r);
+  //  printf("fit status is %d\n", status);
+
+}
+
+int Survey::Perform_Temperature_Fit(gsl_rng *r)
+{
+
+  
+  int status, info;
+
+  for (int i = 0; i < Nbands; i++)
+    {
+      d.nu_prime[i] = nuprimes[i];
+      d.l_prime[i] = y[i];
+      d.n = Nbands;
+      //      printf("struct nu_prime %d is %f\n",i,d.nu_prime[i]);
+      //      printf("struct lnu_prime %d is %f\n",i,d.l_prime[i]);
+    }
+
+
+  x = gsl_vector_view_array (x_init, num_fit_p);
+  wts = gsl_vector_view_array(weights, Nbands); // redundaant?
+  
+  //  x_init[0] = 1.;
+  //  x_init[1] = 1.; // redundant?
+  
+  // initialize solver with starting point and weights 
+  gsl_multifit_nlinear_winit (&x.vector, &wts.vector, &fdf, w); // The x vector that's used in the fit, which can be accssed as w->x, gets reverted to what was set in x_init here
+  
+  // solve the system with a maximum of 100 iterations 
+  status = gsl_multifit_nlinear_driver(100, xtol, gtol, ftol, NULL, NULL, &info, w); // the NULL arguments avoid a callback function
+
+  fitted_Rbb = gsl_vector_get(w->x,0) * R_ref;
+  fitted_Tbb = gsl_vector_get(w->x,1) * T_ref;
+
+  //  printf("fitted R is %e",fitted_Rbb);
+  //  printf("fitted T is %e",fitted_Tbb);
+
+  return status;
+  
+}
+
+double Survey::Get_Tbb_Fit()
+{
+  return fitted_Tbb;
+}
+
+double Survey::Get_Rbb_Fit()
+{
+  return fitted_Rbb;
+}
+
+double Survey::Get_Lbol_Fit()
+{
+  return 4. * PI * pow(fitted_Rbb,2) * STEF_BOLTZ * pow(fitted_Tbb,4);
+}
+
+
