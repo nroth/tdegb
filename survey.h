@@ -60,15 +60,10 @@ class Survey
   gsl_multifit_nlinear_parameters fdf_params;
 
 
-  //double* nuprimes;
-  //double* y;
-  //double* weights;
-  //double* x_init;
-  double nuprimes[5];
-  double y[5];
-  double weights[5];
-  double x_init[2];
-
+  double* nuprimes;
+  double* y;
+  double* weights;
+  double* x_init;
   
   int Nbands;
   struct phot_data d;
@@ -97,7 +92,7 @@ class Survey
   double I_From_Mu(double); // might want to move these somewhere else
   double Mu_From_I(double); // might want to movee these somewhere else
 
-  void Provide_Temperature_Fit_Data(double *, double *, gsl_rng *);
+  int Provide_Temperature_Fit_Data(double *, double *, gsl_rng *);
 
   double Get_Tbb_Fit();
   double Get_Rbb_Fit();

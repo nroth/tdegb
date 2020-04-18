@@ -67,8 +67,8 @@ int main(int argc, char **argv)
   gsl_rng_env_setup();
   //gsl_rng_default_seed = (unsigned int)time(NULL);
   //gsl_rng_default_seed = 2;
-  gsl_rng_default_seed = my_rank;
-  //gsl_rng_default_seed = my_rank + (unsigned int)time(NULL);
+  //gsl_rng_default_seed = my_rank;
+  gsl_rng_default_seed = my_rank + (unsigned int)time(NULL);
   TypeR = gsl_rng_default;
   rangen = gsl_rng_alloc (TypeR);
 
@@ -211,7 +211,9 @@ int main(int argc, char **argv)
   elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
   printf("#\n# It took %f seconds to prepare everything on rank %d\n",elapsed_secs,my_rank );
 
-  Survey surv;  
+  Survey* surv = new Survey; // using a pointer here so as to be sure that constructor and destructor are only called once, outside the main integration function.
+  // Before, when I just declared a survey and then passed it to Sample_Disruption_Parameters, I think funny things were happening with copy constructors, leading
+  // to memory allocation errors.
 
   printf("starting to read catalogue on rank %d\n",my_rank);
   begin = clock();

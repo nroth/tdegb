@@ -16,39 +16,37 @@ struct flare_data
 };
 
 
-void Sample_Disruption_Parameters(gsl_rng *rangen, Survey surv, Galaxy gal, double& vol_rate_accumulator, gsl_ntuple *flare_ntuple, flare_data *flare_row ) 
+void Sample_Disruption_Parameters(gsl_rng *rangen, Survey* surv, Galaxy gal, double& vol_rate_accumulator, gsl_ntuple *flare_ntuple, flare_data *flare_row )
 {
 
-
-  double m_r_limit_contrast = surv.Find_Host_Contrast_Magnitude(gal,'r');
-  double m_g_limit_contrast = surv.Find_Host_Contrast_Magnitude(gal,'g'); 
+  double m_r_limit_contrast = surv->Find_Host_Contrast_Magnitude(gal,'r');
+  double m_g_limit_contrast = surv->Find_Host_Contrast_Magnitude(gal,'g'); 
 
   // for all flares in this galaxy
-  double operating_m_r_limit = std::min(m_r_limit_contrast,surv.Get_m_r_Threshhold());
-  double operating_m_g_limit = std::min(m_g_limit_contrast,surv.Get_m_g_Threshhold());
+  double operating_m_r_limit = std::min(m_r_limit_contrast,surv->Get_m_r_Threshhold());
+  double operating_m_g_limit = std::min(m_g_limit_contrast,surv->Get_m_g_Threshhold());
 
   double mbh = gal.Get_Mbh();
   double z = gal.Get_z();
 
   double cosmo_factor = (1. + z)/(4. * PI * pow(gal.Get_Luminosity_Distance(),2.));
 
-  const int Nbands = surv.Get_Nbands();
+  const int Nbands = surv->Get_Nbands();
 
   double * nu_emit = new double[Nbands];
   double * lnu_obsc_rest = new double[Nbands];
 
-
   // these are used to see if the event passes the survey flux limit
   // call in the enum, rather than using it globally?
-  double nu_g_emit = (1. + z) * surv.Get_Band_Nu(ZTF_g);
-  double nu_r_emit = (1. + z) * surv.Get_Band_Nu(ZTF_r);
+  double nu_g_emit = (1. + z) * surv->Get_Band_Nu(ZTF_g);
+  double nu_r_emit = (1. + z) * surv->Get_Band_Nu(ZTF_r);
 
   // save these for later for the temperature fit
   nu_emit[0] = nu_r_emit;
   nu_emit[1] = nu_g_emit;
-  nu_emit[2] = (1. + z) * surv.Get_Band_Nu(UVW1);
-  nu_emit[3] = (1. + z) * surv.Get_Band_Nu(UVM2);
-  nu_emit[4] = (1. + z) * surv.Get_Band_Nu(UVW2);
+  nu_emit[2] = (1. + z) * surv->Get_Band_Nu(UVW1);
+  nu_emit[3] = (1. + z) * surv->Get_Band_Nu(UVM2);
+  nu_emit[4] = (1. + z) * surv->Get_Band_Nu(UVW2);
 
   int num_trials = 100;
   vol_rate_accumulator = 0.;
@@ -84,8 +82,8 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Survey surv, Galaxy gal, doub
 	  disrupt.Sample_R_V(rangen);
 	  disrupt.Sample_A_V(rangen);
 	    
-	  double r_mag_observed = surv.mAB_From_Fnu(disrupt.Extincted_Flux_Observed(nu_r_emit,cosmo_factor));
-	  double g_mag_observed = surv.mAB_From_Fnu(disrupt.Extincted_Flux_Observed(nu_g_emit,cosmo_factor));
+	  double r_mag_observed = surv->mAB_From_Fnu(disrupt.Extincted_Flux_Observed(nu_r_emit,cosmo_factor));
+	  double g_mag_observed = surv->mAB_From_Fnu(disrupt.Extincted_Flux_Observed(nu_g_emit,cosmo_factor));
 
 	  if (r_mag_observed < operating_m_r_limit && g_mag_observed < operating_m_g_limit && (g_mag_observed - r_mag_observed) < 0.)
 	    {
@@ -97,7 +95,8 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Survey surv, Galaxy gal, doub
 		  lnu_obsc_rest[nu_index] = disrupt.Unobscured_Lnu(nu_emit[nu_index],disrupt.Get_Topt(),disrupt.Get_Peak_L()) * disrupt.Dust_Flux_Factor_Reduction(nu_emit[nu_index]); // consider storing the flux factor reduction (and maybe enven the unobscured lnu) from earlier so you don't need to repeat that here.
 		}
 
-	      surv.Provide_Temperature_Fit_Data(nu_emit,lnu_obsc_rest, rangen); // and perform the fit
+	      int status = surv->Provide_Temperature_Fit_Data(nu_emit,lnu_obsc_rest, rangen); // and perform the fit
+	      if (status != GSL_SUCCESS) printf("ERROR: Temperature fit failed!\n");
 
 	      //could use your enum(s)
 	      flare_row->attributes[0] = log10(gal.Get_Total_Stellar_Mass());
@@ -122,9 +121,9 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Survey surv, Galaxy gal, doub
 	      flare_row->attributes[18] = g_mag_observed;
 	      flare_row->attributes[19] = g_mag_observed - r_mag_observed;
 	      flare_row->attributes[20] = disrupt.Get_A_V();
-	      flare_row->attributes[21] = surv.Get_Tbb_Fit();
-	      flare_row->attributes[22] = surv.Get_Lbol_Fit();
-	      flare_row->attributes[23] = surv.Get_Rbb_Fit(); // in the future, improve  capability to bin functions of columns so you don't need to store extra columns
+	      flare_row->attributes[21] = surv->Get_Tbb_Fit();
+	      flare_row->attributes[22] = surv->Get_Lbol_Fit();
+	      flare_row->attributes[23] = surv->Get_Rbb_Fit(); // in the future, improve  capability to bin functions of columns so you don't need to store extra columns
 	      
 	      flare_row->weight = rate_normalization;
 

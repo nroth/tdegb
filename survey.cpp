@@ -45,9 +45,9 @@ Survey::Survey()
   Nbands = nu_bands.size(); 
 
   // using malloc here so I could put the declarations in the header
-  //  nuprimes = (double*) malloc(Nbands * sizeof(double));
-  //  y = (double*) malloc(Nbands * sizeof(double));
-  //  weights = (double*) malloc(Nbands * sizeof(double));
+  nuprimes = (double*) malloc(Nbands * sizeof(double));
+  y = (double*) malloc(Nbands * sizeof(double));
+  weights = (double*) malloc(Nbands * sizeof(double));
   
   // The struct is storing arrays, which really means storing pointers. When nuprime or y are updated, the struct d knows about the changes
   d.n = Nbands;
@@ -56,12 +56,14 @@ Survey::Survey()
   d.alpha = H_PLANCK * nu_ref/( K_BOLTZ * T_ref);
   
   // the starting guesses for the fit parameters, for every time the fit is run
-  //  x_init =  (double*) malloc(2 * sizeof(double));
-  x_init[0] = 1.;
-  x_init[1] = 1.; 
+  x_init =  (double*) malloc(num_fit_p * sizeof(double));
+  for (int i = 0; i < num_fit_p; i++)
+    {
+      x_init[i] = 1.;
+    }
 
-  x = gsl_vector_view_array (x_init, num_fit_p);
-  wts = gsl_vector_view_array(weights, Nbands); // if weights gets updated, wts does too
+  wts = gsl_vector_view_array(weights, Nbands);
+  x = gsl_vector_view_array (x_init, num_fit_p); // these might seem redundant since I do this again later in the fit, but I find I need them 
 
   // define the function to be minimized //
   fdf.f = Bbfit_f;
@@ -79,10 +81,10 @@ Survey::Survey()
 Survey::~Survey()
 {
 
-  //  free(nuprimes);
-  //  free(y);
-  //  free(weights);
-  //  free(x_init);
+  free(nuprimes);
+  free(y);
+  free(weights);
+  free(x_init);
 }
 
 int Survey::Get_Nbands()
@@ -208,7 +210,7 @@ int Survey::Bbfit_df (const gsl_vector * x, void *phot_data, gsl_matrix * J)
   return GSL_SUCCESS;
 }
 
-void Survey::Provide_Temperature_Fit_Data(double* nu_rests, double* lnus, gsl_rng *r)
+int Survey::Provide_Temperature_Fit_Data(double* nu_rests, double* lnus, gsl_rng *r)
 {
 
   for (int i = 0; i < Nbands; i++)
@@ -218,16 +220,14 @@ void Survey::Provide_Temperature_Fit_Data(double* nu_rests, double* lnus, gsl_rn
       double si = mag_frac_error * yi; 
       double dy = gsl_ran_gaussian(r, si);
 
-      nuprimes[i] = nu_rests[i] / nu_ref; // updates the pointer in the data struct
-      y[i] = yi + dy; // '' ''
-      weights[i] = 1.0/(si * si); // '' ''
-      //      printf("nuprime %d is %f\n",i,nuprimes[i]);
-      //      printf("y %d is %f\n",i,y[i]);
+      nuprimes[i] = nu_rests[i] / nu_ref;
+      y[i] = yi + dy; 
+      weights[i] = 1.0/(si * si); 
 
     }
 
   int status = Perform_Temperature_Fit(r);
-  //  printf("fit status is %d\n", status);
+  return status;
 
 }
 
@@ -237,23 +237,16 @@ int Survey::Perform_Temperature_Fit(gsl_rng *r)
   
   int status, info;
 
+  d.n = Nbands;
   for (int i = 0; i < Nbands; i++)
     {
       d.nu_prime[i] = nuprimes[i];
       d.l_prime[i] = y[i];
-      d.n = Nbands;
-      //      printf("struct nu_prime %d is %f\n",i,d.nu_prime[i]);
-      //      printf("struct lnu_prime %d is %f\n",i,d.l_prime[i]);
     }
 
-
+  // initialize solver with starting point and weights
+  wts = gsl_vector_view_array(weights, Nbands); // if weights gets updated, wts does too
   x = gsl_vector_view_array (x_init, num_fit_p);
-  wts = gsl_vector_view_array(weights, Nbands); // redundaant?
-  
-  //  x_init[0] = 1.;
-  //  x_init[1] = 1.; // redundant?
-  
-  // initialize solver with starting point and weights 
   gsl_multifit_nlinear_winit (&x.vector, &wts.vector, &fdf, w); // The x vector that's used in the fit, which can be accssed as w->x, gets reverted to what was set in x_init here
   
   // solve the system with a maximum of 100 iterations 
@@ -262,11 +255,7 @@ int Survey::Perform_Temperature_Fit(gsl_rng *r)
   fitted_Rbb = gsl_vector_get(w->x,0) * R_ref;
   fitted_Tbb = gsl_vector_get(w->x,1) * T_ref;
 
-  //  printf("fitted R is %e",fitted_Rbb);
-  //  printf("fitted T is %e",fitted_Tbb);
-
   return status;
-  
 }
 
 double Survey::Get_Tbb_Fit()
