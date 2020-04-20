@@ -222,7 +222,7 @@ int main(int argc, char **argv)
   for (int i = 0; i < my_num_gals; i++)
     {
 
-      double galaxy_info[11] = { log10(mass_mendel[i]), mbh_sigma[i], mbh_bulge[i], z[i], sersic_n[i], r50_kpc[i], m_g[i], m_r[i],ssfr[i],M_u[i],M_r[i]};
+      double galaxy_info[11] = { log10(mass_mendel[i]), mbh_sigma[i], mbh_bulge[i], z[i], sersic_n[i], r50_kpc[i], m_g[i], m_r[i],ssfr[i],M_u[i]- M_r[i],M_r[i]};
 
       Galaxy this_galaxy(galaxy_info);
       
@@ -237,6 +237,8 @@ int main(int argc, char **argv)
       gal_row.attributes[11] = this_galaxy.Get_nuker_gammaprime();
       gal_row.attributes[12] = this_galaxy.Get_median_A_V();
       gal_row.attributes[13] = this_galaxy.Get_sigma_A_V();
+      gal_row.attributes[14] = this_galaxy.Get_Mu_Eff(this_galaxy.Get_m_g());
+      gal_row.attributes[15] = this_galaxy.Get_Mu_Central(this_galaxy.Get_m_g());
       gal_row.weight = vol_rate_weight;
 
       gsl_ntuple_write(gal_ntuple);

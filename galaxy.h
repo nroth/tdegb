@@ -5,12 +5,12 @@
 // GSL ntuple requires a struct
 struct galaxy_catalogue_data
 {
-  double attributes[14];
+  double attributes[16];
   double weight; // for determining volumetric disruption rate
 };
 
 // just for convenience
-enum galaxy_catalogue_indices{ mstar_mendel_i, mbh_sigma_i,  mbh_bulge_i, z_i, sersic_n_i, r50_kpc_i, m_g_i, m_r_i,ssfr_i,M_u_i,M_r_i,nuker_gamma_i,median_A_V_i,sigma_A_V_i };
+enum galaxy_catalogue_indices{ mstar_mendel_i, mbh_sigma_i,  mbh_bulge_i, z_i, sersic_n_i, r50_kpc_i, m_g_i, m_r_i,ssfr_i,UminusR_i,M_r_i,nuker_gamma_i,median_A_V_i,sigma_A_V_i };
 
 
 class Galaxy {
@@ -27,13 +27,15 @@ class Galaxy {
   double sersic_n;
   double r50_kpc;
   double ssfr;
-  double M_u;
+  double UminusR;
   double M_r;
   // include star formation history information? Time since starburst, durtaion of starburst?
   // could be used to set the upper truncation of IMF to make the approximate present-day mass function
 
   double resolution_for_nuker_gamma; // arcsec. Taken to be same for all galaxies. See Lauer et al 2007. Nick Stone's rate calculations were based on Nuker gamma as measured in this paper, so to convert n_sersic to nuker gamma we want to account for how they measured gamma
 
+  double resolution_for_central_sb_measurement; 
+  
   double mbh; // what you will take to be the actual mbh, not what would be inferred from a survey by correlations.
 
   double mstar_max;
@@ -99,6 +101,7 @@ public:
   double Get_Disruption_Rate_Powerlaw_Nuker() const;
 
   double Get_Mu_Eff(double) const;
+  double Get_Mu_Central(double) const;
 
   static double Kroupa_IMF_for_integrating(double, void *); // static needed for gsl integration to work
   double Kroupa_IMF_for_value(double, double) const; // static needed for gsl integration to work

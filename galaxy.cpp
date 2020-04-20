@@ -23,9 +23,10 @@ Galaxy::Galaxy(double* galaxy_info)
   disruption_rate_powerlaw_nuker = 0.852; // for galaxies such that black hole mass is below Hills mass for 1 solar mass star
 
   resolution_for_nuker_gamma = 0.04; // arsec. See Lauer et al 2007. Nick Stone's rate calculations were based on Nuker gamma as measured in this paper, so to convert n_sersic to nuker gamma we want to account for how they measured gamma
+  resolution_for_central_sb_measurement = 0.1; // arcsec
 
   
-  total_stellar_mass = pow(10.,galaxy_info[0]); // you passeed it as log  
+  total_stellar_mass = pow(10.,galaxy_info[0]); // you passed it as log  
   mbh_sigma = pow(10.,galaxy_info[1]); // converting log to value
   mbh_bulge = pow(10.,galaxy_info[2]); // converting log to value
   z = galaxy_info[3];
@@ -34,7 +35,7 @@ Galaxy::Galaxy(double* galaxy_info)
   m_g = galaxy_info[6];
   m_r = galaxy_info[7];
   ssfr = galaxy_info[8];
-  M_u = galaxy_info[9];
+  UminusR = galaxy_info[9];
   M_r = galaxy_info[10];
 
 
@@ -109,7 +110,7 @@ double Galaxy::Get_ssfr() const
 
 double Galaxy::Get_M_u() const
 {
-  return M_u;
+  return UminusR + M_r;
 }
 
 double Galaxy::Get_M_r() const
@@ -414,6 +415,15 @@ double Galaxy::Get_Mu_Eff(double m_tot) const
   return m_tot + 5. * log10(re_arcsec) + 2.5 * log10(2. * PI * sersic_n * exp(sersic_bn)/pow(sersic_bn,2. * sersic_n) * gsl_sf_gamma(2. * sersic_n)  );
 }
 
+// equation 6 https://ned.ipac.caltech.edu/level5/March05/Graham/Graham2.html
+double Galaxy::Get_Mu_Central(double m_tot) const
+{
+
+  double mu_e = Get_Mu_Eff(m_tot);
+  return mu_e + 2.5 * sersic_bn /log(10.) * (pow(resolution_for_central_sb_measurement/re_arcsec,1./sersic_n) - 1.);
+    // from formula, you do in fact want this log to be natural log, which for c++ math.h is just log
+}
+
 double Galaxy::Get_Luminosity_Distance() const
 {
   return LuminosityDistance(z);
@@ -421,7 +431,7 @@ double Galaxy::Get_Luminosity_Distance() const
 
 
 // as found in https://ned.ipac.caltech.edu/level5/March05/Graham/Graham2.html
-// I_e in mags / arcsec^2, r in arscsec
+// I_e has units intensity / arcsec^2, r has units arscsec
 double Galaxy::Flux_Enclosed_R_Sersic(double r, double I_e)
 {
   

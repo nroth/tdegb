@@ -11,7 +11,7 @@
 // move this to where appropriate. 
 struct flare_data
 {
-  double attributes[24]; // 14 for galaxy, 10 for flare
+  double attributes[26]; // 16 for galaxy, 10 for flare
   double weight; // for determining volumetric disruption rate
 };
 
@@ -108,22 +108,24 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Survey* surv, Galaxy gal, dou
 	      flare_row->attributes[6] = gal.Get_m_g();
 	      flare_row->attributes[7] = gal.Get_m_r();
 	      flare_row->attributes[8] = gal.Get_ssfr();
-	      flare_row->attributes[9] = gal.Get_M_u();
+	      flare_row->attributes[9] = gal.Get_M_u() - gal.Get_M_r();
 	      flare_row->attributes[10] = gal.Get_M_r();
 	      flare_row->attributes[11] = gal.Get_nuker_gammaprime();
 	      flare_row->attributes[12] = gal.Get_median_A_V();
 	      flare_row->attributes[13] = gal.Get_sigma_A_V();
+	      flare_row->attributes[14] = gal.Get_Mu_Eff(gal.Get_m_g());
+	      flare_row->attributes[15] = gal.Get_Mu_Central(gal.Get_m_g());
 
-	      flare_row->attributes[14] = disrupt.Get_Mstar();
-	      flare_row->attributes[15] = disrupt.Get_beta();
-	      flare_row->attributes[16] = disrupt.Get_Peak_L();
-	      flare_row->attributes[17] = disrupt.Get_Topt();
-	      flare_row->attributes[18] = g_mag_observed;
-	      flare_row->attributes[19] = g_mag_observed - r_mag_observed;
-	      flare_row->attributes[20] = disrupt.Get_A_V();
-	      flare_row->attributes[21] = surv->Get_Tbb_Fit();
-	      flare_row->attributes[22] = surv->Get_Lbol_Fit();
-	      flare_row->attributes[23] = surv->Get_Rbb_Fit(); // in the future, improve  capability to bin functions of columns so you don't need to store extra columns
+	      flare_row->attributes[16] = disrupt.Get_Mstar();
+	      flare_row->attributes[17] = disrupt.Get_beta();
+	      flare_row->attributes[18] = disrupt.Get_Peak_L();
+	      flare_row->attributes[19] = disrupt.Get_Topt();
+	      flare_row->attributes[20] = g_mag_observed;
+	      flare_row->attributes[21] = g_mag_observed - r_mag_observed;
+	      flare_row->attributes[22] = disrupt.Get_A_V();
+	      flare_row->attributes[23] = surv->Get_Tbb_Fit();
+	      flare_row->attributes[24] = surv->Get_Lbol_Fit();
+	      flare_row->attributes[25] = surv->Get_Rbb_Fit(); // in the future, improve  capability to bin functions of columns so you don't need to store extra columns
 	      
 	      flare_row->weight = rate_normalization;
 

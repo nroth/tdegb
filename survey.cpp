@@ -120,10 +120,19 @@ double Survey::mAB_From_Fnu(double F_nu)
 double Survey::Find_Host_Contrast_Magnitude(Galaxy gal, char band)
 {
 
-  double m_tot = gal.Get_m_r(); // default is r band
+  double m_tot;
   if (band == 'g')
     {
       m_tot = gal.Get_m_g();
+    }
+  else if (band == 'r')
+    {
+      m_tot = gal.Get_m_r(); 
+    }
+  else
+    {
+      printf("ERROR, specify g or r band for specifying host contrat magniutde");
+      exit(1);
     }
   double mu_e = gal.Get_Mu_Eff(m_tot);
   double I_e = I_From_Mu(mu_e);
