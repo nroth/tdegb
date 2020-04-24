@@ -18,7 +18,7 @@ Galaxy::Galaxy(double* galaxy_info)
 
   mstar_max = 1.0;  // In the future these will depend on galaxy properties
   mstar_min = 0.08; // Only considering main sequence stars
-  disruption_rate_normalization_combined =  6.5e-5;// for nuker gamma = 1 and
+  disruption_rate_normalization_combined =  pow(10.,-3.79);// for nuker gamma = 1 and
   disruption_rate_powerlaw_mass = -0.223;
   disruption_rate_powerlaw_nuker = 0.852; // for galaxies such that black hole mass is below Hills mass for 1 solar mass star
 
@@ -164,9 +164,6 @@ double Galaxy::Get_sigma_A_Ha() const
   return sigma_A_Ha;
 }
 
-
-
-
 double Galaxy::Get_Disruption_Rate_Normalization_Combined() const
 {
   return disruption_rate_normalization_combined;
@@ -182,6 +179,17 @@ double Galaxy::Get_Disruption_Rate_Powerlaw_Nuker() const
   return disruption_rate_powerlaw_nuker;
 }
 
+bool Galaxy::Is_ETG_UminusR_Mstar(double u_minus_r, double log10_mstar)
+{
+
+  // For a given u_minus_r and mstar, does the galaxy fall on the ETG side of that parameter plane
+  // The slope of this cut seems fairly consistent across the literature
+  // The u-r intercept can be moved up and down depending on redshift range and how strict you want the cut to be
+  // Remember, this is approximating a separation in morphology by using a related, but ultimately distinct, cut on color and magnitude
+
+  return u_minus_r > -0.4 + 0.25 * log10_mstar;
+  
+}
 
 
 // See equation 7 of https://arxiv.org/pdf/1212.0939.pdf
