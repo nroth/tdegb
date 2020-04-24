@@ -167,6 +167,13 @@ double Disruption::Eddington_Luminosity()
   
 }
 
+double Disruption::Get_Eddington_Luminosity()
+{
+  
+  return Eddington_Luminosity();
+  
+}
+
 // mstar and mbh in solar masses
 // mdot in cgs
 // Need to think harder about how to handle polytropic index dependence on stellar mass

@@ -239,6 +239,7 @@ int main(int argc, char **argv)
       gal_row.attributes[13] = this_galaxy.Get_sigma_A_V();
       gal_row.attributes[14] = this_galaxy.Get_Mu_Eff(this_galaxy.Get_m_g());
       gal_row.attributes[15] = this_galaxy.Get_Mu_Central(this_galaxy.Get_m_g());
+      gal_row.attributes[16] = this_galaxy.Get_Mu_At_Rkpc_CosmoCorrected(0.1,this_galaxy.Get_m_g());
       gal_row.weight = vol_rate_weight;
 
       gsl_ntuple_write(gal_ntuple);

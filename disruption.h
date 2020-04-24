@@ -62,6 +62,7 @@ class Disruption {
   double Get_R_V();
   double Get_Hills_Mass();
   double Get_Max_L();
+  double Get_Eddington_Luminosity();
   double Get_Min_Log_Lbol();
 
   void Set_Topt(double);

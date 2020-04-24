@@ -18,8 +18,8 @@ Galaxy::Galaxy(double* galaxy_info)
 
   mstar_max = 1.0;  // In the future these will depend on galaxy properties
   mstar_min = 0.08; // Only considering main sequence stars
-  disruption_rate_normalization_combined =  pow(10.,-3.79);// for nuker gamma = 1 and
-  disruption_rate_powerlaw_mass = -0.404;
+  disruption_rate_normalization_combined =  6.5e-5;// for nuker gamma = 1 and
+  disruption_rate_powerlaw_mass = -0.223;
   disruption_rate_powerlaw_nuker = 0.852; // for galaxies such that black hole mass is below Hills mass for 1 solar mass star
 
   resolution_for_nuker_gamma = 0.04; // arsec. See Lauer et al 2007. Nick Stone's rate calculations were based on Nuker gamma as measured in this paper, so to convert n_sersic to nuker gamma we want to account for how they measured gamma
@@ -353,21 +353,21 @@ void Galaxy::Set_Median_Extinction()
 
 
 // maybe consider moving this to physical constants
-double Galaxy::Arcsec_From_Radian(double radians)
+double Galaxy::Arcsec_From_Radian(double radians) const
 {    
   return radians * 180. * 3600./ PI;
 }
 
 
 // maybe consider moving this to physical constants
-double Galaxy::Radian_From_Arcsec(double r_arcsec)
+double Galaxy::Radian_From_Arcsec(double r_arcsec) const
 {    
   return r_arcsec * PI / (180. * 3600.);
 }
 
 
 
-double Galaxy::R_Arcsec_From_Kpc(double r_kpc)
+double Galaxy::R_Arcsec_From_Kpc(double r_kpc) const
 {
     
   double r_cm = r_kpc * 1000. * PARSEC; // convert to cm
@@ -379,7 +379,7 @@ double Galaxy::R_Arcsec_From_Kpc(double r_kpc)
 }
 
 
-double Galaxy::R_Kpc_From_Arcsec(double r_arcsec)
+double Galaxy::R_Kpc_From_Arcsec(double r_arcsec) const
 {
   double r_rad = Radian_From_Arcsec(r_arcsec);
     
@@ -421,6 +421,17 @@ double Galaxy::Get_Mu_Central(double m_tot) const
 
   double mu_e = Get_Mu_Eff(m_tot);
   return mu_e + 2.5 * sersic_bn /log(10.) * (pow(resolution_for_central_sb_measurement/re_arcsec,1./sersic_n) - 1.);
+    // from formula, you do in fact want this log to be natural log, which for c++ math.h is just log
+}
+
+// equation 6 https://ned.ipac.caltech.edu/level5/March05/Graham/Graham2.html
+double Galaxy::Get_Mu_At_Rkpc_CosmoCorrected(double r_kpc, double m_tot) const
+{
+
+  double r_arcsec = R_Arcsec_From_Kpc(r_kpc);
+  double mu_e = Get_Mu_Eff(m_tot);
+  double cosmo_correction = -10. * (log10(1. + z));
+  return mu_e + 2.5 * sersic_bn /log(10.) * (pow(r_arcsec/re_arcsec,1./sersic_n) - 1.) + cosmo_correction;
     // from formula, you do in fact want this log to be natural log, which for c++ math.h is just log
 }
 

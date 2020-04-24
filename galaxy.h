@@ -5,7 +5,7 @@
 // GSL ntuple requires a struct
 struct galaxy_catalogue_data
 {
-  double attributes[16];
+  double attributes[17];
   double weight; // for determining volumetric disruption rate
 };
 
@@ -63,10 +63,10 @@ class Galaxy {
   double Get_Approx_Sersic_bn();
   double Find_Nuker_Gammaprime_From_Sersic();
   
-  double R_Arcsec_From_Kpc(double);
-  double R_Kpc_From_Arcsec(double);
-  double Arcsec_From_Radian(double); // might want to move these somewhere else
-  double Radian_From_Arcsec(double); // might want to move these somwhere else
+  double R_Arcsec_From_Kpc(double) const;
+  double R_Kpc_From_Arcsec(double) const;
+  double Arcsec_From_Radian(double) const; // might want to move these somewhere else
+  double Radian_From_Arcsec(double) const; // might want to move these somwhere else
 
 
 
@@ -102,6 +102,7 @@ public:
 
   double Get_Mu_Eff(double) const;
   double Get_Mu_Central(double) const;
+  double Get_Mu_At_Rkpc_CosmoCorrected(double, double) const;
 
   static double Kroupa_IMF_for_integrating(double, void *); // static needed for gsl integration to work
   double Kroupa_IMF_for_value(double, double) const; // static needed for gsl integration to work

@@ -40,7 +40,10 @@ class Binner:
         counts = hist[::,2]
 
         print("Total counts is %f" %counts.sum())
+        plt.xlabel(axis,fontsize=16)
+        plt.title(self.hist_type)
         return plt.bar(bin_centers,counts, width = widths, align='center',edgecolor='k',color='white')
+    
 
     def save_current_histogram(self):
 
