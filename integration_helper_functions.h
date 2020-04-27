@@ -51,7 +51,9 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Survey* surv, Galaxy gal, dou
   int num_trials = 100;
   vol_rate_accumulator = 0.;
 
-  double rate_normalization = 1./( (double) num_trials) * gal.Get_Disruption_Rate_Normalization_Combined() * pow(gal.Get_nuker_gammaprime()/1.0,gal.Get_Disruption_Rate_Powerlaw_Nuker()) * 1./(1. + z);
+  //  double rate_normalization = 1./( (double) num_trials) * gal.Get_Disruption_Rate_Normalization_Combined() * pow(gal.Get_nuker_gammaprime()/1.0,gal.Get_Disruption_Rate_Powerlaw_Nuker()) * 1./(1. + z);
+
+  double rate_normalization = 1./( (double) num_trials) * gal.Get_Disruption_Rate_Normalization_Combined() * pow(mbh/1.e8,gal.Get_Disruption_Rate_Powerlaw_Mass()) * 1./(1. + z);
 
   Galaxy* gal_pointer = &gal;
   Disruption disrupt(gal_pointer); // default values filled in now
@@ -107,7 +109,7 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Survey* surv, Galaxy gal, dou
 	      flare_row->attributes[5] = gal.Get_r50_kpc();
 	      flare_row->attributes[6] = gal.Get_m_g();
 	      flare_row->attributes[7] = gal.Get_m_r();
-	      flare_row->attributes[8] = gal.Get_ssfr();
+	      flare_row->attributes[8] = log10(gal.Get_ssfr());
 	      flare_row->attributes[9] = gal.Get_M_u() - gal.Get_M_r();
 	      flare_row->attributes[10] = gal.Get_M_r();
 	      flare_row->attributes[11] = gal.Get_nuker_gammaprime();
@@ -119,15 +121,15 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Survey* surv, Galaxy gal, dou
 
 	      flare_row->attributes[17] = disrupt.Get_Mstar();
 	      flare_row->attributes[18] = disrupt.Get_beta();
-	      flare_row->attributes[19] = disrupt.Get_Peak_L();
+	      flare_row->attributes[19] = log10(disrupt.Get_Peak_L());
 	      flare_row->attributes[20] = disrupt.Get_Topt();
 	      flare_row->attributes[21] = g_mag_observed;
 	      flare_row->attributes[22] = g_mag_observed - r_mag_observed;
 	      flare_row->attributes[23] = disrupt.Get_A_V();
 	      flare_row->attributes[24] = surv->Get_Tbb_Fit();
-	      flare_row->attributes[25] = surv->Get_Lbol_Fit();
-	      flare_row->attributes[26] = surv->Get_Rbb_Fit(); // in the future, improve  capability to bin functions of columns so you don't need to store extra columns
-	      flare_row->attributes[27] = disrupt.Get_Peak_L() / disrupt.Get_Eddington_Luminosity();
+	      flare_row->attributes[25] = log10(surv->Get_Lbol_Fit());
+	      flare_row->attributes[26] = log10(surv->Get_Rbb_Fit()); // in the future, improve  capability to bin functions of columns so you don't need to store extra columns
+	      flare_row->attributes[27] = log10(disrupt.Get_Peak_L() / disrupt.Get_Eddington_Luminosity());
 	      			    
 	      flare_row->weight = rate_normalization;
 

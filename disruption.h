@@ -19,8 +19,9 @@ class Disruption {
 
   double beta_mean;
   double beta_sigma;
-  double T_opt_mean;
-  double T_opt_sigma;
+  double T_opt_min;
+  double T_opt_max;
+  double T_opt_log_powerlaw;
 
   double L_Edd;
   double peak_L; // beak Lbol for a given disruption
@@ -39,8 +40,6 @@ class Disruption {
   double Eddington_Luminosity();
 
   double Planck_Function_Frequency(double, double);
-
-
 
  public:
 

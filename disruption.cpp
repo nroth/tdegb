@@ -14,7 +14,7 @@ Disruption::Disruption(Galaxy* gal)
   lf_log_powerlaw = 1.5;
   min_log_lbol = 43.0;
   max_radeff_streams = 0.1;
-  max_edd_ratio = 2.;
+  max_edd_ratio = 1.;
 
   host_gal = gal;
   mbh = host_gal->Get_Mbh();
@@ -22,8 +22,9 @@ Disruption::Disruption(Galaxy* gal)
 
   
   // move these to galaxy?
-  T_opt_mean = 3.e4;
-  T_opt_sigma = 1.5e4;
+  T_opt_min = 1.e4;
+  T_opt_max = 5.e4;
+  T_opt_log_powerlaw = -5.;
   beta_mean = 1.;
   beta_sigma = 1.e-6;
 
@@ -242,7 +243,7 @@ void Disruption::Sample_Peak_L(gsl_rng *rangen)
 
   peak_L = max_L * pow(this_y,1./lf_log_powerlaw);
 
-  return;
+  //  return;
 }
 
 void Disruption::Sample_Beta(gsl_rng *rangen)
@@ -253,8 +254,13 @@ void Disruption::Sample_Beta(gsl_rng *rangen)
 
 void Disruption::Sample_Topt(gsl_rng *rangen)
 {
-  double u = gsl_rng_uniform(rangen);  
-  T_opt = T_opt_mean + T_opt_sigma* (2. * u - 1.);
+  double ymin = pow(T_opt_min/T_opt_max,T_opt_log_powerlaw);
+
+  double u = gsl_rng_uniform(rangen);
+
+  double this_y = ymin/(1. - u * (1. - ymin));
+
+  T_opt =  T_opt_max * pow(this_y,1./T_opt_log_powerlaw);
 }
 
 void Disruption::Sample_A_V(gsl_rng *rangen)

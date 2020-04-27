@@ -222,7 +222,7 @@ int main(int argc, char **argv)
   for (int i = 0; i < my_num_gals; i++)
     {
 
-      double galaxy_info[11] = { log10(mass_mendel[i]), mbh_sigma[i], mbh_bulge[i], z[i], sersic_n[i], r50_kpc[i], m_g[i], m_r[i],ssfr[i],M_u[i]- M_r[i],M_r[i]};
+      double galaxy_info[11] = { log10(mass_mendel[i]), mbh_sigma[i], mbh_bulge[i], z[i], sersic_n[i], r50_kpc[i], m_g[i], m_r[i],log10(ssfr[i]),M_u[i]- M_r[i],M_r[i]};
 
       Galaxy this_galaxy(galaxy_info);
       
