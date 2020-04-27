@@ -30,7 +30,7 @@ Survey::Survey()
   ///// Stuff related to temperature fit /////
 
   num_fit_p = 2; // should read this in?
-  mag_frac_error = 0.000001; // 0.1 mag error corresponds to ~ 0.1 fractional error
+  mag_frac_error = 0.1; // 0.1 mag error corresponds to ~ 0.1 fractional error
   nu_ref = 1.e15; // Hz
   T_ref = 3.e4; // K
   R_ref = 3.e14; // cm

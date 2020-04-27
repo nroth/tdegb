@@ -11,7 +11,7 @@
 // move this to where appropriate. 
 struct flare_data
 {
-  double attributes[28]; // 17 for galaxy, 11 for flare
+  double attributes[29]; // 17 for galaxy, 12 for flare
   double weight; // for determining volumetric disruption rate
 };
 
@@ -51,9 +51,9 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Survey* surv, Galaxy gal, dou
   int num_trials = 100;
   vol_rate_accumulator = 0.;
 
-  //  double rate_normalization = 1./( (double) num_trials) * gal.Get_Disruption_Rate_Normalization_Combined() * pow(gal.Get_nuker_gammaprime()/1.0,gal.Get_Disruption_Rate_Powerlaw_Nuker()) * 1./(1. + z);
+  double rate_normalization = 1./( (double) num_trials) * gal.Get_Disruption_Rate_Normalization_Combined() * pow(gal.Get_nuker_gammaprime()/1.0,gal.Get_Disruption_Rate_Powerlaw_Nuker()) * 1./(1. + z);
 
-  double rate_normalization = 1./( (double) num_trials) * gal.Get_Disruption_Rate_Normalization_Combined() * pow(mbh/1.e8,gal.Get_Disruption_Rate_Powerlaw_Mass()) * 1./(1. + z);
+  //  double rate_normalization = 1./( (double) num_trials) * gal.Get_Disruption_Rate_Normalization_Combined() * pow(mbh/1.e8,gal.Get_Disruption_Rate_Powerlaw_Mass()) * 1./(1. + z);
 
   Galaxy* gal_pointer = &gal;
   Disruption disrupt(gal_pointer); // default values filled in now
@@ -130,6 +130,7 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Survey* surv, Galaxy gal, dou
 	      flare_row->attributes[25] = log10(surv->Get_Lbol_Fit());
 	      flare_row->attributes[26] = log10(surv->Get_Rbb_Fit()); // in the future, improve  capability to bin functions of columns so you don't need to store extra columns
 	      flare_row->attributes[27] = log10(disrupt.Get_Peak_L() / disrupt.Get_Eddington_Luminosity());
+	      flare_row->attributes[28] = log10(surv->Get_Lbol_Fit() / disrupt.Get_Eddington_Luminosity());
 	      			    
 	      flare_row->weight = rate_normalization;
 

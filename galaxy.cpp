@@ -18,13 +18,13 @@ Galaxy::Galaxy(double* galaxy_info)
 
   mstar_max = 1.0;  // In the future these will depend on galaxy properties
   mstar_min = 0.08; // Only considering main sequence stars
-  //  disruption_rate_normalization_combined =  pow(10.,-3.79);// for nuker gamma = 1 and
-  disruption_rate_normalization_combined =  6.5e-5;// for nuker gamma = 1 and
+  disruption_rate_normalization_combined =  pow(10.,-3.79);// for nuker gamma = 1 and
+  //  disruption_rate_normalization_combined =  6.5e-5;// for nuker gamma = 1 and
   disruption_rate_powerlaw_mass = -0.223;
   disruption_rate_powerlaw_nuker = 0.852; // for galaxies such that black hole mass is below Hills mass for 1 solar mass star
 
   resolution_for_nuker_gamma = 0.04; // arsec. See Lauer et al 2007. Nick Stone's rate calculations were based on Nuker gamma as measured in this paper, so to convert n_sersic to nuker gamma we want to account for how they measured gamma
-  resolution_for_central_sb_measurement = 0.1; // arcsec
+  resolution_for_central_sb_measurement = 0.04; // arcsec
 
   
   total_stellar_mass = pow(10.,galaxy_info[0]); // you passed it as log  
@@ -50,7 +50,7 @@ Galaxy::Galaxy(double* galaxy_info)
 
   Set_IMF_Normalization();
 
-  median_R_V = 4.05; // should depend on galaxy properties
+  median_R_V = 4.05; // Value recommended by Calzetti 2000. should depend on galaxy properties
   Set_Median_Extinction(); // values are hard-coded here, will probably want to make it more clear how to modif
 
 }
