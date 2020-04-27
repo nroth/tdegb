@@ -11,7 +11,7 @@
 // move this to where appropriate. 
 struct flare_data
 {
-  double attributes[29]; // 17 for galaxy, 12 for flare
+  double attributes[31]; // 17 for galaxy, 14 for flare
   double weight; // for determining volumetric disruption rate
 };
 
@@ -131,7 +131,9 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Survey* surv, Galaxy gal, dou
 	      flare_row->attributes[26] = log10(surv->Get_Rbb_Fit()); // in the future, improve  capability to bin functions of columns so you don't need to store extra columns
 	      flare_row->attributes[27] = log10(disrupt.Get_Peak_L() / disrupt.Get_Eddington_Luminosity());
 	      flare_row->attributes[28] = log10(surv->Get_Lbol_Fit() / disrupt.Get_Eddington_Luminosity());
-	      			    
+	      flare_row->attributes[29] = log10(disrupt.Get_Topt());
+	      flare_row->attributes[30] = log10(surv->Get_Tbb_Fit());
+	      
 	      flare_row->weight = rate_normalization;
 
 	      gsl_ntuple_write(flare_ntuple);
