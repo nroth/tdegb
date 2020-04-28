@@ -5,14 +5,6 @@
 #include <gsl/gsl_histogram.h>
 #include <gsl/gsl_ntuple.h>
 
-// GSL ntuple requires a struct
-struct data
-  {
-    double attributes[12];
-    double weight; 
-  };
-
-
 // This is required so that you can use a class member function as a GSL histogram selection function
 // See https://stackoverflow.com/questions/13074756/how-to-avoid-static-member-function-when-using-gsl-with-c/18181494#18181494
 template<typename F>

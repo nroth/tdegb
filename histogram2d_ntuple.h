@@ -103,6 +103,8 @@ void Histogram2dNtuple<data_struct>::Init (vector<int> num_bins, vector<vector<d
 
   ntuple_filename_string = ntuple_filename;
 
+  ibin = 0;
+
 }
 
 //***************************************************************
@@ -117,19 +119,30 @@ int Histogram2dNtuple<data_struct>::sel_func_2d (void *this_data)
 
   data_struct * data_pointer = (data_struct *) this_data;
   double this_horizontal_data = data_pointer->attributes[icol2];
+  //  double this_horizontal_data = log10(data_pointer->attributes[icol2]);
+  //  double this_horizontal_data = data_pointer->attributes[23] - data_pointer->attributes[19];
+
 
   // handle extreme values
   if (this_horizontal_data >= gsl_histogram_max(hist2))
     {
-      this_horizontal_data = (1. - 1.e-15) * gsl_histogram_max(hist2);
+      if ( gsl_histogram_max(hist2) >=  0.)
+	this_horizontal_data = (1. - 1.e-15) * gsl_histogram_max(hist2);
+      else
+	this_horizontal_data = (1. + 1.e-15) * gsl_histogram_max(hist2);
     }
-  if (this_horizontal_data < gsl_histogram_min(hist2))
+  else 
     {
-      this_horizontal_data = gsl_histogram_min(hist2);
+      if (this_horizontal_data < gsl_histogram_min(hist2))
+	{
+	  this_horizontal_data = gsl_histogram_min(hist2);
+	}
     }
+      
 
+  
   return ( this_horizontal_data >= hist2->range[ibin] && this_horizontal_data < hist2->range[ibin + 1]);
-  //  return ( this_horizontal_data >= hist2->range[ibin] && this_horizontal_data < hist2->range[ibin + 1] && data_pointer->attributes[mbh_sigma_i] > 5);
+  //  return ( this_horizontal_data >= hist2->range[ibin] && this_horizontal_data < hist2->range[ibin + 1] && data_pointer->attributes[z_i] < 0.4);
 
 }
 
@@ -140,19 +153,27 @@ double Histogram2dNtuple<data_struct>::val_func_2d (void *this_data)
   data_struct * data_pointer = (data_struct *) this_data;
   double this_col_data;
   
-  //this_col_data = data_pointer->attributes[icol1];
-  //this_col_data = log10(data_pointer->attributes[icol1]);
-  this_col_data = data_pointer->attributes[M_u_i] - data_pointer->attributes[M_r_i];
+  this_col_data = data_pointer->attributes[icol1];
+  //  this_col_data = log10(data_pointer->attributes[icol1]);
+  //this_col_data = data_pointer->attributes[23] - data_pointer->attributes[19];
+
 
   if (this_col_data < gsl_histogram_min(hist1))
     {
       this_col_data = gsl_histogram_min(hist1);
     }
 
-  if (this_col_data >= gsl_histogram_max(hist1))
+  else
     {
-      this_col_data = (1. - 1.e-15) * gsl_histogram_max(hist1);
+      if (this_col_data >= gsl_histogram_max(hist1))
+	{
+	  if ( gsl_histogram_max(hist1) >= 0.)
+	    this_col_data = (1. - 1.e-15) * gsl_histogram_max(hist1);
+	  else
+	    this_col_data = (1. + 1.e-15) * gsl_histogram_max(hist1);
+	}
     }
+
 
   return this_col_data;
 

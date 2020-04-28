@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string>
 #include <vector>
+#include <math.h>
 #include <gsl/gsl_histogram.h>
 #include <gsl/gsl_ntuple.h>
 #include "ntuple_data.h"
@@ -101,6 +102,13 @@ void Histogram1dNtuple<data_struct>::Init (int num_bins, vector<double> bin_spec
 template <class data_struct>
 int Histogram1dNtuple<data_struct>::sel_func_1d (void *this_data)
 {
+  //  data_struct * data_pointer = (data_struct *) this_data;
+
+  //  return data_pointer->attributes[0] > 9.7 && data_pointer->attributes[0] < 10.2 && data_pointer->attributes[z_i] < 0.01 && data_pointer->attributes[9] > 0.25 * data_pointer->attributes[0] - 0.4;
+  //  return data_pointer->attributes[z_i] < 0.4;
+  //  return data_pointer->attributes[mbh_sigma_i] > 4.5;
+  //  return data_pointer->attributes[z_i] < 0.05 && data_pointer->attributes[mbh_sigma_i] > 4.5;
+
   return 1;
 }
 
@@ -111,6 +119,8 @@ double Histogram1dNtuple<data_struct>::val_func_1d (void *this_data)
 
   data_struct * data_pointer = (data_struct *) this_data;
   double this_col_value  = data_pointer->attributes[icol];
+  //    double this_col_value  = log10(data_pointer->attributes[icol]);
+  //  double this_col_value = data_pointer->attributes[M_u_i] - data_pointer->attributes[M_r_i];
 
   // handle extreme values
   if (this_col_value < gsl_histogram_min(hist))
@@ -120,9 +130,11 @@ double Histogram1dNtuple<data_struct>::val_func_1d (void *this_data)
 
   if (this_col_value >= gsl_histogram_max(hist))
     {
-      this_col_value = (1. - 1.e-15) * gsl_histogram_max(hist);
+      if ( gsl_histogram_max(hist) >= 0.)
+	this_col_value = (1. - 1.e-15) * gsl_histogram_max(hist);
+      else
+	this_col_value = (1. + 1.e-15) * gsl_histogram_max(hist);
     }
-
 
   return this_col_value;
 }
