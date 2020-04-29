@@ -159,7 +159,7 @@ void Histogram1dNtuple<data_struct>::Print_Histogram_1D(bool weighted, string sa
   gsl_ntuple_value_fn *V = static_cast<gsl_ntuple_value_fn*>(&FpV);
 
   int name_length = ntuple_filename_string.length();
-  char* ntuple_filename_array = new char[name_length];
+  char* ntuple_filename_array = new char[name_length + 1];
   strcpy(ntuple_filename_array, ntuple_filename_string.c_str());
   
   data_struct data_row;

@@ -38,10 +38,10 @@ public:
 
   // constructors
   Histogram2dNtuple();
-  Histogram2dNtuple(vector<int>, vector<vector<double>> , string, string, string, vector<int>, string);
+  Histogram2dNtuple(vector<size_t>, vector<vector<double>> , string, string, string, vector<int>, string);
   
   // Initialize
-  void Init(vector<int>, vector<vector<double>>, string, string, string, vector<int>, string);
+  void Init(vector<size_t>, vector<vector<double>>, string, string, string, vector<int>, string);
   void Print_Histogram_2D_With_Header(bool, string);
 
   ~Histogram2dNtuple();
@@ -66,7 +66,7 @@ Histogram2dNtuple<data_struct>::Histogram2dNtuple()
 }
 
 template <class data_struct>
-Histogram2dNtuple<data_struct>::Histogram2dNtuple(vector<int> num_bins, vector<vector<double>> bin_specs, string b_name, string v_name, string h_name, vector<int> indices, string ntuple_filename)
+Histogram2dNtuple<data_struct>::Histogram2dNtuple(vector<size_t> num_bins, vector<vector<double>> bin_specs, string b_name, string v_name, string h_name, vector<int> indices, string ntuple_filename)
 {
   Init(num_bins,bin_specs, b_name,v_name,h_name, indices, ntuple_filename);
 }
@@ -87,7 +87,7 @@ Histogram2dNtuple<data_struct>::~Histogram2dNtuple()
 //***************************************************************
 
 template <class data_struct>
-void Histogram2dNtuple<data_struct>::Init (vector<int> num_bins, vector<vector<double>> bin_specs, string b_name, string v_name, string h_name, vector<int> indices, string ntuple_filename)
+void Histogram2dNtuple<data_struct>::Init (vector<size_t> num_bins, vector<vector<double>> bin_specs, string b_name, string v_name, string h_name, vector<int> indices, string ntuple_filename)
 {
 
   hist1 = gsl_histogram_alloc(num_bins[0]);
@@ -102,8 +102,6 @@ void Histogram2dNtuple<data_struct>::Init (vector<int> num_bins, vector<vector<d
   h_axis_name = h_name;
 
   ntuple_filename_string = ntuple_filename;
-
-  ibin = 0;
 
 }
 
@@ -202,17 +200,18 @@ void Histogram2dNtuple<data_struct>::Print_Histogram_2D_With_Header(bool weighte
   data_struct data_row;
 
   int name_length = ntuple_filename_string.length();
-  char* ntuple_filename_array = new char[name_length];
+  char* ntuple_filename_array = new char[name_length + 1];
   strcpy(ntuple_filename_array, ntuple_filename_string.c_str());
 
   // write header
   FILE * outfile = fopen(outfilename.c_str(),"w");
-  for (int iy = 0; iy < hist2->n + 1; iy++)
+  for (size_t iy = 0; iy < hist2->n + 1; iy++)
     {    
       fprintf(outfile,"%g ",hist2->range[iy]);
     }
   fprintf(outfile,"\n");
-  for (int ix = 0; ix < hist1->n + 1; ix++)
+
+  for (size_t ix = 0; ix < hist1->n + 1; ix++)
     {    
       fprintf(outfile,"%g ",hist1->range[ix]);
     }
@@ -221,7 +220,7 @@ void Histogram2dNtuple<data_struct>::Print_Histogram_2D_With_Header(bool weighte
 
   outfile = fopen(outfilename.c_str(),"a");
 
-    for (int i = 0; i < hist2->n; i++)
+    for (size_t i = 0; i < hist2->n; i++)
     {
       ibin = i;
 

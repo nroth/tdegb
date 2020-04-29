@@ -113,11 +113,11 @@ int main(int argc, char **argv)
   string data_path;
   string save_path;
 
-  data_path = "./results/fifth_production_local/mbh_rate/fiducial/";
-  save_path = "./results/fifth_production_local/mbh_rate/fiducial/no_zcut/";
+  //  data_path = "./results/fifth_production_local/mbh_rate/fiducial/";
+  //  save_path = "./results/fifth_production_local/mbh_rate/fiducial/no_zcut/";
 
-  //  data_path = "./results/test/";
-  //  save_path = "./results/test/";
+  data_path = "./results/test/";
+  save_path = "./results/test/";
 
 
   // make 1d histogram
@@ -335,89 +335,10 @@ int main(int argc, char **argv)
   elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
   printf("#\n# It took %f seconds to project to 1d histogram\n",elapsed_secs);
 
-      // make 2d histogram
-  identifiers.resize(5);
-  //save_path = data_path;
-  identifiers[2] = "gals";
-  identifiers[3] = "UminusR";
-  num_bins[0] = 27;
-  bin_specs[0] = 0.75;
-  bin_specs[1] = 3.;
-  icols[0] = 9; 
-  bin_specs_2d.push_back(bin_specs);
-  identifiers[4] = "log_mstar_mendel";
-  num_bins[1] = 25;
-  bin_specs[0] = 8.;
-  bin_specs[1] = 12.;
-  icols[1] = 0;
-  bin_specs_2d.push_back(bin_specs);
-  identifiers[0] = data_path;
-  identifiers[1] = save_path;
-  begin = clock();
-  make_2d_bins(identifiers,num_bins,bin_specs_2d,icols);
-  end = clock();
-  elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
-  printf("#\n# It took %f seconds to project to 2d histogram\n",elapsed_secs);
-  bin_specs_2d.clear(); // had put this here in case you wanted to use it again
-
   
   // make 2d histogram
-  identifiers.resize(5);
-  //save_path = data_path;
-  identifiers[2] = "vol_disrupt";
-  identifiers[3] = "UminusR";
-  num_bins[0] = 27;
-  bin_specs[0] = 0.75;
-  bin_specs[1] = 3.;
-  icols[0] = 9; 
-  bin_specs_2d.push_back(bin_specs);
-  identifiers[4] = "log_mstar_mendel";
-  num_bins[1] = 25;
-  bin_specs[0] = 8.;
-  bin_specs[1] = 12.;
-  icols[1] = 0;
-  bin_specs_2d.push_back(bin_specs);
-  identifiers[0] = data_path;
-  identifiers[1] = save_path;
-  begin = clock();
-  make_2d_bins(identifiers,num_bins,bin_specs_2d,icols);
-  end = clock();
-  elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
-  printf("#\n# It took %f seconds to project to 2d histogram\n",elapsed_secs);
-  bin_specs_2d.clear(); // had put this here in case you wanted to use it again
-
-
-
-
-  // make 2d histogram
-  identifiers.resize(5);
-  //save_path = data_path;
-  identifiers[2] = "flares";
-  identifiers[3] = "UminusR";
-  num_bins[0] = 27;
-  bin_specs[0] = 0.75;
-  bin_specs[1] = 3.0;
-  icols[0] = 9; 
-  bin_specs_2d.push_back(bin_specs);
-  identifiers[4] = "log_mstar_mendel";
-  num_bins[1] = 25;
-  bin_specs[0] = 8.;
-  bin_specs[1] = 12.;
-  icols[1] = 0;
-  bin_specs_2d.push_back(bin_specs);
-  identifiers[0] = data_path;
-  identifiers[1] = save_path;
-  begin = clock();
-  make_2d_bins(identifiers,num_bins,bin_specs_2d,icols);
-  end = clock();
-  elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
-  printf("#\n# It took %f seconds to project to 2d histogram\n",elapsed_secs);
-  bin_specs_2d.clear(); // had put this here in case you wanted to use it again
-
-
+  if (identifiers.size() != 5) identifiers.resize(5);
   
-  // make 2d histogram
-  identifiers.resize(5);
   //save_path = data_path;
   identifiers[2] = "flares";
   identifiers[3] = "log_Lopt";
@@ -443,7 +364,7 @@ int main(int argc, char **argv)
 
 
   // make 2d histogram
-  identifiers.resize(5);
+  if (identifiers.size() != 5) identifiers.resize(5);
   //save_path = data_path;
   identifiers[2] = "flares";
   identifiers[3] = "log_mstar_mendel";
@@ -467,8 +388,9 @@ int main(int argc, char **argv)
   printf("#\n# It took %f seconds to project to 2d histogram\n",elapsed_secs);
   bin_specs_2d.clear(); // had put this here in case you wanted to use it again
 
+
     // make 2d histogram
-  identifiers.resize(5);
+  if (identifiers.size() != 5) identifiers.resize(5);
   //save_path = data_path;
   identifiers[2] = "gals";
   identifiers[3] = "log_mstar_mendel";
@@ -492,8 +414,10 @@ int main(int argc, char **argv)
   printf("#\n# It took %f seconds to project to 2d histogram\n",elapsed_secs);
   bin_specs_2d.clear(); // had put this here in case you wanted to use it again
 
+
       // make 2d histogram
-  identifiers.resize(5);
+  if (identifiers.size() != 5) identifiers.resize(5);
+  
   //save_path = data_path;
   identifiers[2] = "vol_disrupt";
   identifiers[3] = "log_mstar_mendel";
@@ -518,7 +442,7 @@ int main(int argc, char **argv)
   bin_specs_2d.clear(); // had put this here in case you wanted to use it again
 
   // make 2d histogram
-  identifiers.resize(5);
+  if (identifiers.size() != 5) identifiers.resize(5);
   //save_path = data_path;
   identifiers[2] = "gals";
   identifiers[3] = "log_mstar_mendel";
@@ -543,7 +467,8 @@ int main(int argc, char **argv)
   bin_specs_2d.clear(); // had put this here in case you wanted to use it again
 
     // make 2d histogram
-  identifiers.resize(5);
+  if (identifiers.size() != 5) identifiers.resize(5);
+  
   //save_path = data_path;
   identifiers[2] = "vol_disrupt";
   identifiers[3] = "log_mstar_mendel";
@@ -568,7 +493,7 @@ int main(int argc, char **argv)
   bin_specs_2d.clear(); // had put this here in case you wanted to use it again
 
   // make 2d histogram
-  identifiers.resize(5);
+  if (identifiers.size() != 5) identifiers.resize(5);
   //save_path = data_path;
   identifiers[2] = "flares";
   identifiers[3] = "log_mstar_mendel";
@@ -594,7 +519,7 @@ int main(int argc, char **argv)
 
 
       // make 2d histogram
-  identifiers.resize(5);
+  if (identifiers.size() != 5) identifiers.resize(5);
   //save_path = data_path;
   identifiers[2] = "flares";
   identifiers[3] = "log_Topt_fit";
@@ -619,7 +544,7 @@ int main(int argc, char **argv)
   bin_specs_2d.clear(); // had put this here in case you wanted to use it again
 
         // make 2d histogram
-  identifiers.resize(5);
+  if (identifiers.size() != 5) identifiers.resize(5);
   //save_path = data_path;
   identifiers[2] = "flares";
   identifiers[3] = "log_Topt";
@@ -645,7 +570,7 @@ int main(int argc, char **argv)
 
 
   // make 2d histogram
-  identifiers.resize(5);
+  if (identifiers.size() != 5) identifiers.resize(5);
   //save_path = data_path;
   identifiers[2] = "flares";
   identifiers[3] = "log_Rbb_fit";
@@ -670,7 +595,7 @@ int main(int argc, char **argv)
   bin_specs_2d.clear(); // had put this here in case you wanted to use it again
 
         // make 2d histogram
-  identifiers.resize(5);
+  if (identifiers.size() != 5) identifiers.resize(5);
   //save_path = data_path;
   identifiers[2] = "flares";
   identifiers[3] = "log_Rbb_fit";
@@ -696,7 +621,7 @@ int main(int argc, char **argv)
 
   
   // make 2d histogram
-  identifiers.resize(5);
+  if (identifiers.size() != 5) identifiers.resize(5);
   //save_path = data_path;
   identifiers[2] = "flares";
   identifiers[3] = "log_Rbb_fit";
@@ -721,7 +646,7 @@ int main(int argc, char **argv)
   bin_specs_2d.clear(); // had put this here in case you wanted to use it again
 
   // make 2d histogram
-  identifiers.resize(5);
+  if (identifiers.size() != 5) identifiers.resize(5);
   //save_path = data_path;
   identifiers[2] = "flares";
   identifiers[3] = "log_Rbb_fit";
@@ -744,6 +669,89 @@ int main(int argc, char **argv)
   elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
   printf("#\n# It took %f seconds to project to 2d histogram\n",elapsed_secs);
   bin_specs_2d.clear(); // had put this here in case you wanted to use it again
+
+
+  
+      // make 2d histogram
+  if (identifiers.size() != 5) identifiers.resize(5);
+  //save_path = data_path;
+  identifiers[2] = "gals";
+  identifiers[3] = "UminusR";
+  num_bins[0] = 27;
+  bin_specs[0] = 0.75;
+  bin_specs[1] = 3.;
+  icols[0] = 9; 
+  bin_specs_2d.push_back(bin_specs);
+  identifiers[4] = "log_mstar_mendel";
+  num_bins[1] = 25;
+  bin_specs[0] = 8.;
+  bin_specs[1] = 12.;
+  icols[1] = 0;
+  bin_specs_2d.push_back(bin_specs);
+  identifiers[0] = data_path;
+  identifiers[1] = save_path;
+  begin = clock();
+  make_2d_bins(identifiers,num_bins,bin_specs_2d,icols);
+  end = clock();
+  elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
+  printf("#\n# It took %f seconds to project to 2d histogram\n",elapsed_secs);
+  bin_specs_2d.clear(); // had put this here in case you wanted to use it again
+
+    
+  // make 2d histogram
+  if (identifiers.size() != 5) identifiers.resize(5);
+  //save_path = data_path;
+  identifiers[2] = "vol_disrupt";
+  identifiers[3] = "UminusR";
+  num_bins[0] = 27;
+  bin_specs[0] = 0.75;
+  bin_specs[1] = 3.;
+  icols[0] = 9; 
+  bin_specs_2d.push_back(bin_specs);
+  identifiers[4] = "log_mstar_mendel";
+  num_bins[1] = 25;
+  bin_specs[0] = 8.;
+  bin_specs[1] = 12.;
+  icols[1] = 0;
+  bin_specs_2d.push_back(bin_specs);
+  identifiers[0] = data_path;
+  identifiers[1] = save_path;
+  begin = clock();
+  make_2d_bins(identifiers,num_bins,bin_specs_2d,icols);
+  end = clock();
+  elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
+  printf("#\n# It took %f seconds to project to 2d histogram\n",elapsed_secs);
+  bin_specs_2d.clear(); // had put this here in case you wanted to use it again
+
+
+
+
+  // make 2d histogram
+    if (identifiers.size() != 5) identifiers.resize(5);
+  //save_path = data_path;
+  identifiers[2] = "flares";
+  identifiers[3] = "UminusR";
+  num_bins[0] = 27;
+  bin_specs[0] = 0.75;
+  bin_specs[1] = 3.0;
+  icols[0] = 9; 
+  bin_specs_2d.push_back(bin_specs);
+  identifiers[4] = "log_mstar_mendel";
+  num_bins[1] = 25;
+  bin_specs[0] = 8.;
+  bin_specs[1] = 12.;
+  icols[1] = 0;
+  bin_specs_2d.push_back(bin_specs);
+  identifiers[0] = data_path;
+  identifiers[1] = save_path;
+  begin = clock();
+  make_2d_bins(identifiers,num_bins,bin_specs_2d,icols);
+  end = clock();
+  elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
+  printf("#\n# It took %f seconds to project to 2d histogram\n",elapsed_secs);
+  bin_specs_2d.clear(); // had put this here in case you wanted to use it again
+
+
 
 
   
