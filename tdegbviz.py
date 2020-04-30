@@ -25,24 +25,37 @@ class Binner:
         self.save_path = save_path
 
 
-    def plot_1d_histogram(self,axis):
+    def read_1d_histogram(self,axis):
 
         self.axis = axis
         self.working_filename = self.data_path + self.hist_type + '_' + self.axis + '_1d.hist'
         self.savefile_name = self.working_filename.replace('.hist','.png')
 
-        hist = np.loadtxt(self.working_filename)
+        self.hist_1d_counts = np.loadtxt(self.working_filename)
 
-        left_edges = hist[::,0]
-        right_edges = hist[::,1]
+
+    def rescale_1d_counts(self,scalar):
+
+        self.hist_1d_counts[:,2] *= scalar
+
+    def plot_1d_histogram(self,axis):
+
+        left_edges = self.hist_1d_counts[::,0]
+        right_edges = self.hist_1d_counts[::,1]
         bin_centers = 0.5 * (left_edges + right_edges) # assumes uniform spacing
         widths = right_edges - left_edges
-        counts = hist[::,2]
+        counts = self.hist_1d_counts[::,2]
 
-        print("Total counts is %f" %counts.sum())
-        plt.xlabel(axis,fontsize=16)
-        plt.title(self.hist_type)
-        return plt.bar(bin_centers,counts, width = widths, align='center',edgecolor='k',color='white')
+        plt.xlabel(axis,fontsize=14)
+        if (self.hist_type == 'flares'):
+            plt.title("Host galaxies of detected flares",fontsize=14)
+            plt.ylabel(r'Number of ZTF detections / yr / bin',fontsize=14)
+        if (self.hist_type == 'vol_disrupt' or self.hist_type == 'gals'):
+            plt.title("Catalogue galaxies",fontsize=14)
+            plt.ylabel(r'Number of galaxies / bin',fontsize=14)
+
+        print("Total counts is %f" % self.hist_1d_counts[:,2].sum())
+        return self.hist_1d_counts, plt.bar(bin_centers,counts, width = widths, align='center',edgecolor='k',color='white')
     
 
     def save_current_histogram(self):
@@ -86,6 +99,10 @@ class Binner:
                 plt.ylabel(axis1,fontsize=16)  
 
 
+    def rescale_2d_counts(self,scalar):
+
+        self.hist_2d_counts[:,1] *= scalar
+
     # trying to use gouraud shading will result in error: I think it needs a different grid shape
     def plot_2d_histogram(self, zlim = 0, cmap_name = 'jet',cm_maxval = 1.,cm_minval = 0.,bin_shading = 'flat'):
 
@@ -112,11 +129,11 @@ class Binner:
 
         if (zlim == 0):
             zlim = max_count
-    
-
+        
         cbar.ax.tick_params(labelsize=18)                                                          
         cbar.set_label(r'rate',fontsize=16)  
         plt.clim(0,zlim)
+        plt.title(self.hist_type)
                                                                                            
 
         print("Total counts is %f" % hist_2d_counts.sum())
