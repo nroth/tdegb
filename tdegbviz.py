@@ -101,7 +101,7 @@ class Binner:
 
     def rescale_2d_counts(self,scalar):
 
-        self.hist_2d_counts[:,1] *= scalar
+        self.hist_2d_counts *= scalar
 
     # trying to use gouraud shading will result in error: I think it needs a different grid shape
     def plot_2d_histogram(self, zlim = 0, cmap_name = 'jet',cm_maxval = 1.,cm_minval = 0.,bin_shading = 'flat'):
