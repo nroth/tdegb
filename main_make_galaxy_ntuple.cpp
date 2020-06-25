@@ -37,6 +37,7 @@ int main(int argc, char **argv)
   begin = clock();
   struct galaxy_catalogue_data gal_row;
   struct flare_data flare_row;
+  struct vol_flare_data vol_flare_row;
 
   string full_filename_string;
   int name_length;
@@ -60,6 +61,16 @@ int main(int argc, char **argv)
   strcpy(flare_ntuple_filename_array, full_filename_string.c_str());
   gsl_ntuple *flare_ntuple  = gsl_ntuple_create(flare_ntuple_filename_array, &flare_row, sizeof (flare_row));
   delete [] flare_ntuple_filename_array;
+
+  string filename_prefix_vol_flares = "vol_flare_ntuple_";
+  string extension_vol_flares = ".dat";
+  full_filename_string = filename_prefix_vol_flares + std::to_string(my_rank);
+  full_filename_string += extension_vol_flares;
+  name_length = full_filename_string.length();
+  char* vol_flare_ntuple_filename_array = new char[name_length];
+  strcpy(vol_flare_ntuple_filename_array, full_filename_string.c_str());
+  gsl_ntuple *vol_flare_ntuple  = gsl_ntuple_create(vol_flare_ntuple_filename_array, &vol_flare_row, sizeof (vol_flare_row));
+  delete [] vol_flare_ntuple_filename_array;
 
   // setup random num generator
   gsl_rng *rangen;
@@ -228,7 +239,7 @@ int main(int argc, char **argv)
       
       double vol_rate_weight;
 
-      Sample_Disruption_Parameters(rangen,surv,this_galaxy,vol_rate_weight,flare_ntuple,&flare_row);
+      Sample_Disruption_Parameters(rangen,surv,this_galaxy,vol_rate_weight,flare_ntuple,&flare_row,vol_flare_ntuple,&vol_flare_row);
       
       for (int j = 0; j < 11; j++)
 	{
@@ -250,6 +261,7 @@ int main(int argc, char **argv)
 
   gsl_ntuple_close (gal_ntuple);
   gsl_ntuple_close (flare_ntuple);
+  gsl_ntuple_close (vol_flare_ntuple);
 
   gsl_rng_free(rangen); // we don't need any more random numbers
 
@@ -279,6 +291,10 @@ int main(int argc, char **argv)
   char combined_flare_ntuple_filename[35];
   filename = "flare_ntuple_combined.dat";
   strcpy(combined_flare_ntuple_filename, filename.c_str());
+
+  char combined_vol_flare_ntuple_filename[35];
+  filename = "vol_flare_ntuple_combined.dat";
+  strcpy(combined_vol_flare_ntuple_filename, filename.c_str());
 
 
   // combine the galaxy ntuples
@@ -372,6 +388,54 @@ int main(int argc, char **argv)
       end = clock();
       float elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
       printf("#\n# It took %f seconds to copy flare events into single file\n",elapsed_secs);
+
+    }
+
+
+      // combine the vol_flare ntuples
+  if ( my_rank == 2)
+    {
+
+      begin = clock();
+
+      struct vol_flare_data combined_vol_flare_row;
+
+      char working_ntuple_filename[35];
+
+      gsl_ntuple *working_ntuple;
+
+      gsl_ntuple *combined_ntuple  = gsl_ntuple_create(combined_vol_flare_ntuple_filename, &combined_vol_flare_row, sizeof (combined_vol_flare_row));
+	
+      // loop over files
+      for (int i =0; i < n_procs; i++)
+	{
+
+	  //using the filename_prefix and extension that you defined earlier when you originally wrote the files
+	sprintf(working_ntuple_filename, "%s%d%s", filename_prefix_vol_flares.c_str(),i,extension_vol_flares.c_str());
+	working_ntuple = gsl_ntuple_open(working_ntuple_filename, &vol_flare_row, sizeof (vol_flare_row));
+
+
+	while(gsl_ntuple_read(working_ntuple) != GSL_EOF)
+	  {
+
+	    memcpy(combined_vol_flare_row.attributes, vol_flare_row.attributes, sizeof(combined_vol_flare_row.attributes));
+	    combined_vol_flare_row.weight = vol_flare_row.weight;
+	    
+	    gsl_ntuple_write(combined_ntuple);
+	  }
+
+
+	gsl_ntuple_close (working_ntuple);
+	
+	}
+
+      gsl_ntuple_close (combined_ntuple);
+
+      //delete files with "remove?" http://www.cplusplus.com/reference/cstdio/remove/
+      
+      end = clock();
+      float elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
+      printf("#\n# It took %f seconds to copy vol_flare events into single file\n",elapsed_secs);
 
     }
 

@@ -15,8 +15,15 @@ struct flare_data
   double weight; // for determining volumetric disruption rate
 };
 
+// move this to where appropriate. 
+struct vol_flare_data
+{
+  double attributes[2]; // 
+  double weight; // for determining volumetric disruption rate
+};
 
-void Sample_Disruption_Parameters(gsl_rng *rangen, Survey* surv, Galaxy gal, double& vol_rate_accumulator, gsl_ntuple *flare_ntuple, flare_data *flare_row )
+
+void Sample_Disruption_Parameters(gsl_rng *rangen, Survey* surv, Galaxy gal, double& vol_rate_accumulator, gsl_ntuple *flare_ntuple, flare_data *flare_row, gsl_ntuple *vol_flare_ntuple, vol_flare_data *vol_flare_row )
 {
 
   double m_r_limit_contrast = surv->Find_Host_Contrast_Magnitude(gal,'r');
@@ -87,9 +94,7 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Survey* surv, Galaxy gal, dou
 	  double r_mag_observed = surv->mAB_From_Fnu(disrupt.Extincted_Flux_Observed(nu_r_emit,cosmo_factor));
 	  double g_mag_observed = surv->mAB_From_Fnu(disrupt.Extincted_Flux_Observed(nu_g_emit,cosmo_factor));
 
-	  if (r_mag_observed < operating_m_r_limit && g_mag_observed < operating_m_g_limit && (g_mag_observed - r_mag_observed) < 0.)
-	    {
-
+	  
 	      /////// temperature fit ///////
 	      // collect the values from disruption::Unobscured_Lnu in an array
 	      for (int nu_index = 0; nu_index < Nbands; nu_index++)
@@ -99,6 +104,10 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Survey* surv, Galaxy gal, dou
 
 	      int status = surv->Provide_Temperature_Fit_Data(nu_emit,lnu_obsc_rest, rangen); // and perform the fit
 	      if (status != GSL_SUCCESS) printf("ERROR: Temperature fit failed!\n");
+
+
+	  if (r_mag_observed < operating_m_r_limit && g_mag_observed < operating_m_g_limit && (g_mag_observed - r_mag_observed) < 0.)
+	    {
 
 	      //could use your enum(s)
 	      flare_row->attributes[0] = log10(gal.Get_Total_Stellar_Mass());
@@ -138,11 +147,21 @@ void Sample_Disruption_Parameters(gsl_rng *rangen, Survey* surv, Galaxy gal, dou
 
 	      gsl_ntuple_write(flare_ntuple);
 
-	    }	    
+	    }
 
-	}
+	  vol_flare_row->attributes[0] = surv->Get_Tbb_Fit();
+	  vol_flare_row->attributes[1] = log10(surv->Get_Lbol_Fit());
+	  //	  vol_flare_row->attributes[0] = disrupt.Get_Topt();
+	  //	  vol_flare_row->attributes[1] = log10(disrupt.Get_Peak_L());
 
-    }
+	  
+	  vol_flare_row->weight = rate_normalization;
+
+	  gsl_ntuple_write(vol_flare_ntuple);
+
+	} // hills mass condition
+
+    } //loop over trials
 
     // this can be done at the end to save time
   // normalize by number of trials
