@@ -180,6 +180,11 @@ double Galaxy::Get_Disruption_Rate_Powerlaw_Nuker() const
   return disruption_rate_powerlaw_nuker;
 }
 
+void Galaxy::Set_z(double new_z)
+{
+  z = new_z;
+}
+
 bool Galaxy::Is_ETG_UminusR_Mstar(double u_minus_r, double log10_mstar)
 {
 

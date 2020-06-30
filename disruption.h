@@ -43,6 +43,7 @@ class Disruption {
 
  public:
 
+  Disruption();
   Disruption(Galaxy*);
 
   void Rejection_Sample_Mstar(gsl_rng *);

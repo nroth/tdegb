@@ -100,6 +100,8 @@ public:
   double Get_Disruption_Rate_Powerlaw_Mass() const;
   double Get_Disruption_Rate_Powerlaw_Nuker() const;
 
+  void Set_z(double);
+
   static bool Is_ETG_UminusR_Mstar(double, double);
 
   double Get_Mu_Eff(double) const;

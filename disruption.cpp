@@ -8,6 +8,14 @@
 #include "disruption.h"
 
 
+//default. Useful if you only want to use certian member functions
+Disruption::Disruption()
+{
+
+  printf("Warning: using default disruption constructor. Members are not initialized\n");
+  
+}
+
 Disruption::Disruption(Galaxy* gal)
 {
 
@@ -24,7 +32,7 @@ Disruption::Disruption(Galaxy* gal)
   // move these to galaxy?
   T_opt_min = 1.e4;
   T_opt_max = 5.e4;
-  T_opt_log_powerlaw = -5.;
+  T_opt_log_powerlaw = -1.;
   beta_mean = 1.;
   beta_sigma = 1.e-6;
 

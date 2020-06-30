@@ -116,6 +116,11 @@ double Survey::mAB_From_Fnu(double F_nu)
   return -2.5 * log10(F_nu) - 48.6;
 }
 
+double Survey::Fnu_From_mAB(double mAB)
+{
+  return pow(10., (mAB + 48.6)/(-2.5));
+}
+
 // find a way to make this passed galaxy constant?
 double Survey::Find_Host_Contrast_Magnitude(Galaxy gal, char band)
 {
@@ -263,6 +268,7 @@ int Survey::Perform_Temperature_Fit(gsl_rng *r)
 
   fitted_Rbb = gsl_vector_get(w->x,0) * R_ref;
   fitted_Tbb = gsl_vector_get(w->x,1) * T_ref;
+  fitted_Lbol = 4. * PI * pow(fitted_Rbb,2) * STEF_BOLTZ * pow(fitted_Tbb,4);
 
   return status;
 }
@@ -279,7 +285,20 @@ double Survey::Get_Rbb_Fit()
 
 double Survey::Get_Lbol_Fit()
 {
-  return 4. * PI * pow(fitted_Rbb,2) * STEF_BOLTZ * pow(fitted_Tbb,4);
+  return fitted_Lbol;
 }
 
+void Survey::Set_Tbb_Fit(double new_T)
+{
+  fitted_Tbb = new_T;
+}
 
+void Survey::Set_Rbb_Fit(double new_R)
+{
+  fitted_Rbb = new_R;
+}
+
+void Survey::Set_Lbol_Fit(double new_L)
+{
+  fitted_Lbol = new_L;
+}

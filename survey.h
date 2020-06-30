@@ -53,6 +53,7 @@ class Survey
 
   double fitted_Tbb;
   double fitted_Rbb;
+  double fitted_Lbol;
 
   const gsl_multifit_nlinear_type *Type; 
   gsl_multifit_nlinear_workspace *w;
@@ -82,6 +83,7 @@ class Survey
   Survey();
   ~Survey();
   double mAB_From_Fnu(double);
+  double Fnu_From_mAB(double);
   double Find_Host_Contrast_Magnitude(Galaxy, char);
 
   int Get_Nbands();
@@ -97,6 +99,10 @@ class Survey
   double Get_Tbb_Fit();
   double Get_Rbb_Fit();
   double Get_Lbol_Fit();
+
+  void Set_Tbb_Fit(double);
+  void Set_Rbb_Fit(double);
+  void Set_Lbol_Fit(double);
 
 };
 
