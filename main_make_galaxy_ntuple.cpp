@@ -30,6 +30,13 @@ int main(int argc, char **argv)
   MPI_Comm_rank( MPI_COMM_WORLD, &my_rank );
   MPI_Comm_size( MPI_COMM_WORLD, &n_procs);
 
+  int make_vol_flares = 0;
+  if (argc > 1)
+    {
+      make_vol_flares = std::stoi(argv[1]);
+    }
+  printf("option to make vol flare ntuple: %d\n",make_vol_flares);
+
   clock_t begin;
   clock_t end;
   float elapsed_secs;
@@ -37,6 +44,7 @@ int main(int argc, char **argv)
   begin = clock();
   struct galaxy_catalogue_data gal_row;
   struct flare_data flare_row;
+
   struct vol_flare_data vol_flare_row;
 
   string full_filename_string;
@@ -61,6 +69,7 @@ int main(int argc, char **argv)
   strcpy(flare_ntuple_filename_array, full_filename_string.c_str());
   gsl_ntuple *flare_ntuple  = gsl_ntuple_create(flare_ntuple_filename_array, &flare_row, sizeof (flare_row));
   delete [] flare_ntuple_filename_array;
+
 
   string filename_prefix_vol_flares = "vol_flare_ntuple_";
   string extension_vol_flares = ".dat";
@@ -239,7 +248,7 @@ int main(int argc, char **argv)
       
       double vol_rate_weight;
 
-      Sample_Disruption_Parameters(rangen,surv,this_galaxy,vol_rate_weight,flare_ntuple,&flare_row,vol_flare_ntuple,&vol_flare_row);
+      Sample_Disruption_Parameters(rangen,surv,this_galaxy,vol_rate_weight,flare_ntuple,&flare_row,vol_flare_ntuple,&vol_flare_row,make_vol_flares);
       
       for (int j = 0; j < 11; j++)
 	{
@@ -261,7 +270,10 @@ int main(int argc, char **argv)
 
   gsl_ntuple_close (gal_ntuple);
   gsl_ntuple_close (flare_ntuple);
+
   gsl_ntuple_close (vol_flare_ntuple);
+
+  delete surv;
 
   gsl_rng_free(rangen); // we don't need any more random numbers
 
@@ -295,8 +307,7 @@ int main(int argc, char **argv)
   char combined_vol_flare_ntuple_filename[35];
   filename = "vol_flare_ntuple_combined.dat";
   strcpy(combined_vol_flare_ntuple_filename, filename.c_str());
-
-
+  
   // combine the galaxy ntuples
   if ( my_rank == 0)
     {
@@ -393,7 +404,7 @@ int main(int argc, char **argv)
 
 
       // combine the vol_flare ntuples
-  if ( my_rank == 2)
+  if ( my_rank == 2 && make_vol_flares == 1)
     {
 
       begin = clock();
