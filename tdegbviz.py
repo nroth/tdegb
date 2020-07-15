@@ -38,7 +38,8 @@ class Binner:
 
         self.hist_1d_counts[:,2] *= scalar
 
-    def plot_1d_histogram(self,axis):
+    def plot_1d_histogram(self,axis,rescale_by_binwidth = False, value_only = False):
+
 
         left_edges = self.hist_1d_counts[::,0]
         right_edges = self.hist_1d_counts[::,1]
@@ -46,20 +47,38 @@ class Binner:
         widths = right_edges - left_edges
         counts = self.hist_1d_counts[::,2]
 
+        self.rescale_1d_by_binwidth = rescale_by_binwidth
+
+        if(self.rescale_1d_by_binwidth):
+            counts /= widths
+            
+
         plt.xlabel(axis,fontsize=14)
         if (self.hist_type == 'flares'):
             plt.title("Host galaxies of detected flares",fontsize=14)
-            plt.ylabel(r'Number of ZTF detections / yr / bin',fontsize=14)
+            if (self.rescale_1d_by_binwidth):
+                plt.ylabel(r'Expected # of ZTF detections yr$^{-1}$ (bin interval)$^{-1}$',fontsize=14)
+            else:
+                plt.ylabel(r'Expected # of ZTF detections / yr / bin',fontsize=14)
         if (self.hist_type == 'vol_disrupt' or self.hist_type == 'gals'):
             plt.title("Catalogue galaxies",fontsize=14)
             plt.ylabel(r'Number of galaxies / bin',fontsize=14)
 
         print("Total counts is %f" % self.hist_1d_counts[:,2].sum())
-        return self.hist_1d_counts, plt.bar(bin_centers,counts, width = widths, align='center',edgecolor='k',color='white')
+
+        if (value_only):
+            return self.hist_1d_counts, plt.errorbar(bin_centers,counts, xerr= widths/2., yerr = 0, elinewidth=1,color='k',fmt='o',markersize=3,label = 'model')
+        else:
+            return self.hist_1d_counts, plt.bar(bin_centers,counts, width = widths, align='center',edgecolor='k',color='white')
     
 
-    def save_current_histogram(self):
+    def save_current_histogram(self,fn = ''):
 
+        if (fn == 'pdf'):
+            self.savefile_name = self.savefile_name.replace('.png','.pdf')
+        else:
+            if (fn != ''):
+                self.savefile_name = self.data_path + fn
         print("saving to ",self.savefile_name)
         plt.savefig(self.savefile_name)
 
@@ -138,7 +157,7 @@ class Binner:
 
         print("Total counts is %f" % hist_2d_counts.sum())
 
-        return hist2d, cbar
+        return hist_2d_counts, hist2d, cbar
 
     def plot_2d_contours(self, level_list = [0.1,0.3,0.5,0.7,0.9]):
 
@@ -166,7 +185,7 @@ class Binner:
 
         print("Total counts is %f" % hist_2d_counts.sum())
 
-        return cont
+        return hist_2d_counts, cont
         
 # static
 def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=100):
