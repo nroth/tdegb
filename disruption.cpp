@@ -243,13 +243,33 @@ void Disruption::Determine_Max_L()
 void Disruption::Sample_Peak_L(gsl_rng *rangen)
 {
 
-  double ymin = pow( pow(10., min_log_lbol)/max_L, lf_log_powerlaw);
+  double u, ymin, this_y;
 
-  double u = gsl_rng_uniform(rangen);
+  if (lf_log_powerlaw == 0)
+    {
 
-  double this_y = ymin/(1. - u * (1. - ymin));
+      ymin = max_L / pow(10., min_log_lbol);
 
-  peak_L = max_L * pow(this_y,1./lf_log_powerlaw);
+      u = gsl_rng_uniform(rangen);
+
+      this_y = exp(u * log(ymin)); // log is natural log                                                                                                                      
+
+      peak_L =  max_L / this_y;
+
+    }
+
+  else
+    {
+  
+      ymin = pow( pow(10., min_log_lbol)/max_L, lf_log_powerlaw);
+
+      u = gsl_rng_uniform(rangen);
+
+      this_y = ymin/(1. - u * (1. - ymin));
+
+      peak_L = max_L * pow(this_y,1./lf_log_powerlaw);
+
+    }
 
   //  return;
 }
@@ -262,13 +282,33 @@ void Disruption::Sample_Beta(gsl_rng *rangen)
 
 void Disruption::Sample_Topt(gsl_rng *rangen)
 {
-  double ymin = pow(T_opt_min/T_opt_max,T_opt_log_powerlaw);
 
-  double u = gsl_rng_uniform(rangen);
+  double ymin, u, this_y;
+  
+  if (T_opt_log_powerlaw == 0)
+    {
 
-  double this_y = ymin/(1. - u * (1. - ymin));
+      ymin = T_opt_max / T_opt_min;
 
-  T_opt =  T_opt_max * pow(this_y,1./T_opt_log_powerlaw);
+      u = gsl_rng_uniform(rangen);
+
+      this_y = exp(u * log(ymin)); // log is natural log
+
+      T_opt = T_opt_max / this_y;
+
+    }
+
+  
+  else
+    {
+      ymin = pow(T_opt_min/T_opt_max,T_opt_log_powerlaw);
+
+      u = gsl_rng_uniform(rangen);
+
+      this_y = ymin/(1. - u * (1. - ymin));
+
+      T_opt =  T_opt_max * pow(this_y,1./T_opt_log_powerlaw);
+    }
 }
 
 void Disruption::Sample_A_V(gsl_rng *rangen)
