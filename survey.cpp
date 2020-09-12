@@ -1,3 +1,27 @@
+/*
+MIT License
+
+Copyright (c) 2020 Nathaniel Jacob Roth
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE
+*/
+
 #include <math.h>
 #include <stdio.h>
 #include "physical_constants.h"
@@ -8,24 +32,27 @@
 #include <gsl/gsl_blas.h>
 
 
+
+
 Survey::Survey()
 {
 
   // see e.g. http://svo2.cab.inta-csic.es/svo/theory/fps3/index.php?id=Swift/UVOT.UVW2&&mode=browse&gname=Swift&gname2=UVOT#filter
   // later, when reading in, put this in a loop
-  nu_bands.push_back(C_LIGHT / (6436.92 * 1.e-8)); // ZTF_r
-  nu_bands.push_back(C_LIGHT / (4804.79 * 1.e-8)); // ZTF_g
+
+  nu_bands.push_back(C_LIGHT / (6257.54 * 1.e-8)); // LSSt r
+  nu_bands.push_back(C_LIGHT / (4840.83 * 1.e-8)); // LSST g
   nu_bands.push_back(C_LIGHT / (2688.46 * 1.e-8)); // Swift UVW1
   nu_bands.push_back(C_LIGHT / (2272.71 * 1.e-8)); // Swift UVM2
   nu_bands.push_back(C_LIGHT / (2140.26 * 1.e-8)); // Swift UVW2
 
-  m_r_threshhold = 19;
-  m_g_threshhold = 19;
+  m_r_threshhold = 23.;
+  m_g_threshhold = 23.;
 
-  host_contrast_cut = 0.36385;
+  host_contrast_cut = 0.;
 
-  g_psf_arcsec = 2.1; // g-band median PSF FWHM. Page 8 of Bellm et al 2019 https://iopscience.iop.org/article/10.1088/1538-3873/aaecbe/pdf
-  r_psf_arcsec = 2.0; // r-band median PSF FWHM. Page 8 of Bellm et al 2019 https://iopscience.iop.org/article/10.1088/1538-3873/aaecbe/pdf
+  g_psf_arcsec = 0.7; // g-band median PSF FWHM. Page 8 of Bellm et al 2019 https://iopscience.iop.org/article/10.1088/1538-3873/aaecbe/pdf
+  r_psf_arcsec = 0.7; // r-band median PSF FWHM. Page 8 of Bellm et al 2019 https://iopscience.iop.org/article/10.1088/1538-3873/aaecbe/pdf
 
   ///// Stuff related to temperature fit /////
 

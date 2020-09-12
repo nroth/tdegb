@@ -1,3 +1,27 @@
+/*
+MIT License
+
+Copyright (c) 2020 Nathaniel Jacob Roth
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE
+*/
+
 #ifndef COSMOLOGY_H
 #define COSMOLOGY_H
 
@@ -14,7 +38,7 @@
 
 
 //function needs to have this signature for params
-double ComovingDistanceIntegrand(double z, void * params)
+static double ComovingDistanceIntegrand(double z, void * params)
 {
 
   //double param = *(double *) params;
@@ -23,7 +47,7 @@ double ComovingDistanceIntegrand(double z, void * params)
 
 }
 
-double ComovingDistance(double z)
+static double ComovingDistance(double z)
 {
 
   //    double ComovingDistanceIntegrand(double, void *); // function needs to have this signature for gsl
@@ -47,7 +71,7 @@ double ComovingDistance(double z)
 
 }
 
-double ComovingVolumeIntegrand(double z, void * params)
+static double ComovingVolumeIntegrand(double z, void * params)
 {
 
   double d_c = ComovingDistance(z);
@@ -57,7 +81,7 @@ double ComovingVolumeIntegrand(double z, void * params)
 }
 
 // return in Mpc^3
-double ComovingVolume(double z_min, double z_max, double omega)
+static double ComovingVolume(double z_min, double z_max, double omega)
 {
 
   int grid_size = 256;
@@ -80,21 +104,21 @@ double ComovingVolume(double z_min, double z_max, double omega)
 
 }
 
-double LuminosityDistance(double z)
+static double LuminosityDistance(double z)
 {
 
   return (1. + z) * ComovingDistance(z);
   
 }
 
-double AngularDiameterDistance(double z)
+static double AngularDiameterDistance(double z)
 {
 
   return 1./(1. + z) * ComovingDistance(z);
   
 }
 
-double DistanceModulus(double z)
+static double DistanceModulus(double z)
 {
 
   double ld = LuminosityDistance(z);

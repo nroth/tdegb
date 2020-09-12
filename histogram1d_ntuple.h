@@ -1,3 +1,27 @@
+/*
+MIT License
+
+Copyright (c) 2020 Nathaniel Jacob Roth
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE
+*/
+
 #ifndef HISTOGRAM1DNTUPLE_H
 #define HISTOGRAM1DNTUPLE_H 
 
@@ -8,6 +32,7 @@
 #include <gsl/gsl_histogram.h>
 #include <gsl/gsl_ntuple.h>
 #include "ntuple_data.h"
+#include "cosmology.h"
 #include "physical_constants.h"
 
 using std::string;
@@ -29,7 +54,6 @@ private:
   double val_func_1d (void *);
   double Lgfit_val_func_1d (void *);
   double volLgfit_val_func_1d (void *);
-
 
 public:
 
@@ -109,6 +133,7 @@ int Histogram1dNtuple<data_struct>::sel_func_1d (void *this_data)
 {
   data_struct * data_pointer = (data_struct *) this_data;
 
+  //  return data_pointer->attributes[1] > 7.0 && data_pointer->attributes[1] < 7.25 && data_pointer->attributes[z_i] > 0.4 && data_pointer->attributes[UminusR_i] > 0.25 * data_pointer->attributes[0] - 0.4;
   //  return data_pointer->attributes[0] > 9.7 && data_pointer->attributes[0] < 10.2 && data_pointer->attributes[z_i] < 0.02 && data_pointer->attributes[9] > 0.25 * data_pointer->attributes[0] - 0.4;
   //    return data_pointer->attributes[0] > 8.7 && data_pointer->attributes[0] < 10.7 && data_pointer->attributes[z_i] < 0.02 && data_pointer->attributes[9] < 0.25 * data_pointer->attributes[0] - 0.6;
   //  return data_pointer->attributes[z_i] < 0.4;
@@ -306,6 +331,7 @@ void Histogram1dNtuple<data_struct>::Print_Lg_Histogram_1D(bool weighted, string
   fclose(outfile);
 
 }
+
 
 template <class data_struct>
 void Histogram1dNtuple<data_struct>::Print_volLg_Histogram_1D(bool weighted, string save_path)

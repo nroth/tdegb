@@ -1,3 +1,27 @@
+/*
+MIT License
+
+Copyright (c) 2020 Nathaniel Jacob Roth
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE
+*/
+
 #include <math.h>
 #include <algorithm> // for std::max
 #include <stdio.h>
@@ -325,13 +349,13 @@ double Galaxy::Calzetti_Extinction(double x, double rv)
   // To make this analogous to the Cardelli extinction function, here we return k(lambda) / R_V
   
 
-    if (x < 5./11. || x > 25./3.)
-    {
-      printf("ERROR: Calzetti extinction not defined for x < 0.45 or x > 8.33...\n");
-      return 0.;
-    }
+  //    if (x < 5./11. || x > 25./3.)
+  //    {
+  //      printf("ERROR: Calzetti extinction not defined for x < 0.45 or x > 8.33...\n");
+  //      return 0.;
+  //    }
 
-    if (x >= 5./11. && x < 1.6)
+    if (x < 1.6)
       {
 	
 	return std::max((2.659 * (-1.857 + 1.040 * x) + rv)/rv,0.);

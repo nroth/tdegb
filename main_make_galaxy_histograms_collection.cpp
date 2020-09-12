@@ -1,3 +1,27 @@
+/*
+MIT License
+
+Copyright (c) 2020 Nathaniel Jacob Roth
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE
+*/
+
 #include <fstream>
 #include <iostream>
 #include <stdio.h>
@@ -159,16 +183,20 @@ int main(int argc, char **argv)
   string data_path;
   string save_path;
 
-  data_path = "./results/sixth_production_local/nuker_gamma_rate/log_LbolPL0_LoptPLm5_vol/";
-  save_path = "./results/sixth_production_local/nuker_gamma_rate/log_LbolPL0_LoptPLm5_vol/";
+  //  data_path = "./results/sixth_production_local/nuker_gamma_rate/fallback_streams_v5/";
+  //save_path = "./results/sixth_production_local/nuker_gamma_rate/fallback_streams_v5/";
+
+  data_path = "./results/fifth_production_local/nuker_gamma_rate/fiducial/";
+  save_path = "./results/fifth_production_local/nuker_gamma_rate/fiducial/";
+
 
 
     // make 1d histogram
   //  save_path = data_path;
   identifiers[2] = "flares";
   identifiers[3] = "log_Lg";
-  num_bins[0] = 40;
-  bin_specs[0] = 41.;
+  num_bins[0] = 75;
+  bin_specs[0] = 40.5;
   bin_specs[1] = 45.;
   icols[0] = 0; // Lg is special
   identifiers[0] = data_path;
@@ -179,23 +207,54 @@ int main(int argc, char **argv)
   elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
   printf("#\n# It took %f seconds to project to 1d histogram\n",elapsed_secs);
 
-
-
-  identifiers[2] = "vol_flares";
-  identifiers[3] = "log_volLg";
-  num_bins[0] = 40;
-  bin_specs[0] = 41.;
-  bin_specs[1] = 45.;
-  icols[0] = 0; // Lg is special
+      // make 1d histogram
+  //  save_path = data_path;
+  identifiers[2] = "flares";
+  identifiers[3] = "A_V";
+  num_bins[0] = 75;
+  bin_specs[0] = 0.;
+  bin_specs[1] = 1.75;
+  icols[0] = 23;
   identifiers[0] = data_path;
   identifiers[1] = save_path;
   begin = clock();
-  make_Lg_bins(identifiers,num_bins[0],bin_specs,icols[0]);
+  make_1d_bins(identifiers,num_bins[0],bin_specs,icols[0]);
   end = clock();
   elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
   printf("#\n# It took %f seconds to project to 1d histogram\n",elapsed_secs);
 
-										
+        // make 1d histogram
+  //  save_path = data_path;
+  identifiers[2] = "gals";
+  identifiers[3] = "A_V_median";
+  num_bins[0] = 75;
+  bin_specs[0] = 0.;
+  bin_specs[1] = 2.5;
+  icols[0] = 12;
+  identifiers[0] = data_path;
+  identifiers[1] = save_path;
+  begin = clock();
+  make_1d_bins(identifiers,num_bins[0],bin_specs,icols[0]);
+  end = clock();
+  elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
+  printf("#\n# It took %f seconds to project to 1d histogram\n",elapsed_secs);
+
+  /*
+
+  //  identifiers[2] = "vol_flares";
+  //identifiers[3] = "log_volLg";
+  //num_bins[0] = 40;
+  //bin_specs[0] = 41.;
+  //bin_specs[1] = 45.;
+  //icols[0] = 0; // Lg is special
+  //identifiers[0] = data_path;
+  //identifiers[1] = save_path;
+  //begin = clock();
+  //make_Lg_bins(identifiers,num_bins[0],bin_specs,icols[0]);
+  //end = clock();
+  //elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
+  //printf("#\n# It took %f seconds to project to 1d histogram\n",elapsed_secs);
+
 
   // make 1d histogram
   //  save_path = data_path;
@@ -437,7 +496,7 @@ int main(int argc, char **argv)
   identifiers[3] = "z";
   num_bins[0] = 25;
   bin_specs[0] = 0.;
-  bin_specs[1] = 0.4;
+  bin_specs[1] = 1.0;
   icols[0] = 3; // use an enum, avoid specifying this again? Also end of input
   identifiers[0] = data_path;
   identifiers[1] = save_path;
@@ -587,7 +646,7 @@ int main(int argc, char **argv)
   identifiers[4] = "z";
   num_bins[1] = 25;
   bin_specs[0] = 0.;
-  bin_specs[1] = 0.4;
+  bin_specs[1] = 1.0;
   icols[1] = 3;
   bin_specs_2d.push_back(bin_specs);
   identifiers[0] = data_path;
@@ -613,7 +672,7 @@ int main(int argc, char **argv)
   identifiers[4] = "z";
   num_bins[1] = 25;
   bin_specs[0] = 0.;
-  bin_specs[1] = 0.4;
+  bin_specs[1] = 1.0;
   icols[1] = 3;
   bin_specs_2d.push_back(bin_specs);
   identifiers[0] = data_path;
@@ -640,7 +699,7 @@ int main(int argc, char **argv)
   identifiers[4] = "z";
   num_bins[1] = 25;
   bin_specs[0] = 0.;
-  bin_specs[1] = 0.4;
+  bin_specs[1] = 1.0;
   icols[1] = 3;
   bin_specs_2d.push_back(bin_specs);
   identifiers[0] = data_path;
@@ -901,7 +960,7 @@ int main(int argc, char **argv)
   identifiers[4] = "z";
   num_bins[1] = 25;
   bin_specs[0] = 0.;
-  bin_specs[1] = 0.4;
+  bin_specs[1] = 1.0;
   icols[1] = 3;
   bin_specs_2d.push_back(bin_specs);
   identifiers[0] = data_path;
@@ -926,7 +985,7 @@ int main(int argc, char **argv)
   identifiers[4] = "z";
   num_bins[1] = 25;
   bin_specs[0] = 0.;
-  bin_specs[1] = 0.4;
+  bin_specs[1] = 1.0;
   icols[1] = 3;
   bin_specs_2d.push_back(bin_specs);
   identifiers[0] = data_path;
@@ -953,7 +1012,7 @@ int main(int argc, char **argv)
   identifiers[4] = "z";
   num_bins[1] = 25;
   bin_specs[0] = 0.;
-  bin_specs[1] = 0.4;
+  bin_specs[1] = 1.0;
   icols[1] = 3;
   bin_specs_2d.push_back(bin_specs);
   identifiers[0] = data_path;
@@ -1077,7 +1136,7 @@ int main(int argc, char **argv)
   identifiers[3] = "z";
   num_bins[0] = 30;
   bin_specs[0] = 0.;
-  bin_specs[1] = 0.4;
+  bin_specs[1] = 1.0;
   icols[0] = 3; 
   bin_specs_2d.push_back(bin_specs);
   identifiers[4] = "Topt_fit";
@@ -1104,7 +1163,7 @@ int main(int argc, char **argv)
   identifiers[3] = "z";
   num_bins[0] = 30;
   bin_specs[0] = 0.;
-  bin_specs[1] = 0.4;
+  bin_specs[1] = 1.0;
   icols[0] = 3; 
   bin_specs_2d.push_back(bin_specs);
   identifiers[4] = "Mu_100pc_cut";
@@ -1168,7 +1227,7 @@ int main(int argc, char **argv)
   identifiers[3] = "z_coarse";
   num_bins[0] = 8;
   bin_specs[0] = 0.;
-  bin_specs[1] = 0.4;
+  bin_specs[1] = 1.0;
   icols[0] = 3; // use an enum, avoid specifying this again? Also end of input
   identifiers[0] = data_path;
   identifiers[1] = save_path;
@@ -1241,7 +1300,6 @@ int main(int argc, char **argv)
   printf("#\n# It took %f seconds to project to 1d histogram\n",elapsed_secs);
 
 
-
   identifiers[2] = "flares";
   identifiers[3] = "log_Lg_coarse";
   num_bins[0] = 8;
@@ -1255,6 +1313,44 @@ int main(int argc, char **argv)
   end = clock();
   elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
   printf("#\n# It took %f seconds to project to 1d histogram\n",elapsed_secs);
+
+
+
+  // make 1d histogram
+  //save_path = data_path;
+  identifiers[2] = "gals";
+  identifiers[3] = "m_r";
+  num_bins[0] = 150;
+  bin_specs[0] = 10.;
+  bin_specs[1] = 25.;
+  icols[0] = 7; // use an enum, avoid specifying this again? Also end of input
+  identifiers[0] = data_path;
+  identifiers[1] = save_path;
+  begin = clock();
+  make_1d_bins(identifiers,num_bins[0],bin_specs,icols[0]);
+  end = clock();
+  elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
+  printf("#\n# It took %f seconds to project to 1d histogram\n",elapsed_secs);
+
+
+
+    // make 1d histogram
+  //save_path = data_path;
+  identifiers[2] = "flares";
+  identifiers[3] = "m_r";
+  num_bins[0] = 150;
+  bin_specs[0] = 10.;
+  bin_specs[1] = 25.;
+  icols[0] = 7; // use an enum, avoid specifying this again? Also end of input
+  identifiers[0] = data_path;
+  identifiers[1] = save_path;
+  begin = clock();
+  make_1d_bins(identifiers,num_bins[0],bin_specs,icols[0]);
+  end = clock();
+  elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
+  printf("#\n# It took %f seconds to project to 1d histogram\n",elapsed_secs);
+
+  */
   
 }
 
