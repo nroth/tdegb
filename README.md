@@ -8,7 +8,7 @@ The code requires the use of the GNU scientific library and HDF5. The galaxy cat
 
 # Contributing
 
-Please fork the repository or create a branch separate from master, and then submit pull requests.
+Please fork the repository and then submit pull requests.
 
 # Release
 

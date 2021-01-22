@@ -180,9 +180,8 @@ int main(int argc, char **argv)
   string data_path;
   string save_path;
 
-  //  data_path = "./results/sixth_production_local/nuker_gamma_rate/fallback_streams_v5/";
-  //save_path = "./results/sixth_production_local/nuker_gamma_rate/fallback_streams_v5/";
 
+  // MODIFY FOR YOUR NEEDS
   data_path = "./results/fifth_production_local/nuker_gamma_rate/fiducial/";
   save_path = "./results/fifth_production_local/nuker_gamma_rate/fiducial/";
 
@@ -252,6 +251,7 @@ int main(int argc, char **argv)
   //elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
   //printf("#\n# It took %f seconds to project to 1d histogram\n",elapsed_secs);
 
+  */
 
   // make 1d histogram
   //  save_path = data_path;
@@ -1347,7 +1347,6 @@ int main(int argc, char **argv)
   elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
   printf("#\n# It took %f seconds to project to 1d histogram\n",elapsed_secs);
 
-  */
   
 }
 

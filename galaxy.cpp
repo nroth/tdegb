@@ -70,7 +70,7 @@ Galaxy::Galaxy(double* galaxy_info)
   Set_IMF_Normalization();
 
   median_R_V = 4.05; // Value recommended by Calzetti 2000. should depend on galaxy properties
-  Set_Median_Extinction(); // values are hard-coded here, will probably want to make it more clear how to modif
+  Set_Median_Extinction(); // values are hard-coded here, will probably want to make it more clear how to modify
 
 }
 
@@ -207,7 +207,7 @@ void Galaxy::Set_z(double new_z)
 bool Galaxy::Is_ETG_UminusR_Mstar(double u_minus_r, double log10_mstar)
 {
 
-  // For a given u_minus_r and mstar, does the galaxy fall on the ETG side of that parameter plane
+  // For a given u_minus_r and mstar, does the galaxy fall on the ETG side of that parameter plane?
   // The slope of this cut seems fairly consistent across the literature
   // The u-r intercept can be moved up and down depending on redshift range and how strict you want the cut to be
   // Remember, this is approximating a separation in morphology by using a related, but ultimately distinct, cut on color and magnitude

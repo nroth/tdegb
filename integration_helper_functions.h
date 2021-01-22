@@ -27,14 +27,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "histogramNd.h"
 #include "survey.h"
 
-// move this to where appropriate. 
+// TODO: move this to where appropriate.
+// Consider implmenting a real database
 struct flare_data
 {
   double attributes[31]; // 17 for galaxy, 14 for flare
   double weight; // for determining volumetric disruption rate
 };
 
-// move this to where appropriate. 
+// TODO: move this to where appropriate. 
 struct vol_flare_data
 {
   double attributes[2]; // 

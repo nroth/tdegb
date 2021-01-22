@@ -191,7 +191,7 @@ int main(int argc, char **argv)
   string save_path;
 
 
-
+  // MODIFY FOR YOUR NEEDS
   data_path = "./results/fifth_production_local/nuker_gamma_rate/fiducial/";
   save_path = "./results/fifth_production_local/nuker_gamma_rate/fiducial/";
   // make 1d histogram

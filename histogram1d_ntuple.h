@@ -207,6 +207,8 @@ double Histogram1dNtuple<data_struct>::Lgfit_val_func_1d (void *this_data)
 }
 
 //right now only works for flare data types, not gals
+//this function is for diagnostic purposes, not part of the core calculation
+//use with caution
 template <class data_struct>  
 double Histogram1dNtuple<data_struct>::volLgfit_val_func_1d (void *this_data)
 {
@@ -216,7 +218,7 @@ double Histogram1dNtuple<data_struct>::volLgfit_val_func_1d (void *this_data)
   double Lbol = pow(10.,data_pointer->attributes[1]);
   double Tbb = data_pointer->attributes[0];
 
-  double nu_g = C_LIGHT / (4804.79 * 1.e-8); // rest frame
+  double nu_g = C_LIGHT / (4804.79 * 1.e-8); // rest frame. CAREFUL: hard-coded g-band effective wavelength
 
   double B_nu =   2. *H_PLANCK * pow(nu_g,3.)/( pow(C_LIGHT,2.) * (exp(H_PLANCK * nu_g /(K_BOLTZ * Tbb)) - 1.) );
 
